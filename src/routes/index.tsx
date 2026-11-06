@@ -49,7 +49,7 @@ function useNow() {
 }
 
 function Panel({ title, icon: Icon, children, action, className }: { title: string; icon: typeof Activity; children: React.ReactNode; action?: React.ReactNode; className?: string }) {
-  return <section className={cn("rounded-xl border border-sky-400/20 bg-[#0a172b]/95 p-4 shadow-[0_12px_34px_rgba(0,0,0,.22)]", className)}>
+  return <section className={cn("glass rounded-xl p-4", className)}>
     <div className="mb-3 flex items-center gap-2"><Icon className="size-4 text-sky-300"/><h2 className="flex-1 font-display text-xs font-bold uppercase tracking-[.12em] text-slate-100">{title}</h2>{action}</div>
     {children}
   </section>;
@@ -156,7 +156,7 @@ function Dashboard() {
 
     <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
       <div className="min-w-0 space-y-4">
-        <section className="rounded-xl border border-sky-400/25 bg-[#0a172b] p-4 shadow-[0_12px_34px_rgba(0,0,0,.24)]">
+        <section className="glass rounded-xl p-4">
           <div className="flex flex-wrap items-start gap-4">
             <div className="relative shrink-0">
               <img src="https://raw.githubusercontent.com/FrankMazerati/Global_Command_Center_Test/main/frankmazerati.png" alt="Frank Mazerati" onError={e => { e.currentTarget.style.display = "none"; }} className="size-[88px] rounded-xl border-2 border-sky-400/60 bg-[#101f38] object-cover shadow-[0_0_22px_rgba(56,189,248,.18)]"/>
