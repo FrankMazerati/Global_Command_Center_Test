@@ -170,3 +170,122 @@
   backdrop-filter: blur(18px) saturate(145%);
   -webkit-backdrop-filter: blur(18px) saturate(145%);
 }
+
+
+/* MAXIMUS OPTIMUS — Holographic Intelligence Interface
+   A unified visual language: holographic HUD + glass + luminous controls + motion.
+   No third-party runtime dependencies; respects reduced-motion preferences. */
+:root {
+  --holo-cyan: 88 214 255;
+  --holo-blue: 55 133 255;
+  --holo-violet: 163 110 255;
+  --holo-mint: 67 232 185;
+  --holo-glass: rgba(7, 20, 42, .58);
+  --holo-edge: rgba(120, 211, 255, .28);
+  --holo-glow: 0 0 0 1px rgba(91, 202, 255, .16), 0 0 24px rgba(45, 153, 255, .13), inset 0 1px 0 rgba(255,255,255,.10);
+}
+body {
+  background-image:
+    radial-gradient(ellipse at 12% 12%, rgba(24, 111, 220, .13), transparent 38%),
+    radial-gradient(ellipse at 88% 26%, rgba(120, 66, 220, .10), transparent 34%),
+    radial-gradient(ellipse at 55% 100%, rgba(20, 169, 190, .08), transparent 42%),
+    linear-gradient(180deg, #030914 0%, #050d1d 52%, #020711 100%);
+  background-attachment: fixed;
+}
+.command-header {
+  border-image: linear-gradient(90deg, rgba(70,180,255,.10), rgba(100,210,255,.62), rgba(168,112,255,.36), rgba(70,180,255,.10)) 1;
+  box-shadow: 0 10px 38px rgba(0,0,0,.42), 0 1px 22px rgba(50,160,255,.08);
+}
+.command-header::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(104,215,255,.85), rgba(173,127,255,.55), transparent);
+  opacity: .8;
+}
+.glass, .glass-strong {
+  position: relative;
+  border-color: var(--holo-edge);
+  box-shadow: var(--glass-shadow), var(--holo-glow);
+}
+.glass {
+  background-image: linear-gradient(135deg, rgba(99,195,255,.055), transparent 44%, rgba(154,110,255,.035));
+}
+.glass-strong {
+  background-image: linear-gradient(135deg, rgba(95,190,255,.09), rgba(7,18,39,.12) 48%, rgba(151,105,255,.055));
+}
+.holo-control {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid rgba(113, 207, 255, .30);
+  background: linear-gradient(135deg, rgba(26, 101, 170, .22), rgba(10, 25, 51, .58) 58%, rgba(100, 72, 170, .14));
+  color: #e6f7ff;
+  box-shadow: 0 0 0 1px rgba(77,183,255,.07), 0 5px 18px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.13);
+  backdrop-filter: blur(14px) saturate(150%);
+  -webkit-backdrop-filter: blur(14px) saturate(150%);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .22s ease, background .22s ease, color .18s ease;
+}
+.holo-control::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 15%, rgba(157,228,255,.12) 48%, transparent 72%);
+  transform: translateX(-115%);
+  transition: transform .55s ease;
+}
+.holo-control:hover {
+  transform: translateY(-1px);
+  border-color: rgba(121, 221, 255, .72);
+  color: #fff;
+  background: linear-gradient(135deg, rgba(31,126,210,.34), rgba(10,27,54,.68) 58%, rgba(120,83,205,.24));
+  box-shadow: 0 0 0 1px rgba(77,183,255,.18), 0 0 22px rgba(48,164,255,.22), 0 8px 24px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.18);
+}
+.holo-control:hover::before { transform: translateX(115%); }
+.holo-control:active { transform: translateY(0) scale(.985); }
+.holo-control:focus-visible {
+  outline: 2px solid rgba(119,220,255,.9);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px rgba(58,166,255,.16), 0 0 24px rgba(58,166,255,.24);
+}
+.holo-control:disabled { opacity: .48; cursor: not-allowed; transform: none; }
+.dashboard-profile-scene {
+  border-color: rgba(111, 207, 255, .42);
+  box-shadow: 0 20px 56px rgba(0,0,0,.38), 0 0 34px rgba(31,139,255,.11), inset 0 1px 0 rgba(255,255,255,.16);
+}
+.dashboard-profile-scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: .17;
+  background-image: linear-gradient(rgba(118,205,255,.20) 1px, transparent 1px), linear-gradient(90deg, rgba(118,205,255,.16) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(90deg, black, transparent 86%);
+}
+.dashboard-profile-scene::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  width: 38rem;
+  height: 22rem;
+  right: -15rem;
+  top: -12rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(57,164,255,.18), rgba(126,91,255,.07) 44%, transparent 70%);
+  filter: blur(12px);
+}
+footer {
+  background-image: linear-gradient(110deg, rgba(30,112,190,.08), transparent 35%, rgba(118,82,190,.07));
+  box-shadow: 0 -14px 38px rgba(0,0,0,.16);
+}
+@media (prefers-reduced-motion: reduce) {
+  .holo-control, .holo-control::before { transition: none; }
+  .holo-control:hover, .holo-control:active { transform: none; }
+}
