@@ -130,14 +130,87 @@ function Dashboard() {
   if (!authReady) return <div className="grid min-h-[55vh] place-items-center text-sm text-slate-400"><div className="flex items-center gap-3"><span className="size-2 animate-pulse rounded-full bg-sky-400"/>Securing your command session…</div></div>;
 
   return <div className="space-y-4 text-slate-200">
-    <section className="glass-strong overflow-hidden rounded-xl px-4 py-3">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="font-display text-[10px] font-black tracking-[.16em] text-sky-300">OPERATING PROMISE</span>
-        <p className="font-display text-[11px] font-bold uppercase tracking-[.12em] text-white sm:text-xs">SEE EVERYTHING <span className="text-sky-300">LOCALLY.</span> CONNECT EVERYTHING <span className="text-sky-300">GLOBALLY.</span> POWERED BY <span className="text-sky-300">INTELLIGENCE.</span></p>
-      </div>
-    </section>
+    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="min-w-0 space-y-4">
+        <section className="dashboard-profile-scene glass-strong overflow-hidden rounded-2xl p-4 sm:p-5">
+          <div className="relative z-10 flex flex-wrap items-center gap-4">
+            <div className="relative grid size-[104px] shrink-0 place-items-center">
+              <div className="absolute inset-1 rotate-45 rounded-[18px] border border-sky-300/70 bg-sky-300/10 shadow-[0_0_28px_rgba(56,189,248,.3)]"/>
+              <img src={`${import.meta.env.BASE_URL}frankmazerati.png`} alt="Frank Mazerati" onError={e => { e.currentTarget.style.display = "none"; }} className="relative size-[96px] border-2 border-sky-200/80 object-cover shadow-[0_0_24px_rgba(56,189,248,.28)]" style={{clipPath:"polygon(50% 0%,100% 50%,50% 100%,0% 50%)"}}/>
+              <span className="absolute bottom-1 right-0 size-3.5 rounded-full border-2 border-slate-950 bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,.8)]"/>
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-[10px] font-semibold uppercase tracking-[.2em] text-sky-200/80">{greeting} · YOUR COMMAND IS READY</div>
+              <h1 className="mt-1 font-display text-2xl font-black tracking-wide text-white sm:text-3xl">Frank Mazerati</h1>
+              <div className="mt-1 text-xs font-semibold text-sky-200">Founder & Chief Principal Architect</div>
+              <div className="mt-1 text-[10px] text-slate-200/80">Role: Global Admin <span className="mx-2 text-slate-400">|</span> Position: Chief Principal Architect and Design Engineer</div>
+              <p className="mt-2 text-[10px] text-slate-200/75">Every ticket you close makes someone's day easier.</p>
+            </div>
+            <div className="flex min-w-[150px] flex-col items-start gap-2 sm:items-end">
+              <span className="text-[9px] font-bold uppercase tracking-[.14em] text-slate-300/75">Availability</span>
+              <select aria-label="Availability status" value={availability} onChange={e => { const value = e.target.value as Availability; setAvailability(value); work.setAvailability(value); }} className={cn("h-8 max-w-[155px] rounded-full border px-3 text-[11px] font-bold outline-none backdrop-blur-md", statusTone[availability] || "border-sky-300/40 bg-sky-300/10 text-sky-100")}>
+                {AVAILABILITY.map(status => <option key={status} value={status} className="bg-[#0a172b] text-white">{status}</option>)}
+              </select>
+            </div>
+          </div>
 
-    <section className="flex flex-wrap items-center gap-2 rounded-xl border border-sky-300/15 bg-slate-950/10 px-2 py-2 backdrop-blur-md">
+          <div className="relative z-10 mt-4 grid grid-cols-2 gap-2 border-t border-white/15 pt-3 sm:grid-cols-4">
+            <div className="rounded-lg border border-white/10 bg-slate-950/30 px-3 py-2 backdrop-blur-md">
+              <div className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-[.14em] text-slate-300/75"><Clock3 className="size-3 text-sky-200"/> Local time</div>
+              <div className="mt-1 font-mono text-lg font-bold tabular-nums text-white">{now ? now.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) : "--:--"}</div>
+              <div className="text-[9px] text-slate-300/70">{now ? now.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"}) : "Local date"}</div>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-slate-950/30 px-3 py-2 backdrop-blur-md">
+              <div className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-[.14em] text-slate-300/75"><CloudSun className="size-3 text-sky-200"/> Local weather</div>
+              <div className="mt-1 text-xs font-semibold text-white">Not connected</div>
+              <div className="text-[9px] text-slate-300/70">Weather service required</div>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-slate-950/30 px-3 py-2 backdrop-blur-md">
+              <div className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-[.14em] text-slate-300/75"><CalendarDays className="size-3 text-sky-200"/> Time of day</div>
+              <div className="mt-1 text-xs font-semibold text-white">{greeting}</div>
+              <div className="text-[9px] text-slate-300/70">Based on local device time</div>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-slate-950/30 px-3 py-2 backdrop-blur-md">
+              <div className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-[.14em] text-slate-300/75"><ShieldCheck className="size-3 text-sky-200"/> Session</div>
+              <div className="mt-1 text-xs font-semibold text-emerald-200">Authenticated</div>
+              <div className="text-[9px] text-slate-300/70">Supabase session verified</div>
+            </div>
+          </div>
+
+          <div className="relative z-10 mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
+            <div className="font-display text-[9px] font-black uppercase tracking-[.13em] text-slate-100">SEE EVERYTHING <span className="text-sky-200">LOCALLY.</span> CONNECT EVERYTHING <span className="text-sky-200">GLOBALLY.</span> POWERED BY <span className="text-sky-200">INTELLIGENCE.</span></div>
+            <div className="text-[8px] font-bold uppercase tracking-[.12em] text-slate-300/70">ONE WORLD · ONE SYSTEM · ONE INTELLIGENT NETWORK</div>
+          </div>
+
+          <div className="relative z-10 mt-4 grid gap-3 border-t border-white/10 pt-3 lg:grid-cols-[1fr_1fr]">
+            <div>
+              <div className="mb-2 text-[9px] font-bold uppercase tracking-[.16em] text-sky-200">Identity record · system controlled</div>
+              <div className="space-y-1.5">
+                {[
+                  ["Company ID", "Assigned by IntelliStack IAM"],
+                  ["Global User ID", "Assigned by IntelliStack IAM"],
+                  ["Department", "Manager assigned"],
+                ].map(([label, value]) => <div key={label} className="flex items-center justify-between gap-3 border-b border-white/10 py-1.5"><span className="text-[10px] text-slate-300/70">{label}</span><span className="text-right text-[11px] font-semibold text-slate-100">{value}</span></div>)}
+              </div>
+            </div>
+            <div>
+              <div className="mb-2 text-[9px] font-bold uppercase tracking-[.16em] text-sky-200">Work contact · user managed</div>
+              <div className="space-y-1.5">
+                {[
+                  ["Work email", "Profile record"],
+                  ["Work phone", "Profile record"],
+                  ["Work location", "Profile record"],
+                ].map(([label, value]) => <div key={label} className="flex items-center justify-between gap-3 border-b border-white/10 py-1.5"><span className="text-[10px] text-slate-300/70">{label}</span><span className="text-right text-[11px] font-semibold text-slate-100">{value}</span></div>)}
+              </div>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-slate-950/30 px-3 py-2 backdrop-blur-md lg:col-span-2">
+              <div className="text-[9px] font-bold uppercase tracking-[.16em] text-sky-200">Manager · read-only reporting record</div>
+              <div className="mt-1 flex flex-wrap items-center justify-between gap-2"><span className="text-[11px] font-semibold text-slate-100">Assigned manager and manager contact</span><span className="text-[10px] text-slate-300/65">Populated from the organization reporting structure</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section className="flex flex-wrap items-center gap-2 rounded-xl border border-sky-300/15 bg-slate-950/10 px-2 py-2 backdrop-blur-md">
       <div className="mr-1 flex min-w-[105px] items-center gap-2 px-2">
         <Clock3 className="size-3.5 text-sky-300"/>
         <span className="font-display text-[9px] font-bold uppercase tracking-[.14em] text-slate-300">Global Time</span>
@@ -156,56 +229,6 @@ function Dashboard() {
         <button type="button" onClick={() => setClockExpanded(v => !v)} className="rounded-md border border-sky-300/20 px-2 py-1 text-[9px] font-semibold text-sky-200 hover:bg-sky-300/10">{clockExpanded ? "5 clocks" : "10 clocks"}</button>
       </div>
     </section>
-
-    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
-      <div className="min-w-0 space-y-4">
-        <section className="glass rounded-xl p-4">
-          <div className="flex flex-wrap items-start gap-4">
-            <div className="relative shrink-0">
-              <img src={`${import.meta.env.BASE_URL}frankmazerati.png`} alt="Frank Mazerati" onError={e => { e.currentTarget.style.display = "none"; }} className="size-[88px] rounded-xl border-2 border-sky-400/60 bg-[#101f38] object-cover shadow-[0_0_22px_rgba(56,189,248,.18)]"/>
-              <div className="absolute -bottom-1 -right-1 size-4 rounded-full border-2 border-[#0a172b] bg-emerald-400"/>
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-xs font-medium text-slate-400">{greeting},</div>
-              <h1 className="mt-0.5 font-display text-2xl font-black tracking-wide text-white">Frank Mazerati</h1>
-              <div className="mt-1 text-xs font-semibold text-sky-300">Founder & Chief Principal Architect</div>
-              <div className="mt-1 text-[11px] text-slate-400">Role: Global Admin <span className="mx-2 text-slate-600">|</span> Position: Chief Principal Architect and Design Engineer</div>
-              <p className="mt-2 text-[11px] text-slate-400">Every ticket you close makes someone's day easier.</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[9px] font-bold uppercase tracking-[.14em] text-slate-500">Availability</span>
-              <select aria-label="Availability status" value={availability} onChange={e => { const value = e.target.value as Availability; setAvailability(value); work.setAvailability(value); }} className={cn("h-8 max-w-[145px] rounded-full border px-3 text-[11px] font-bold outline-none", statusTone[availability] || "border-sky-400/30 bg-sky-400/10 text-sky-200")}>
-                {AVAILABILITY.map(status => <option key={status} value={status} className="bg-[#0a172b] text-white">{status}</option>)}
-              </select>
-            </div>
-          </div>
-          <div className="mt-4 grid gap-3 border-t border-sky-400/15 pt-3 lg:grid-cols-[1fr_1fr]">
-            <div>
-              <div className="mb-2 text-[9px] font-bold uppercase tracking-[.16em] text-sky-300">Identity record · system controlled</div>
-              <div className="space-y-1.5">
-                {[
-                  ["Company ID", "Assigned by IntelliStack IAM"],
-                  ["Global User ID", "Assigned by IntelliStack IAM"],
-                  ["Department", "Manager assigned"],
-                ].map(([label, value]) => <div key={label} className="flex items-center justify-between gap-3 border-b border-slate-700/50 py-1.5"><span className="text-[10px] text-slate-500">{label}</span><span className="text-right text-[11px] font-semibold text-slate-200">{value}</span></div>)}
-              </div>
-            </div>
-            <div>
-              <div className="mb-2 text-[9px] font-bold uppercase tracking-[.16em] text-sky-300">Work contact · user managed</div>
-              <div className="space-y-1.5">
-                {[
-                  ["Work email", "Profile record"],
-                  ["Work phone", "Profile record"],
-                  ["Work location", "Profile record"],
-                ].map(([label, value]) => <div key={label} className="flex items-center justify-between gap-3 border-b border-slate-700/50 py-1.5"><span className="text-[10px] text-slate-500">{label}</span><span className="text-right text-[11px] font-semibold text-slate-200">{value}</span></div>)}
-              </div>
-            </div>
-            <div className="rounded-lg border border-sky-400/15 bg-[#071225] px-3 py-2 lg:col-span-2">
-              <div className="text-[9px] font-bold uppercase tracking-[.16em] text-sky-300">Manager · read-only reporting record</div>
-              <div className="mt-1 flex flex-wrap items-center justify-between gap-2"><span className="text-[11px] font-semibold text-slate-200">Assigned manager and manager contact</span><span className="text-[10px] text-slate-500">Populated from the organization reporting structure</span></div>
-            </div>
-          </div>
-        </section>
 
         <section className="glass overflow-hidden rounded-xl px-3 py-2.5">
           <div className="mb-2 flex items-center justify-between gap-2">
