@@ -1,9 +1,9 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
-  Bell, CalendarDays, CloudSun, LogOut, Mail, Menu, MessageSquare,
-  Search, Settings, ShieldCheck, UserRound,
+  Bell, CalendarDays, LogOut, Mail, Menu, MessageSquare,
+  Search, Settings2, ShieldCheck, UserRound,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
@@ -11,19 +11,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useWork } from "@/lib/work-context";
+import { NAV, slugify } from "@/lib/nav";
 import { GlobalSearch } from "./GlobalSearch";
 import { HelpBuddyLauncher, HelpBuddySheet } from "./HelpBuddy";
 import { NavMenu } from "./NavMenu";
-
-function useNow() {
-  const [now, setNow] = useState<Date | null>(null);
-  useEffect(() => {
-    setNow(new Date());
-    const timer = setInterval(() => setNow(new Date()), 15000);
-    return () => clearInterval(timer);
-  }, []);
-  return now;
-}
 
 const FOOTER_COLUMNS = [
   { title: "COMMAND", links: ["Global Command Center", "Bring the Work to You", "IntelliDesk", "IntelliChat", "IntelliCalendar"] },
@@ -33,85 +24,113 @@ const FOOTER_COLUMNS = [
   { title: "INTELLISTACK", links: ["About IntelliStack", "Our Ecosystem", "Knowledge Center", "Help & Support", "Contact"] },
 ];
 
+const FOOTER_DESTINATIONS: Record<string, [string, string, string]> = {
+  "Bring the Work to You": ["home-and-command-center", "command-center", "bring-the-work-to-you"],
+  "IntelliDesk": ["service-desk-and-enterprise-operations", "intellidesk-overview", "intellidesk-dashboard"],
+  "IntelliChat": ["productivity-and-collaboration", "intellistack-collaboration-tools", "intellichat"],
+  "IntelliCalendar": ["productivity-and-collaboration", "intellistack-collaboration-tools", "intellicalendar"],
+  "IntelliStaff": ["employee-and-manager-workspace", "workforce-experiences", "intellistaff-overview"],
+  "IntelliHire": ["employee-and-manager-workspace", "workforce-experiences", "intellihire-overview"],
+  "IntelliWork": ["employee-and-manager-workspace", "workforce-experiences", "intelliwork-overview"],
+  "Employees": ["employee-and-manager-workspace", "people-and-organization", "employees"],
+  "Contractors": ["employee-and-manager-workspace", "people-and-organization", "contractors"],
+  "Security Center": ["security-risk-and-governance", "security-overview", "security-operations-dashboard"],
+  "Compliance": ["security-risk-and-governance", "compliance-management", "compliance-overview"],
+  "Audit & Approvals": ["security-risk-and-governance", "audit-management", "audit-overview"],
+  "Policies": ["security-risk-and-governance", "policies-and-procedures", "policies"],
+  "Service Status": ["account-and-administration", "account-and-system-administration", "service-status"],
+  "Knowledge Center": ["account-and-administration", "getting-started", "getting-started-with-your-command-center"],
+};
+
 export function AppShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const now = useNow();
   const w = useWork();
   const navigate = useNavigate();
 
   const go = (section: string, group: string, page: string) =>
     navigate({ to: "/m/$section/$group/$page", params: { section, group, page } });
 
+  const footerGo = (label: string) => {
+    if (label === "Global Command Center") {
+      navigate({ to: "/" });
+      return;
+    }
+    if (label === "Help & Support") {
+      w.openHelpBuddy();
+      return;
+    }
+    const destination = FOOTER_DESTINATIONS[label];
+    if (destination) go(...destination);
+    else {
+      const page = slugify(label);
+      const match = NAV.flatMap(section => section.groups.flatMap(group =>
+        group.pages.filter(item => item.slug === page).map(item => [section.slug, group.slug, item.slug] as [string, string, string])
+      ))[0];
+      if (match) go(...match);
+    }
+  };
+
+  const utilityClass = "relative grid size-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-slate-950/25 text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-md transition hover:border-sky-300/45 hover:bg-sky-400/10 hover:text-sky-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70";
+
   return (
     <div className="min-h-dvh bg-page text-foreground">
-      <header className="command-header sticky top-0 z-30 border-b border-sky-400/25 glass-strong shadow-[0_8px_30px_rgba(0,0,0,.35)]">
-        <div className="mx-auto grid min-h-[82px] max-w-[1800px] grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-3 sm:px-5">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" aria-label="Open command navigation" onClick={() => setMenuOpen(true)} className="text-sky-200 hover:bg-sky-400/10 hover:text-white">
-              <Menu className="size-6" />
+      <header className="command-header sticky top-0 z-30 border-b border-sky-300/25 shadow-[0_8px_30px_rgba(0,0,0,.35)]">
+        <div className="mx-auto flex min-h-[68px] max-w-[1800px] items-center justify-between gap-2 px-3 sm:px-5">
+          <div className="flex min-w-0 items-center gap-2">
+            <Button variant="ghost" size="icon" aria-label="Open command navigation" onClick={() => setMenuOpen(true)} className="size-10 rounded-xl border border-sky-300/25 bg-slate-950/30 text-sky-100 shadow-[inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-md hover:bg-sky-400/15 hover:text-white">
+              <Menu className="size-5" strokeWidth={1.8} />
             </Button>
-            <div className="hidden items-center gap-2 lg:flex">
-              <div className="grid size-9 place-items-center rounded-lg border border-sky-400/40 bg-sky-400/10 text-sky-300"><ShieldCheck className="size-5" /></div>
-              <div className="text-[10px] font-bold uppercase leading-[1.45] tracking-[.14em] text-slate-300">SECURED<br/>TRUSTED<br/>COMPLIANT</div>
+            <div className="hidden items-center gap-2 sm:flex">
+              <span className="grid size-8 place-items-center rounded-lg border border-sky-300/35 bg-sky-400/10 text-sky-200"><ShieldCheck className="size-[18px]" strokeWidth={1.7}/></span>
+              <span className="hidden font-display text-[8px] font-bold uppercase leading-relaxed tracking-[.15em] text-slate-300 md:block">SECURED<br/>TRUSTED<br/>COMPLIANT</span>
             </div>
           </div>
 
-          <Link to="/" className="text-center leading-none">
-            <div className="hidden text-[9px] font-semibold uppercase tracking-[.32em] text-slate-400 sm:block">IntelliStack Systems Presents</div>
-            <div className="mt-1 font-display text-lg font-black tracking-[.07em] text-white sm:text-[27px]">
-              MAXIMUS <span className="text-sky-400">OPTIMUS</span>
-            </div>
-            <div className="mt-1 font-display text-[9px] font-semibold tracking-[.34em] text-sky-200 sm:text-[11px]">GLOBAL COMMAND CENTER</div>
+          <Link to="/" aria-label="Return to command center" className="min-w-0 flex-1 px-1 text-center">
+            <span className="block truncate font-display text-[13px] font-black uppercase tracking-[.12em] text-white drop-shadow-[0_2px_12px_rgba(56,189,248,.32)] sm:text-lg sm:tracking-[.18em]">
+              Welcome to Your <span className="text-sky-300">Command Center</span>
+            </span>
+            <span className="mt-1 hidden font-display text-[8px] font-semibold uppercase tracking-[.24em] text-slate-300/80 sm:block">ONE WORLD · ONE SYSTEM · ONE INTELLIGENT NETWORK</span>
           </Link>
 
-          <div className="flex items-center justify-end gap-0.5 sm:gap-1">
-            <div className="mr-2 hidden text-right xl:block">
-              <div className="font-mono text-sm font-bold tabular-nums text-white">{now ? now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "--:--"}</div>
-              <div className="text-[10px] text-slate-400">{now ? now.toLocaleDateString([], { weekday: "short", month: "short", day: "numeric" }) : "Local time"}</div>
-            </div>
-            <Button variant="ghost" size="icon" aria-label="Search" onClick={() => w.setSearchOpen(true)} className="text-slate-300 hover:bg-sky-400/10 hover:text-sky-200"><Search className="size-[18px]"/></Button>
+          <nav aria-label="Quick actions" className="flex shrink-0 items-center justify-end gap-1">
+            <button type="button" aria-label="Search" title="Search" onClick={() => w.setSearchOpen(true)} className={utilityClass}><Search className="size-[17px]" strokeWidth={1.7}/></button>
             <Popover>
-              <PopoverTrigger asChild><Button variant="ghost" size="icon" aria-label="Notifications" className="text-slate-300 hover:bg-sky-400/10 hover:text-sky-200"><Bell className="size-[18px]"/></Button></PopoverTrigger>
-              <PopoverContent align="end" className="w-64 border-sky-400/20 bg-[#0b1830] text-sm text-slate-100"><div className="font-semibold">Notifications</div><p className="mt-1 text-xs text-slate-400">Your notification stream will appear here.</p></PopoverContent>
+              <PopoverTrigger asChild><button type="button" aria-label="Notifications" title="Notifications" className={utilityClass}><Bell className="size-[17px]" strokeWidth={1.7}/><span className="absolute right-2 top-2 size-1.5 rounded-full bg-sky-300 shadow-[0_0_8px_rgba(56,189,248,.9)]"/></button></PopoverTrigger>
+              <PopoverContent align="end" className="w-64 border-sky-300/25 bg-[#0a172b]/95 text-sm text-slate-100 backdrop-blur-xl"><div className="font-semibold">Notifications</div><p className="mt-1 text-xs text-slate-400">Your notification stream will appear here when connected.</p></PopoverContent>
             </Popover>
-            <Button variant="ghost" size="icon" aria-label="Email" onClick={() => go("productivity-and-collaboration","intellistack-collaboration-tools","email")} className="hidden text-slate-300 hover:bg-sky-400/10 hover:text-sky-200 sm:inline-flex"><Mail className="size-[18px]"/></Button>
-            <Button variant="ghost" size="icon" aria-label="Messages" onClick={() => go("productivity-and-collaboration","intellistack-collaboration-tools","intellichat")} className="text-slate-300 hover:bg-sky-400/10 hover:text-sky-200"><MessageSquare className="size-[18px]"/></Button>
-            <Button variant="ghost" size="icon" aria-label="Calendar" onClick={() => go("productivity-and-collaboration","intellistack-collaboration-tools","intellicalendar")} className="hidden text-slate-300 hover:bg-sky-400/10 hover:text-sky-200 sm:inline-flex"><CalendarDays className="size-[18px]"/></Button>
-            <Button variant="ghost" size="icon" aria-label="Settings" onClick={() => go("account-and-administration","account-and-system-administration","system-settings")} className="hidden text-slate-300 hover:bg-sky-400/10 hover:text-sky-200 sm:inline-flex"><Settings className="size-[18px]"/></Button>
+            <button type="button" aria-label="Email" title="Email" onClick={() => go("productivity-and-collaboration","intellistack-collaboration-tools","email")} className={utilityClass + " hidden sm:grid"}><Mail className="size-[17px]" strokeWidth={1.7}/></button>
+            <button type="button" aria-label="Messages" title="Messages" onClick={() => go("productivity-and-collaboration","intellistack-collaboration-tools","intellichat")} className={utilityClass}><MessageSquare className="size-[17px]" strokeWidth={1.7}/></button>
+            <button type="button" aria-label="Calendar" title="Calendar" onClick={() => go("productivity-and-collaboration","intellistack-collaboration-tools","intellicalendar")} className={utilityClass + " hidden sm:grid"}><CalendarDays className="size-[17px]" strokeWidth={1.7}/></button>
+            <button type="button" aria-label="Settings" title="Settings" onClick={() => go("account-and-administration","account-and-system-administration","system-settings")} className={utilityClass + " hidden md:grid"}><Settings2 className="size-[17px]" strokeWidth={1.7}/></button>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" aria-label="Profile menu" className="text-slate-300 hover:bg-sky-400/10 hover:text-sky-200"><UserRound className="size-[18px]"/></Button></DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 border-sky-400/20 bg-[#0b1830] text-slate-100">
-                <DropdownMenuLabel>Frank Mazerati<div className="text-xs font-normal text-slate-400">{w.availability}</div></DropdownMenuLabel>
+              <DropdownMenuTrigger asChild><button type="button" aria-label="Profile menu" title="Profile" className={utilityClass}><UserRound className="size-[17px]" strokeWidth={1.7}/></button></DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 border-sky-300/25 bg-[#0a172b]/95 text-slate-100 backdrop-blur-xl">
+                <DropdownMenuLabel>My Command Profile<div className="text-xs font-normal text-slate-400">{w.availability}</div></DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-slate-700"/>
                 <DropdownMenuItem onSelect={() => go("identity-and-access-management","users-and-identity","user-profiles")}><UserRound className="mr-2 size-4"/>My profile</DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => go("governance","administration","system-configuration")}><Settings className="mr-2 size-4"/>Settings</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => go("account-and-administration","account-and-system-administration","preferences")}><Settings2 className="mr-2 size-4"/>Preferences</DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-slate-700"/>
                 <DropdownMenuItem onSelect={() => navigate({ to: "/login" })}><LogOut className="mr-2 size-4"/>Sign out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button variant="ghost" size="icon" aria-label="Sign out" className="hidden text-slate-300 hover:bg-red-500/10 hover:text-red-300 sm:inline-flex" onClick={() => navigate({ to: "/login" })}><LogOut className="size-[18px]"/></Button>
-          </div>
-        </div>
-        <div className="border-t border-sky-400/10 bg-[#071326]">
-          <div className="mx-auto flex max-w-[1800px] items-center justify-between gap-3 px-4 py-1.5 sm:px-6">
-            <div className="font-display text-[9px] font-semibold uppercase tracking-[.17em] text-slate-400">ONE WORLD <span className="text-sky-400">•</span> ONE SYSTEM <span className="text-sky-400">•</span> ONE INTELLIGENT NETWORK</div>
-            <div className="hidden items-center gap-2 text-[9px] font-semibold tracking-[.12em] text-slate-400 sm:flex"><CloudSun className="size-3.5 text-sky-300"/> GLOBAL OPERATIONS</div>
-          </div>
+            <button type="button" aria-label="Sign out" title="Sign out" onClick={() => navigate({to:"/login"})} className={utilityClass + " hidden lg:grid"}><LogOut className="size-[17px]" strokeWidth={1.7}/></button>
+          </nav>
         </div>
       </header>
 
       <main className="mx-auto max-w-[1800px] px-3 pb-10 pt-4 sm:px-5">{children}</main>
 
-      <footer className="border-t border-sky-400/20 bg-[#030a16] text-slate-300">
+      <footer className="border-t border-sky-300/20 bg-[#030a16]/95 text-slate-300">
         <div className="mx-auto grid max-w-[1800px] gap-7 px-5 py-8 sm:grid-cols-2 lg:grid-cols-5">
           {FOOTER_COLUMNS.map((column) => (
             <div key={column.title}>
               <h2 className="mb-3 font-display text-[10px] font-bold tracking-[.2em] text-sky-300">{column.title}</h2>
-              <ul className="space-y-2">{column.links.map((label) => <li key={label}><button type="button" onClick={() => label === "Global Command Center" ? navigate({to:"/"}) : label === "Help & Support" ? w.openHelpBuddy() : undefined} className="text-left text-xs text-slate-400 transition hover:text-white">{label}</button></li>)}</ul>
+              <ul className="space-y-2">{column.links.map((label) => <li key={label}><button type="button" onClick={() => footerGo(label)} className="text-left text-xs text-slate-400 transition hover:text-sky-200">{label}</button></li>)}</ul>
             </div>
           ))}
         </div>
-        <div className="border-t border-sky-400/10 px-4 py-3 text-center text-[10px] tracking-wide text-slate-500">© 2026 IntelliStack Systems <span className="mx-2 text-sky-500">•</span> ONE WORLD. ONE SYSTEM. ONE INTELLIGENT NETWORK.</div>
+        <div className="border-t border-sky-300/10 px-4 py-3 text-center text-[10px] tracking-wide text-slate-500">© 2026 IntelliStack Systems <span className="mx-2 text-sky-500">•</span> ONE WORLD. ONE SYSTEM. ONE INTELLIGENT NETWORK.</div>
       </footer>
 
       <NavMenu open={menuOpen} onOpenChange={setMenuOpen}/>
