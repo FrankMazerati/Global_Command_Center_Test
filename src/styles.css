@@ -289,3 +289,19 @@ footer {
   .holo-control, .holo-control::before { transition: none; }
   .holo-control:hover, .holo-control:active { transform: none; }
 }
+
+/* Full-screen command-center image; content floats above it as light, see-through glass. */
+html, body, #root { min-height: 100%; }
+html, body { background: transparent !important; }
+body { position: relative; isolation: isolate; color: #f8fbff; }
+body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background-image: linear-gradient(110deg, rgba(5,18,35,.30), rgba(5,18,35,.12) 48%, rgba(5,18,35,.28)), url("https://raw.githubusercontent.com/FrankMazerati/Global_Command_Center_Test/main/Meta_AI_886725249_1470003438386201_7166575789944365800_n_20261103_061537.webp"); background-position: center; background-size: cover; background-repeat: no-repeat; }
+.command-dashboard { text-shadow: 0 1px 8px rgba(3,12,24,.42); }
+.command-dashboard .glass, .command-dashboard .glass-strong { background-color: rgba(222,238,250,.13); background-image: linear-gradient(135deg,rgba(225,242,255,.12),rgba(206,226,244,.045) 55%,rgba(255,255,255,.06)); border-color: rgba(225,242,255,.24); box-shadow: 0 10px 30px rgba(3,12,24,.12), inset 0 1px 0 rgba(255,255,255,.20); backdrop-filter: blur(13px) saturate(135%); -webkit-backdrop-filter: blur(13px) saturate(135%); }
+.command-dashboard .dashboard-profile-scene { background: rgba(218,235,248,.12); background-image: linear-gradient(110deg,rgba(220,238,252,.14),rgba(215,232,247,.06)); border-color: rgba(230,245,255,.30); box-shadow: 0 12px 34px rgba(3,12,24,.13), inset 0 1px 0 rgba(255,255,255,.20); }
+.command-dashboard .dashboard-profile-scene::before, .command-dashboard .dashboard-profile-scene::after { opacity: .08; }
+.command-dashboard .rounded-lg.border.border-white\/10.bg-slate-950\/30, .command-dashboard .rounded-lg.border.border-white\/10.bg-slate-950\/30.backdrop-blur-md { background: transparent; border-color: rgba(230,245,255,.12); }
+.command-dashboard .bg-\[\#071225\] { background: rgba(225,240,252,.08) !important; }
+.command-dashboard .rounded-xl.border.border-sky-400\/25.bg-\[\#0a172b\] { background: rgba(220,238,250,.13); backdrop-filter: blur(14px); }
+.command-dashboard .holo-control { background: rgba(220,238,250,.13); border-color: rgba(225,242,255,.25); box-shadow: inset 0 1px 0 rgba(255,255,255,.18); }
+.command-dashboard .holo-control:hover { background: rgba(220,238,250,.23); border-color: rgba(225,242,255,.52); }
+@media (max-width: 767px) { .command-dashboard .dashboard-profile-scene { padding: .65rem; } .command-dashboard .dashboard-profile-scene .relative.z-10.mt-2.flex.flex-wrap { gap: .35rem .75rem; } }
