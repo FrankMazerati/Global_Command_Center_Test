@@ -129,88 +129,52 @@ function Dashboard() {
 
   if (!authReady) return <div className="grid min-h-[55vh] place-items-center text-sm text-slate-400"><div className="flex items-center gap-3"><span className="size-2 animate-pulse rounded-full bg-sky-400"/>Securing your command session…</div></div>;
 
-  return <div className="space-y-4 text-slate-200">
+  return <div className="command-dashboard space-y-3 text-slate-100">
     <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
       <div className="min-w-0 space-y-4">
-        <section className="dashboard-profile-scene glass-strong overflow-hidden rounded-2xl p-4 sm:p-5">
+        <section className="dashboard-profile-scene glass-strong overflow-hidden rounded-xl p-2.5 sm:p-3">
           <div className="relative z-10 flex flex-wrap items-center gap-4">
-            <div className="relative grid size-[104px] shrink-0 place-items-center">
-              <div className="absolute inset-1 rotate-45 rounded-[18px] border border-sky-300/70 bg-sky-300/10 shadow-[0_0_28px_rgba(56,189,248,.3)]"/>
-              <img src={`${import.meta.env.BASE_URL}frankmazerati.png`} alt="Frank Mazerati" onError={e => { e.currentTarget.style.display = "none"; }} className="relative size-[96px] border-2 border-sky-200/80 object-cover shadow-[0_0_24px_rgba(56,189,248,.28)]" style={{clipPath:"polygon(50% 0%,100% 50%,50% 100%,0% 50%)"}}/>
+            <div className="relative grid size-[68px] shrink-0 place-items-center">
+              <div className="absolute inset-1 rotate-45 rounded-[14px] border border-sky-200/60 bg-sky-100/10 shadow-[0_0_18px_rgba(56,189,248,.2)]"/>
+              <img src={`${import.meta.env.BASE_URL}frankmazerati.png`} alt="Frank Mazerati" onError={e => { e.currentTarget.style.display = "none"; }} className="relative size-[62px] border border-sky-100/70 object-cover shadow-[0_0_16px_rgba(56,189,248,.2)]" style={{clipPath:"polygon(50% 0%,100% 50%,50% 100%,0% 50%)"}}/>
               <span className="absolute bottom-1 right-0 size-3.5 rounded-full border-2 border-slate-950 bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,.8)]"/>
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-[10px] font-semibold uppercase tracking-[.2em] text-sky-200/80">{greeting} · YOUR COMMAND IS READY</div>
-              <h1 className="mt-1 font-display text-2xl font-black tracking-wide text-white sm:text-3xl">Frank Mazerati</h1>
+              <h1 className="mt-0.5 font-display text-lg font-black tracking-wide text-white sm:text-xl">Frank Mazerati</h1>
               <div className="mt-1 text-xs font-semibold text-sky-200">Founder & Chief Principal Architect</div>
               <div className="mt-1 text-[10px] text-slate-200/80">Role: Global Admin <span className="mx-2 text-slate-400">|</span> Position: Chief Principal Architect and Design Engineer</div>
               <p className="mt-2 text-[10px] text-slate-200/75">Every ticket you close makes someone's day easier.</p>
             </div>
-            <div className="flex min-w-[150px] flex-col items-start gap-2 sm:items-end">
+            <div className="flex min-w-0 flex-col items-start gap-1 sm:items-end">
               <span className="text-[9px] font-bold uppercase tracking-[.14em] text-slate-300/75">Availability</span>
-              <select aria-label="Availability status" value={availability} onChange={e => { const value = e.target.value as Availability; setAvailability(value); work.setAvailability(value); }} className={cn("h-8 max-w-[155px] rounded-full border px-3 text-[11px] font-bold outline-none backdrop-blur-md", statusTone[availability] || "border-sky-300/40 bg-sky-300/10 text-sky-100")}>
+              <select aria-label="Availability status" value={availability} onChange={e => { const value = e.target.value as Availability; setAvailability(value); work.setAvailability(value); }} className={cn("h-7 max-w-[145px] rounded-full border px-2.5 text-[10px] font-bold outline-none backdrop-blur-md", statusTone[availability] || "border-sky-300/40 bg-sky-300/10 text-sky-100")}>
                 {AVAILABILITY.map(status => <option key={status} value={status} className="bg-[#0a172b] text-white">{status}</option>)}
               </select>
             </div>
           </div>
 
-          <div className="relative z-10 mt-4 grid grid-cols-2 gap-2 border-t border-white/15 pt-3 sm:grid-cols-4">
-            <div className="rounded-lg border border-white/10 bg-slate-950/30 px-3 py-2 backdrop-blur-md">
-              <div className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-[.14em] text-slate-300/75"><Clock3 className="size-3 text-sky-200"/> Local time</div>
-              <div className="mt-1 font-mono text-lg font-bold tabular-nums text-white">{now ? now.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) : "--:--"}</div>
-              <div className="text-[9px] text-slate-300/70">{now ? now.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"}) : "Local date"}</div>
-            </div>
-            <div className="rounded-lg border border-white/10 bg-slate-950/30 px-3 py-2 backdrop-blur-md">
-              <div className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-[.14em] text-slate-300/75"><CloudSun className="size-3 text-sky-200"/> Local weather</div>
-              <div className="mt-1 text-xs font-semibold text-white">Not connected</div>
-              <div className="text-[9px] text-slate-300/70">Weather service required</div>
-            </div>
-            <div className="rounded-lg border border-white/10 bg-slate-950/30 px-3 py-2 backdrop-blur-md">
-              <div className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-[.14em] text-slate-300/75"><CalendarDays className="size-3 text-sky-200"/> Time of day</div>
-              <div className="mt-1 text-xs font-semibold text-white">{greeting}</div>
-              <div className="text-[9px] text-slate-300/70">Based on local device time</div>
-            </div>
-            <div className="rounded-lg border border-white/10 bg-slate-950/30 px-3 py-2 backdrop-blur-md">
-              <div className="flex items-center gap-1.5 text-[8px] font-bold uppercase tracking-[.14em] text-slate-300/75"><ShieldCheck className="size-3 text-sky-200"/> Session</div>
-              <div className="mt-1 text-xs font-semibold text-emerald-200">Authenticated</div>
-              <div className="text-[9px] text-slate-300/70">Supabase session verified</div>
-            </div>
+          <div className="relative z-10 mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-white/15 pt-2 text-[9px] text-slate-100/85">
+            <span className="inline-flex items-center gap-1"><Clock3 className="size-3 text-sky-200"/>Local <strong className="font-mono text-[12px] text-white tabular-nums">{now ? now.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) : "--:--"}</strong></span>
+            <span className="text-slate-200/65">{now ? now.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"}) : "Local date"}</span>
+            <span className="inline-flex items-center gap-1"><CloudSun className="size-3 text-sky-200"/>Weather: <strong className="font-semibold text-white">Not connected</strong></span>
+            <span className="inline-flex items-center gap-1"><ShieldCheck className="size-3 text-emerald-200"/>Authenticated</span>
           </div>
 
-          <div className="relative z-10 mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-3">
+          <div className="relative z-10 mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-2">
             <div className="font-display text-[9px] font-black uppercase tracking-[.13em] text-slate-100">SEE EVERYTHING <span className="text-sky-200">LOCALLY.</span> CONNECT EVERYTHING <span className="text-sky-200">GLOBALLY.</span> POWERED BY <span className="text-sky-200">INTELLIGENCE.</span></div>
             <div className="text-[8px] font-bold uppercase tracking-[.12em] text-slate-300/70">ONE WORLD · ONE SYSTEM · ONE INTELLIGENT NETWORK</div>
           </div>
 
-          <div className="relative z-10 mt-4 grid gap-3 border-t border-white/10 pt-3 lg:grid-cols-[1fr_1fr]">
-            <div>
-              <div className="mb-2 text-[9px] font-bold uppercase tracking-[.16em] text-sky-200">Identity record · system controlled</div>
-              <div className="space-y-1.5">
-                {[
-                  ["Company ID", "Assigned by IntelliStack IAM"],
-                  ["Global User ID", "Assigned by IntelliStack IAM"],
-                  ["Department", "Manager assigned"],
-                ].map(([label, value]) => <div key={label} className="flex items-center justify-between gap-3 border-b border-white/10 py-1.5"><span className="text-[10px] text-slate-300/70">{label}</span><span className="text-right text-[11px] font-semibold text-slate-100">{value}</span></div>)}
-              </div>
-            </div>
-            <div>
-              <div className="mb-2 text-[9px] font-bold uppercase tracking-[.16em] text-sky-200">Work contact · user managed</div>
-              <div className="space-y-1.5">
-                {[
-                  ["Work email", "Profile record"],
-                  ["Work phone", "Profile record"],
-                  ["Work location", "Profile record"],
-                ].map(([label, value]) => <div key={label} className="flex items-center justify-between gap-3 border-b border-white/10 py-1.5"><span className="text-[10px] text-slate-300/70">{label}</span><span className="text-right text-[11px] font-semibold text-slate-100">{value}</span></div>)}
-              </div>
-            </div>
-            <div className="rounded-lg border border-white/10 bg-slate-950/30 px-3 py-2 backdrop-blur-md lg:col-span-2">
-              <div className="text-[9px] font-bold uppercase tracking-[.16em] text-sky-200">Manager · read-only reporting record</div>
-              <div className="mt-1 flex flex-wrap items-center justify-between gap-2"><span className="text-[11px] font-semibold text-slate-100">Assigned manager and manager contact</span><span className="text-[10px] text-slate-300/65">Populated from the organization reporting structure</span></div>
-            </div>
+          <div className="relative z-10 mt-2 flex flex-wrap gap-x-4 gap-y-1 border-t border-white/10 pt-2 text-[9px] text-slate-100/85">
+            <span>Company ID: <strong className="text-white">Assigned by IntelliStack IAM</strong></span>
+            <span>User ID: <strong className="text-white">Assigned by IntelliStack IAM</strong></span>
+            <span>Department: <strong className="text-white">Manager assigned</strong></span>
+            <span>Work email / phone / location: <strong className="text-white">Profile record</strong></span>
           </div>
         </section>
 
-        <section className="flex flex-wrap items-center gap-2 rounded-xl border border-sky-300/15 bg-slate-950/10 px-2 py-2 backdrop-blur-md">
+        <section className="glass flex flex-wrap items-center gap-2 rounded-xl px-2 py-1.5 backdrop-blur-xl">
       <div className="mr-1 flex min-w-[105px] items-center gap-2 px-2">
         <Clock3 className="size-3.5 text-sky-300"/>
         <span className="font-display text-[9px] font-bold uppercase tracking-[.14em] text-slate-300">Global Time</span>
@@ -230,7 +194,7 @@ function Dashboard() {
       </div>
     </section>
 
-        <section className="glass overflow-hidden rounded-xl px-3 py-2.5">
+        <section className="glass overflow-hidden rounded-lg px-2.5 py-2">
           <div className="mb-2 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 font-display text-[9px] font-black uppercase tracking-[.16em] text-sky-300"><TrendingUp className="size-3.5"/> Market Watch</div>
             <span className="text-[8px] font-semibold uppercase tracking-wider text-amber-300">Live data connector required</span>
@@ -246,7 +210,7 @@ function Dashboard() {
         <Panel title="Quick Picks" icon={Sparkles} action={<button type="button" onClick={() => setPickEditor(v => !v)} className="inline-flex items-center gap-1 rounded-md border border-sky-400/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-300 hover:bg-sky-400/10">{pickEditor ? "Finish" : <><Plus className="size-3"/> Manage</>}</button>}>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
             {picks.map((pick, index) => <div key={pick.label} draggable={pickEditor} onDragStart={() => setPickDrag(index)} onDragOver={e => { if (pickEditor) e.preventDefault(); }} onDrop={e => { e.preventDefault(); if (pickDrag !== null) setPicks(items => reorder(items, pickDrag, index)); setPickDrag(null); }} className={cn("group relative", pickEditor && "cursor-grab", pickDrag === index && "opacity-40")}>
-              <Link to="/m/$section/$group/$page" params={{section:pick.section,group:pick.group,page:pick.page}} className="flex min-h-[54px] items-center gap-2 rounded-lg border border-sky-400/20 bg-[#071225] px-3 py-2 text-[11px] font-semibold text-slate-200 transition hover:border-sky-300/60 hover:bg-[#102542]">
+              <Link to="/m/$section/$group/$page" params={{section:pick.section,group:pick.group,page:pick.page}} className="holo-control flex min-h-[38px] items-center gap-2 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-slate-100 transition">
                 {pickEditor ? <GripVertical className="size-3 shrink-0 text-sky-400"/> : pickIcon(pick.icon)}
                 <span className="leading-tight">{pick.label}</span>
               </Link>
@@ -257,7 +221,7 @@ function Dashboard() {
         </Panel>
 
         <Panel title="Bring the Work to You" icon={Activity} action={<span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-300">Awaiting live data connection</span>}>
-          <div className="mb-3 flex flex-wrap gap-1.5">{WORK_TABS.map(tab => <button key={tab} type="button" onClick={() => setWorkTab(tab)} className={cn("rounded-md border px-3 py-1.5 text-[10px] font-bold", workTab === tab ? "border-sky-400/50 bg-sky-400/15 text-sky-200" : "border-slate-700 bg-[#071225] text-slate-400 hover:text-white")}>{tab}</button>)}</div>
+          <div className="mb-2 flex flex-wrap gap-1">{WORK_TABS.map(tab => <button key={tab} type="button" onClick={() => setWorkTab(tab)} className={cn("rounded-md border px-2.5 py-1 text-[9px] font-bold", workTab === tab ? "border-sky-200/50 bg-sky-200/15 text-white" : "border-white/20 bg-white/5 text-slate-200/75 hover:bg-white/10")}>{tab}</button>)}</div>
           <div className="rounded-lg border border-dashed border-sky-400/20 bg-[#071225] px-4 py-6 text-center"><div className="mx-auto mb-2 grid size-9 place-items-center rounded-full border border-sky-400/25 bg-sky-400/10"><BriefcaseBusiness className="size-4 text-sky-300"/></div><div className="text-xs font-semibold text-slate-200">{workTab}</div><p className="mt-1 text-[10px] text-slate-500">Role-based work items will appear here when ticket and workflow records are connected.</p>{work.activeTicketId && <Link to="/m/$section/$group/$page" params={{section:"service-desk-and-enterprise-operations",group:"ticket-management",page:"active-ticket-workspace"}} className="mt-3 inline-block text-xs font-semibold text-sky-300 hover:underline">Continue {work.activeTicketId}</Link>}</div>
         </Panel>
 
