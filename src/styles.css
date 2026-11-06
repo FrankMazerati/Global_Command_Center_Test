@@ -137,8 +137,8 @@
 .command-header {
   background-color: rgba(3, 10, 24, .78);
   background-image:
-    linear-gradient(90deg, rgba(3, 10, 24, .88) 0%, rgba(3, 10, 24, .54) 42%, rgba(3, 10, 24, .76) 100%),
-    linear-gradient(180deg, rgba(3, 10, 24, .14) 0%, rgba(3, 10, 24, .76) 100%),
+    linear-gradient(90deg, rgba(3, 10, 24, .54) 0%, rgba(3, 10, 24, .24) 42%, rgba(3, 10, 24, .44) 100%),
+    linear-gradient(180deg, rgba(3, 10, 24, .06) 0%, rgba(3, 10, 24, .42) 100%),
     url("https://raw.githubusercontent.com/FrankMazerati/Global_Command_Center_Test/main/Meta_AI_886725249_1470003438386201_7166575789944365800_n_20261103_061537.webp");
   background-position: center 46%;
   background-size: cover;
@@ -159,8 +159,8 @@
   isolation: isolate;
   background-color: rgba(4, 14, 30, .48);
   background-image:
-    linear-gradient(100deg, rgba(3, 10, 24, .74) 0%, rgba(3, 10, 24, .48) 52%, rgba(3, 10, 24, .66) 100%),
-    linear-gradient(180deg, rgba(3, 10, 24, .10) 0%, rgba(3, 10, 24, .62) 100%),
+    linear-gradient(100deg, rgba(3, 10, 24, .52) 0%, rgba(3, 10, 24, .28) 52%, rgba(3, 10, 24, .46) 100%),
+    linear-gradient(180deg, rgba(3, 10, 24, .04) 0%, rgba(3, 10, 24, .40) 100%),
     url("https://raw.githubusercontent.com/FrankMazerati/Global_Command_Center_Test/main/Meta_AI_886725249_1470003438386201_7166575789944365800_n_20261103_061537.webp");
   background-position: center 48%;
   background-size: cover;
