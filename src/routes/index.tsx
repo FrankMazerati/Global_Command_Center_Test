@@ -27,16 +27,16 @@ const CLOCKS = [
 
 type Pick = { label: string; section: string; group: string; page: string; icon: string };
 const PICK_CATALOG: Pick[] = [
-  { label: "Active Ticket", section: "command-center", group: "ticket-management", page: "active-ticket-workspace", icon: "ticket" },
-  { label: "My Tickets", section: "command-center", group: "intellidesk-overview", page: "my-tickets", icon: "inbox" },
-  { label: "Create Ticket", section: "command-center", group: "intellidesk-overview", page: "create-ticket", icon: "plus" },
-  { label: "Global Directory", section: "new-active-directory", group: "directory-overview", page: "global-directory", icon: "users" },
-  { label: "IntelliCalendar", section: "collaboration", group: "intellistack-collaboration-tools", page: "intellicalendar", icon: "calendar" },
-  { label: "Financial Overview", section: "my-business-center", group: "financial-center", page: "financial-overview", icon: "chart" },
-  { label: "Network Dashboard", section: "noc-center", group: "noc-overview", page: "network-operations-dashboard", icon: "network" },
-  { label: "Security Ops", section: "security", group: "security-overview", page: "security-operations-dashboard", icon: "shield" },
-  { label: "Audit Archive", section: "governance", group: "audit-management", page: "ticket-audit-archive", icon: "audit" },
-  { label: "Learning Paths", section: "knowledge-and-learning", group: "training-and-learning", page: "learning-paths", icon: "book" },
+  { label: "Active Ticket", section: "service-desk-and-enterprise-operations", group: "ticket-management", page: "active-ticket-workspace", icon: "ticket" },
+  { label: "My Tickets", section: "service-desk-and-enterprise-operations", group: "intellidesk-overview", page: "my-tickets", icon: "inbox" },
+  { label: "Create Ticket", section: "service-desk-and-enterprise-operations", group: "intellidesk-overview", page: "create-ticket", icon: "plus" },
+  { label: "Global Directory", section: "identity-and-access-management", group: "directory-overview", page: "global-directory", icon: "users" },
+  { label: "IntelliCalendar", section: "productivity-and-collaboration", group: "intellistack-collaboration-tools", page: "intellicalendar", icon: "calendar" },
+  { label: "Financial Overview", section: "business-products", group: "financial-center", page: "financial-overview", icon: "chart" },
+  { label: "Network Dashboard", section: "service-desk-and-enterprise-operations", group: "noc-overview", page: "network-operations-dashboard", icon: "network" },
+  { label: "Security Ops", section: "security-risk-and-governance", group: "security-overview", page: "security-operations-dashboard", icon: "shield" },
+  { label: "Audit Archive", section: "security-risk-and-governance", group: "audit-management", page: "ticket-audit-archive", icon: "audit" },
+  { label: "Learning Paths", section: "account-and-administration", group: "training-and-learning", page: "learning-paths", icon: "book" },
 ];
 const DEFAULT_PICKS = PICK_CATALOG.slice(0, 5);
 const NEWS_DEFAULT = ["IT", "Corporate", "Security", "Network", "Help Desk / Executive"];
@@ -194,16 +194,16 @@ function Dashboard() {
 
         <Panel title="Bring the Work to You" icon={Activity} action={<span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-300">Awaiting live data connection</span>}>
           <div className="mb-3 flex flex-wrap gap-1.5">{WORK_TABS.map(tab => <button key={tab} type="button" onClick={() => setWorkTab(tab)} className={cn("rounded-md border px-3 py-1.5 text-[10px] font-bold", workTab === tab ? "border-sky-400/50 bg-sky-400/15 text-sky-200" : "border-slate-700 bg-[#071225] text-slate-400 hover:text-white")}>{tab}</button>)}</div>
-          <div className="rounded-lg border border-dashed border-sky-400/20 bg-[#071225] px-4 py-6 text-center"><div className="mx-auto mb-2 grid size-9 place-items-center rounded-full border border-sky-400/25 bg-sky-400/10"><BriefcaseBusiness className="size-4 text-sky-300"/></div><div className="text-xs font-semibold text-slate-200">{workTab}</div><p className="mt-1 text-[10px] text-slate-500">Role-based work items will appear here when ticket and workflow records are connected.</p>{work.activeTicketId && <Link to="/m/$section/$group/$page" params={{section:"command-center",group:"ticket-management",page:"active-ticket-workspace"}} className="mt-3 inline-block text-xs font-semibold text-sky-300 hover:underline">Continue {work.activeTicketId}</Link>}</div>
+          <div className="rounded-lg border border-dashed border-sky-400/20 bg-[#071225] px-4 py-6 text-center"><div className="mx-auto mb-2 grid size-9 place-items-center rounded-full border border-sky-400/25 bg-sky-400/10"><BriefcaseBusiness className="size-4 text-sky-300"/></div><div className="text-xs font-semibold text-slate-200">{workTab}</div><p className="mt-1 text-[10px] text-slate-500">Role-based work items will appear here when ticket and workflow records are connected.</p>{work.activeTicketId && <Link to="/m/$section/$group/$page" params={{section:"service-desk-and-enterprise-operations",group:"ticket-management",page:"active-ticket-workspace"}} className="mt-3 inline-block text-xs font-semibold text-sky-300 hover:underline">Continue {work.activeTicketId}</Link>}</div>
         </Panel>
 
         <Panel title="Operations & Intelligence" icon={Radar}>
           <div className="grid gap-2 sm:grid-cols-2">
             {[
-              ["Network Operations", "Infrastructure health, service status and alerts.", "noc-center","noc-overview","network-operations-dashboard",<Radar className="size-4"/>],
-              ["Security Operations", "Security posture, threat signals and incidents.", "security","security-overview","security-operations-dashboard",<ShieldCheck className="size-4"/>],
-              ["Governance & Audit", "Approvals, audit trails and compliance activity.", "governance","audit-management","ticket-audit-archive",<CheckCircle2 className="size-4"/>],
-              ["Knowledge & Learning", "Guides, runbooks and training resources.", "knowledge-and-learning","training-and-learning","learning-paths",<BookOpen className="size-4"/>],
+              ["Network Operations", "Infrastructure health, service status and alerts.", "service-desk-and-enterprise-operations","noc-overview","network-operations-dashboard",<Radar className="size-4"/>],
+              ["Security Operations", "Security posture, threat signals and incidents.", "security-risk-and-governance","security-overview","security-operations-dashboard",<ShieldCheck className="size-4"/>],
+              ["Governance & Audit", "Approvals, audit trails and compliance activity.", "security-risk-and-governance","audit-management","ticket-audit-archive",<CheckCircle2 className="size-4"/>],
+              ["Knowledge & Learning", "Guides, runbooks and training resources.", "account-and-administration","training-and-learning","learning-paths",<BookOpen className="size-4"/>],
             ].map(([title,desc,section,group,page,icon]) => <Link key={String(title)} to="/m/$section/$group/$page" params={{section:String(section),group:String(group),page:String(page)}} className="flex items-start gap-3 rounded-lg border border-sky-400/15 bg-[#071225] p-3 hover:border-sky-300/50"><span className="mt-0.5 text-sky-300">{icon}</span><span><span className="block text-xs font-semibold text-slate-100">{String(title)}</span><span className="mt-1 block text-[10px] leading-relaxed text-slate-500">{String(desc)}</span></span></Link>)}
           </div>
         </Panel>
