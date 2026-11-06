@@ -25,7 +25,7 @@ export function NavMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="glass-strong w-[92vw] max-w-sm gap-0 border-sky-400/25 p-0 text-slate-100">
+      <SheetContent side="left" className="glass-strong holo-nav-sheet w-[92vw] max-w-sm gap-0 border-sky-400/25 p-0 text-slate-100">
         <SheetHeader className="border-b border-sky-400/20 bg-[#071326]/80 px-5 py-4 text-left">
           <SheetTitle className="font-display text-base tracking-wide">Navigation</SheetTitle>
           <SheetDescription className="text-xs">Nine primary areas · Maximus Optimus Global Command Center</SheetDescription>
@@ -36,7 +36,7 @@ export function NavMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (
               to="/"
               onClick={close}
               className={cn(
-                "mb-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-accent",
+                "holo-control mb-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-accent",
                 pathname === "/" && "bg-accent text-accent-foreground",
               )}
             >
@@ -54,7 +54,7 @@ export function NavMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (
                       aria-expanded={expanded}
                       onClick={() => setOpenSection(expanded ? null : section.slug)}
                       className={cn(
-                        "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition-colors hover:bg-accent",
+                        "holo-control flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-semibold transition-colors hover:bg-accent",
                         isCurrent && "bg-accent/70",
                       )}
                     >
