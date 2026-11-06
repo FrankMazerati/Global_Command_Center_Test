@@ -49,8 +49,8 @@ function useNow() {
 }
 
 function Panel({ title, icon: Icon, children, action, className }: { title: string; icon: typeof Activity; children: React.ReactNode; action?: React.ReactNode; className?: string }) {
-  return <section className={cn("glass rounded-xl p-4", className)}>
-    <div className="mb-3 flex items-center gap-2"><Icon className="size-4 text-sky-300"/><h2 className="flex-1 font-display text-xs font-bold uppercase tracking-[.12em] text-slate-100">{title}</h2>{action}</div>
+  return <section className={cn("glass rounded-lg p-2.5", className)}>
+    <div className="mb-2 flex items-center gap-2"><Icon className="size-4 text-sky-300"/><h2 className="flex-1 font-display text-xs font-bold uppercase tracking-[.12em] text-slate-100">{title}</h2>{action}</div>
     {children}
   </section>;
 }
@@ -130,8 +130,8 @@ function Dashboard() {
   if (!authReady) return <div className="grid min-h-[55vh] place-items-center text-sm text-slate-400"><div className="flex items-center gap-3"><span className="size-2 animate-pulse rounded-full bg-sky-400"/>Securing your command session…</div></div>;
 
   return <div className="command-dashboard space-y-3 text-slate-100">
-    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
-      <div className="min-w-0 space-y-4">
+    <div className="grid items-start gap-2 xl:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="min-w-0 space-y-2">
         <section className="dashboard-profile-scene glass-strong overflow-hidden rounded-xl p-2.5 sm:p-3">
           <div className="relative z-10 flex flex-wrap items-center gap-4">
             <div className="relative grid size-[68px] shrink-0 place-items-center">
@@ -242,7 +242,7 @@ function Dashboard() {
         </Panel>
       </div>
 
-      <aside className="space-y-4 xl:sticky xl:top-28">
+      <aside className="space-y-2 xl:sticky xl:top-28">
         <div className="rounded-xl border border-sky-400/25 bg-[#0a172b] shadow-[0_12px_34px_rgba(0,0,0,.24)]"><HelpBuddyPanel/></div>
         <Panel title="Command Status" icon={ShieldCheck}>
           <div className="space-y-3">
