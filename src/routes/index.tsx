@@ -1,94 +1,70 @@
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
-  ArrowDown,
-  ArrowUp,
-  BookOpen,
-  ChevronDown,
-  ChevronUp,
-  Megaphone,
-  Plug,
-  Plus,
-  Radar,
-  ShieldCheck,
-  Sparkles,
-  X,
-  type LucideIcon,
+  Activity, ArrowDown, ArrowUp, Bell, BookOpen, BriefcaseBusiness, CalendarDays,
+  CheckCircle2, ChevronDown, ChevronUp, Clock3, GripVertical, Mail, Megaphone,
+  MessageSquare, Plus, Radar, ShieldCheck, Sparkles, TrendingUp, UserRound, X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useEffect, useMemo, useState, type DragEvent } from "react";
 import { getSupabaseClient } from "@/lib/supabase";
-
 import { HelpBuddyPanel } from "@/components/shell/HelpBuddy";
 import { StatusBadge } from "@/components/shell/StatusBadge";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AVAILABILITY, useWork, type Availability } from "@/lib/work-context";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Dashboard · Maximus Optimus Global Command Center" },
-      { name: "description", content: "See everything locally, connect everything globally, powered by intelligence." },
-      { property: "og:title", content: "Maximus Optimus Global Command Center" },
-      { property: "og:description", content: "IntelliStack Systems presents Maximus Optimus Global Command Center." },
-    ],
-  }),
+  head: () => ({ meta: [
+    { title: "Global Command Center · Maximus Optimus" },
+    { name: "description", content: "See Everything Locally. Connect Everything Globally. Powered by Intelligence." },
+  ]}),
   component: Dashboard,
 });
 
-const ZONES = [
-  ["Chicago", "America/Chicago"],
-  ["New York", "America/New_York"],
-  ["London", "Europe/London"],
-  ["Dubai", "Asia/Dubai"],
-  ["Tokyo", "Asia/Tokyo"],
-  ["Los Angeles", "America/Los_Angeles"],
-  ["São Paulo", "America/Sao_Paulo"],
-  ["Berlin", "Europe/Berlin"],
-  ["Mumbai", "Asia/Kolkata"],
-  ["Sydney", "Australia/Sydney"],
+const CLOCKS = [
+  ["London", "Europe/London"], ["Chicago", "America/Chicago"], ["New York", "America/New_York"],
+  ["Sydney", "Australia/Sydney"], ["Tokyo", "Asia/Tokyo"], ["Los Angeles", "America/Los_Angeles"],
+  ["Dubai", "Asia/Dubai"], ["Berlin", "Europe/Berlin"], ["Mumbai", "Asia/Kolkata"], ["São Paulo", "America/Sao_Paulo"],
 ] as const;
 
-type Pick = { label: string; section: string; group: string; page: string; tone: string };
-const QUICK_PICKS: Pick[] = [
-  { label: "Active Ticket", section: "command-center", group: "ticket-management", page: "active-ticket-workspace", tone: "bg-maximus" },
-  { label: "My Tickets", section: "command-center", group: "intellidesk-overview", page: "my-tickets", tone: "bg-primary" },
-  { label: "Create Ticket", section: "command-center", group: "intellidesk-overview", page: "create-ticket", tone: "bg-optimus" },
-  { label: "Global Directory", section: "new-active-directory", group: "directory-overview", page: "global-directory", tone: "bg-contractor" },
-  { label: "IntelliCalendar", section: "collaboration", group: "intellistack-collaboration-tools", page: "intellicalendar", tone: "bg-world" },
-  { label: "Financial Overview", section: "my-business-center", group: "financial-center", page: "financial-overview", tone: "bg-tenant" },
-  { label: "Network Dashboard", section: "noc-center", group: "noc-overview", page: "network-operations-dashboard", tone: "bg-network" },
-  { label: "Security Ops", section: "security", group: "security-overview", page: "security-operations-dashboard", tone: "bg-optimus" },
-  { label: "Audit Archive", section: "governance", group: "audit-management", page: "ticket-audit-archive", tone: "bg-tenant" },
-  { label: "Learning Paths", section: "knowledge-and-learning", group: "training-and-learning", page: "learning-paths", tone: "bg-everything" },
+type Pick = { label: string; section: string; group: string; page: string; icon: string };
+const PICK_CATALOG: Pick[] = [
+  { label: "Active Ticket", section: "command-center", group: "ticket-management", page: "active-ticket-workspace", icon: "ticket" },
+  { label: "My Tickets", section: "command-center", group: "intellidesk-overview", page: "my-tickets", icon: "inbox" },
+  { label: "Create Ticket", section: "command-center", group: "intellidesk-overview", page: "create-ticket", icon: "plus" },
+  { label: "Global Directory", section: "new-active-directory", group: "directory-overview", page: "global-directory", icon: "users" },
+  { label: "IntelliCalendar", section: "collaboration", group: "intellistack-collaboration-tools", page: "intellicalendar", icon: "calendar" },
+  { label: "Financial Overview", section: "my-business-center", group: "financial-center", page: "financial-overview", icon: "chart" },
+  { label: "Network Dashboard", section: "noc-center", group: "noc-overview", page: "network-operations-dashboard", icon: "network" },
+  { label: "Security Ops", section: "security", group: "security-overview", page: "security-operations-dashboard", icon: "shield" },
+  { label: "Audit Archive", section: "governance", group: "audit-management", page: "ticket-audit-archive", icon: "audit" },
+  { label: "Learning Paths", section: "knowledge-and-learning", group: "training-and-learning", page: "learning-paths", icon: "book" },
 ];
-
-const DEFAULT_NEWS = ["IT", "Corporate", "Security", "Network", "Help Desk / Executive"];
-const WORK_TABS = ["Tickets", "Approvals", "Follow-ups", "Priorities"] as const;
-type WorkTab = (typeof WORK_TABS)[number];
+const DEFAULT_PICKS = PICK_CATALOG.slice(0, 5);
+const NEWS_DEFAULT = ["IT", "Corporate", "Security", "Network", "Help Desk / Executive"];
+const WORK_TABS = ["Critical & Urgent", "High Priority", "Upcoming", "Follow-ups", "Help Desk / Tickets"] as const;
 
 function useNow() {
   const [now, setNow] = useState<Date | null>(null);
-  useEffect(() => {
-    setNow(new Date());
-    const t = setInterval(() => setNow(new Date()), 30000);
-    return () => clearInterval(t);
-  }, []);
+  useEffect(() => { setNow(new Date()); const timer = setInterval(() => setNow(new Date()), 15000); return () => clearInterval(timer); }, []);
   return now;
 }
 
-function Card({ title, icon: Icon, children, className, action }: { title: string; icon?: LucideIcon; children: React.ReactNode; className?: string; action?: React.ReactNode }) {
-  return (
-    <section className={cn("rounded-xl border bg-card p-4 shadow-card", className)}>
-      <div className="mb-3 flex items-center gap-2">
-        {Icon && <Icon className="size-4 text-primary" />}
-        <h2 className="flex-1 text-sm font-semibold">{title}</h2>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
+function Panel({ title, icon: Icon, children, action, className }: { title: string; icon: typeof Activity; children: React.ReactNode; action?: React.ReactNode; className?: string }) {
+  return <section className={cn("rounded-xl border border-sky-400/20 bg-[#0a172b]/95 p-4 shadow-[0_12px_34px_rgba(0,0,0,.22)]", className)}>
+    <div className="mb-3 flex items-center gap-2"><Icon className="size-4 text-sky-300"/><h2 className="flex-1 font-display text-xs font-bold uppercase tracking-[.12em] text-slate-100">{title}</h2>{action}</div>
+    {children}
+  </section>;
+}
+
+function pickIcon(name: string) {
+  const cls = "size-4 text-sky-300";
+  if (name === "calendar") return <CalendarDays className={cls}/>;
+  if (name === "shield") return <ShieldCheck className={cls}/>;
+  if (name === "book") return <BookOpen className={cls}/>;
+  if (name === "chart") return <TrendingUp className={cls}/>;
+  if (name === "network") return <Radar className={cls}/>;
+  if (name === "users") return <UserRound className={cls}/>;
+  if (name === "plus") return <Plus className={cls}/>;
+  return <BriefcaseBusiness className={cls}/>;
 }
 
 function Dashboard() {
@@ -98,199 +74,164 @@ function Dashboard() {
     let active = true;
     const client = getSupabaseClient();
     if (!client) { navigate({ to: "/login", replace: true }); return; }
-    client.auth.getSession().then(({ data }) => {
-      if (!active) return;
-      if (!data.session) navigate({ to: "/login", replace: true });
-      else setAuthReady(true);
-    }).catch(() => navigate({ to: "/login", replace: true }));
+    client.auth.getSession().then(({ data }) => { if (!active) return; if (!data.session) navigate({ to: "/login", replace: true }); else setAuthReady(true); })
+      .catch(() => navigate({ to: "/login", replace: true }));
     return () => { active = false; };
   }, [navigate]);
+
   const now = useNow();
-  const w = useWork();
-  const [zonesOpen, setZonesOpen] = useState(false);
-  const [picksOpen, setPicksOpen] = useState(false);
-  const [news, setNews] = useState<string[]>(DEFAULT_NEWS);
-  const [newSource, setNewSource] = useState("");
-  const [workTab, setWorkTab] = useState<WorkTab>("Tickets");
+  const work = useWork();
   const hour = now?.getHours() ?? 9;
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const [availability, setAvailability] = useState<Availability>(work.availability);
+  const [picks, setPicks] = useState<Pick[]>(DEFAULT_PICKS);
+  const [pickEditor, setPickEditor] = useState(false);
+  const [pickDrag, setPickDrag] = useState<number | null>(null);
+  const [clockOrder, setClockOrder] = useState<string[]>(CLOCKS.map(([city]) => city));
+  const [clockManager, setClockManager] = useState(false);
+  const [clockDrag, setClockDrag] = useState<number | null>(null);
+  const [news, setNews] = useState(NEWS_DEFAULT);
+  const [newNews, setNewNews] = useState("");
+  const [workTab, setWorkTab] = useState<(typeof WORK_TABS)[number]>("Critical & Urgent");
 
-  const move = (i: number, d: -1 | 1) =>
-    setNews((n) => {
-      const j = i + d;
-      if (j < 0 || j >= n.length) return n;
-      const c = [...n];
-      const a = c[i]!;
-      c[i] = c[j]!;
-      c[j] = a;
-      return c;
-    });
+  useEffect(() => {
+    try {
+      const savedPicks = localStorage.getItem("mo:quick-picks");
+      if (savedPicks) setPicks(JSON.parse(savedPicks) as Pick[]);
+      const savedClocks = localStorage.getItem("mo:clock-order");
+      if (savedClocks) setClockOrder(JSON.parse(savedClocks) as string[]);
+    } catch { /* Keep the safe defaults when saved preferences are unavailable. */ }
+  }, []);
+  useEffect(() => { try { localStorage.setItem("mo:quick-picks", JSON.stringify(picks)); } catch { /* Storage is optional. */ } }, [picks]);
+  useEffect(() => { try { localStorage.setItem("mo:clock-order", JSON.stringify(clockOrder)); } catch { /* Storage is optional. */ } }, [clockOrder]);
 
-  return (
-    <div className="space-y-4">
-      {/* Announcements */}
-      <div className="flex items-center gap-3 rounded-xl bg-brand-gradient px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-card">
-        <Megaphone className="size-4 shrink-0" />
-        <span className="flex-1">See everything locally, connect everything globally, powered by intelligence.</span>
-        <span className="hidden text-xs opacity-90 sm:inline">Company announcements connect in a later phase</span>
+  const clocks = useMemo(() => clockOrder.map(city => CLOCKS.find(([name]) => name === city)).filter((x): x is (typeof CLOCKS)[number] => Boolean(x)), [clockOrder]);
+  const addPick = (label: string) => {
+    const found = PICK_CATALOG.find(p => p.label === label);
+    if (found && !picks.some(p => p.label === label)) setPicks(current => [...current, found]);
+  };
+  const reorder = <T,>(items: T[], from: number, to: number) => {
+    if (to < 0 || to >= items.length || from === to) return items;
+    const next = [...items]; const [item] = next.splice(from, 1); if (item) next.splice(to, 0, item); return next;
+  };
+  const statusTone: Record<string, string> = {
+    Available: "border-emerald-400/40 bg-emerald-400/10 text-emerald-300",
+    Away: "border-amber-400/40 bg-amber-400/10 text-amber-300",
+    Busy: "border-rose-400/40 bg-rose-400/10 text-rose-300",
+    "Out to Lunch": "border-orange-400/40 bg-orange-400/10 text-orange-300",
+    Meeting: "border-violet-400/40 bg-violet-400/10 text-violet-300",
+    Break: "border-cyan-400/40 bg-cyan-400/10 text-cyan-300",
+  };
+
+  if (!authReady) return <div className="grid min-h-[55vh] place-items-center text-sm text-slate-400"><div className="flex items-center gap-3"><span className="size-2 animate-pulse rounded-full bg-sky-400"/>Securing your command session…</div></div>;
+
+  return <div className="space-y-4 text-slate-200">
+    <section className="overflow-hidden rounded-xl border border-sky-400/30 bg-gradient-to-r from-[#0b2342] via-[#0b1930] to-[#10172b] px-4 py-3 shadow-[0_10px_32px_rgba(0,0,0,.3)]">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="font-display text-[10px] font-black tracking-[.16em] text-sky-300">OPERATING PROMISE</span>
+        <p className="font-display text-[11px] font-bold uppercase tracking-[.12em] text-white sm:text-xs">SEE EVERYTHING <span className="text-sky-300">LOCALLY.</span> CONNECT EVERYTHING <span className="text-sky-300">GLOBALLY.</span> POWERED BY <span className="text-sky-300">INTELLIGENCE.</span></p>
       </div>
+    </section>
 
-      {/* Time bar */}
-      <div className="rounded-xl border bg-card px-3 py-2 shadow-card">
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          {ZONES.slice(0, zonesOpen ? 10 : 5).map(([city, tz]) => (
-            <div key={tz} className="text-xs">
-              <span className="text-muted-foreground">{city} </span>
-              <span className="font-semibold tabular-nums">
-                {now ? now.toLocaleTimeString([], { timeZone: tz, hour: "2-digit", minute: "2-digit" }) : "--:--"}
-              </span>
-            </div>
-          ))}
-          <button type="button" onClick={() => setZonesOpen(!zonesOpen)} className="ml-auto flex items-center gap-1 text-xs font-medium text-primary">
-            {zonesOpen ? <>Fewer <ChevronUp className="size-3" /></> : <>All 10 <ChevronDown className="size-3" /></>}
-          </button>
-        </div>
+    <Panel title="Global time zones" icon={Clock3} action={<button type="button" onClick={() => setClockManager(v => !v)} className="text-[10px] font-semibold uppercase tracking-wider text-sky-300 hover:text-white">{clockManager ? "Done arranging" : "Arrange clocks"} <span className="ml-1">{clockManager ? "✓" : "↔"}</span></button>}>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+        {clocks.slice(0, clockManager ? 10 : 5).map(([city, zone]) => {
+          const idx = clockOrder.indexOf(city);
+          return <div key={city} draggable={clockManager} onDragStart={() => setClockDrag(idx)} onDragOver={e => { if (clockManager) e.preventDefault(); }} onDrop={e => { e.preventDefault(); if (clockDrag !== null) setClockOrder(order => reorder(order, clockDrag, idx)); setClockDrag(null); }} className={cn("flex min-w-0 items-center gap-2 rounded-lg border border-sky-400/15 bg-[#071225] px-3 py-2", clockManager && "cursor-grab border-dashed border-sky-400/50", clockDrag === idx && "opacity-40")}>
+            {clockManager && <GripVertical className="size-3 shrink-0 text-sky-400"/>}
+            <div className="min-w-0 flex-1"><div className="truncate text-[10px] font-semibold uppercase tracking-wider text-slate-400">{city}</div><div className="font-mono text-lg font-bold tabular-nums text-white">{now ? now.toLocaleTimeString([], { timeZone: zone, hour: "2-digit", minute: "2-digit" }) : "--:--"}</div></div>
+          </div>;
+        })}
       </div>
+      <div className="mt-2 flex items-center justify-between text-[10px] text-slate-500"><span>{clockManager ? "Drag clocks to change their order. Your order is saved." : "Your five priority cities · expand to manage up to ten"}</span><button type="button" onClick={() => setClockManager(v => !v)} className="font-semibold text-sky-300">{clockManager ? "Show priority five" : "View all 10"}</button></div>
+      {clockManager && <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5">{clocks.slice(5).map(([city, zone]) => <div key={city} draggable onDragStart={() => setClockDrag(clockOrder.indexOf(city))} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); if (clockDrag !== null) setClockOrder(order => reorder(order, clockDrag, clockOrder.indexOf(city))); setClockDrag(null); }} className="flex cursor-grab items-center gap-2 rounded-lg border border-dashed border-sky-400/30 bg-[#071225] px-3 py-2"><GripVertical className="size-3 text-sky-400"/><div><div className="text-[10px] text-slate-400">{city}</div><div className="font-mono text-sm font-bold text-white">{now ? now.toLocaleTimeString([], { timeZone: zone, hour: "2-digit", minute: "2-digit" }) : "--:--"}</div></div></div>)}</div>}
+    </Panel>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
-        <div className="min-w-0 space-y-4">
-          {/* Profile */}
-          <section className="rounded-xl border bg-card p-4 shadow-card">
-            <div className="flex flex-wrap items-start gap-4">
-              <img src="/frankmazerati.png" alt="Frank Mazerati profile" className="size-16 shrink-0 rounded-full border-2 border-primary/30 object-cover shadow-card" />
-              <div className="min-w-0 flex-1">
-                <div className="text-sm text-muted-foreground">{greeting},</div>
-                <h1 className="font-display text-xl font-bold">Frank Mazerati</h1>
-                <div className="text-sm text-secondary-foreground">Principal, Chief Principal Architect and Design Engineer</div>
-                <p className="mt-1 text-xs text-tenant">Every ticket you close makes someone's day easier.</p>
-              </div>
-              <div className="w-full sm:w-48">
-                <Select value={w.availability} onValueChange={(v) => w.setAvailability(v as Availability)}>
-                  <SelectTrigger aria-label="Availability"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {AVAILABILITY.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
+    <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="min-w-0 space-y-4">
+        <section className="rounded-xl border border-sky-400/25 bg-[#0a172b] p-4 shadow-[0_12px_34px_rgba(0,0,0,.24)]">
+          <div className="flex flex-wrap items-start gap-4">
+            <div className="relative shrink-0">
+              <img src="/frankmazerati.png" alt="Frank Mazerati" onError={e => { e.currentTarget.style.display = "none"; }} className="size-[88px] rounded-xl border-2 border-sky-400/60 bg-[#101f38] object-cover shadow-[0_0_22px_rgba(56,189,248,.18)]"/>
+              <div className="absolute -bottom-1 -right-1 size-4 rounded-full border-2 border-[#0a172b] bg-emerald-400"/>
             </div>
-            <dl className="mt-4 grid grid-cols-1 gap-x-6 gap-y-1.5 border-t pt-3 text-sm sm:grid-cols-2">
-              {["Global Company ID", "Global User ID", "Work email", "Phone", "Location", "Department", "Manager"].map((k) => (
-                <div key={k} className="flex justify-between gap-3">
-                  <dt className="text-muted-foreground">{k}</dt>
-                  <dd className="text-right text-muted-foreground/80">From directory record</dd>
-                </div>
-              ))}
-            </dl>
-          </section>
-
-          {/* Quick Picks */}
-          <Card
-            title="Quick Picks"
-            icon={Sparkles}
-            action={
-              <button type="button" onClick={() => setPicksOpen(!picksOpen)} className="text-xs font-medium text-primary">
-                {picksOpen ? "Show 5" : "Show 10"}
-              </button>
-            }
-          >
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-              {QUICK_PICKS.slice(0, picksOpen ? 10 : 5).map((p) => (
-                <Link
-                  key={p.label}
-                  to="/m/$section/$group/$page"
-                  params={{ section: p.section, group: p.group, page: p.page }}
-                  className="flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium hover:bg-accent"
-                >
-                  <span className={cn("size-2.5 shrink-0 rounded-full", p.tone)} /> {p.label}
-                </Link>
-              ))}
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-medium text-slate-400">{greeting},</div>
+              <h1 className="mt-0.5 font-display text-2xl font-black tracking-wide text-white">Frank Mazerati</h1>
+              <div className="mt-1 text-xs font-semibold text-sky-300">Founder & Chief Principal Architect</div>
+              <div className="mt-1 text-[11px] text-slate-400">Role: Global Admin <span className="mx-2 text-slate-600">|</span> Position: Chief Principal Systems Architect</div>
+              <p className="mt-2 text-[11px] text-slate-400">Every ticket you close makes someone's day easier.</p>
             </div>
-          </Card>
-
-          {/* Bring the Work to You */}
-          <section className="rounded-xl border-2 border-primary/30 bg-card p-4 shadow-card">
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <h2 className="font-display text-base font-bold tracking-wide">Bring the Work to You</h2>
-              <StatusBadge status="Awaiting integration" className="ml-auto" />
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] font-bold uppercase tracking-[.14em] text-slate-500">Availability</span>
+              <select aria-label="Availability status" value={availability} onChange={e => { const value = e.target.value as Availability; setAvailability(value); work.setAvailability(value); }} className={cn("h-8 max-w-[145px] rounded-full border px-3 text-[11px] font-bold outline-none", statusTone[availability] || "border-sky-400/30 bg-sky-400/10 text-sky-200")}>
+                {AVAILABILITY.map(status => <option key={status} value={status} className="bg-[#0a172b] text-white">{status}</option>)}
+              </select>
             </div>
-            <div className="mb-3 flex flex-wrap gap-1.5">
-              {WORK_TABS.map((t) => (
-                <button key={t} type="button" onClick={() => setWorkTab(t)} className={cn("rounded-md px-3 py-1.5 text-sm font-medium", workTab === t ? "bg-primary text-primary-foreground" : "bg-muted hover:bg-accent")}>
-                  {t}
-                </button>
-              ))}
-            </div>
-            <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-              Your {workTab.toLowerCase()} will appear here, by role and priority, once your existing records are connected.
-              {w.activeTicketId && (
-                <div className="mt-3">
-                  <Link to="/m/$section/$group/$page" params={{ section: "command-center", group: "ticket-management", page: "active-ticket-workspace" }} className="font-semibold text-primary hover:underline">
-                    Continue working on {w.activeTicketId}
-                  </Link>
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* Help Buddy inline on mobile */}
-          <div className="rounded-xl border bg-card shadow-card lg:hidden">
-            <HelpBuddyPanel />
           </div>
-
-          {/* News feed */}
-          <Card title="News feed" icon={Megaphone}>
-            <ul className="space-y-1.5">
-              {news.map((s, i) => (
-                <li key={s} className="flex items-center gap-2 rounded-lg border px-3 py-2 text-sm">
-                  <span className="flex-1 font-medium">{s}</span>
-                  <span className="hidden text-xs text-muted-foreground sm:inline">Source not connected</span>
-                  <button type="button" aria-label={`Move ${s} up`} onClick={() => move(i, -1)} className="text-muted-foreground hover:text-foreground"><ArrowUp className="size-4" /></button>
-                  <button type="button" aria-label={`Move ${s} down`} onClick={() => move(i, 1)} className="text-muted-foreground hover:text-foreground"><ArrowDown className="size-4" /></button>
-                  <button type="button" aria-label={`Remove ${s}`} onClick={() => setNews((n) => n.filter((x) => x !== s))} className="text-muted-foreground hover:text-destructive"><X className="size-4" /></button>
-                </li>
-              ))}
-            </ul>
-            <form
-              className="mt-2 flex gap-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const v = newSource.trim();
-                if (v && !news.includes(v)) setNews([...news, v]);
-                setNewSource("");
-              }}
-            >
-              <Input value={newSource} onChange={(e) => setNewSource(e.target.value)} placeholder="Add a news source" aria-label="New news source" />
-              <button type="submit" aria-label="Add source" className="grid w-10 place-items-center rounded-md border hover:bg-accent"><Plus className="size-4" /></button>
-            </form>
-          </Card>
-
-          {/* Module cards */}
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid gap-2 border-t border-sky-400/15 pt-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { title: "Connectors", icon: Plug, text: "Microsoft 365, calendars, file storage and more.", to: ["productivity", "connected-productivity-tools", "connection-status"] },
-              { title: "Network monitoring", icon: Radar, text: "Infrastructure health and alerts.", to: ["noc-center", "noc-overview", "network-operations-dashboard"] },
-              { title: "Security monitoring", icon: ShieldCheck, text: "Posture, threats and incidents.", to: ["security", "security-overview", "security-posture"] },
-              { title: "Knowledge base", icon: BookOpen, text: "Guides, walkthroughs and training.", to: ["knowledge-and-learning", "getting-started", "getting-started-with-your-command-center"] },
-            ].map((c) => (
-              <Link key={c.title} to="/m/$section/$group/$page" params={{ section: c.to[0]!, group: c.to[1]!, page: c.to[2]! }} className="group rounded-xl border bg-card p-4 shadow-card hover:border-primary/50">
-                <div className="mb-1 flex items-center gap-2">
-                  <c.icon className="size-4 text-primary" />
-                  <h3 className="flex-1 text-sm font-semibold">{c.title}</h3>
-                  <StatusBadge status="Awaiting integration" />
-                </div>
-                <p className="text-sm text-muted-foreground">{c.text}</p>
-              </Link>
-            ))}
+              ["Company", "IntelliStack Systems"], ["Global Company ID", "Directory assigned"],
+              ["Global User ID", "Directory assigned"], ["Work email", "Directory assigned"],
+              ["Phone", "Profile managed"], ["Location", "Profile managed"],
+              ["Department", "Organization assigned"], ["Manager", "Reporting structure assigned"],
+            ].map(([label, value]) => <div key={label} className="flex min-w-0 flex-col rounded-lg border border-slate-700/60 bg-[#071225] px-3 py-2"><span className="text-[9px] font-bold uppercase tracking-[.12em] text-slate-500">{label}</span><span className="mt-1 truncate text-xs font-semibold text-slate-200">{value}</span></div>)}
           </div>
-        </div>
+        </section>
 
-        {/* Persistent Help Buddy beside the work on desktop/tablet */}
-        <aside className="hidden lg:block">
-          <div className="sticky top-32 rounded-xl border bg-card shadow-card">
-            <HelpBuddyPanel />
+        <Panel title="Quick Picks" icon={Sparkles} action={<button type="button" onClick={() => setPickEditor(v => !v)} className="inline-flex items-center gap-1 rounded-md border border-sky-400/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-300 hover:bg-sky-400/10">{pickEditor ? "Finish" : <><Plus className="size-3"/> Manage</>}</button>}>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+            {picks.map((pick, index) => <div key={pick.label} draggable={pickEditor} onDragStart={() => setPickDrag(index)} onDragOver={e => { if (pickEditor) e.preventDefault(); }} onDrop={e => { e.preventDefault(); if (pickDrag !== null) setPicks(items => reorder(items, pickDrag, index)); setPickDrag(null); }} className={cn("group relative", pickEditor && "cursor-grab", pickDrag === index && "opacity-40")}>
+              <Link to="/m/$section/$group/$page" params={{section:pick.section,group:pick.group,page:pick.page}} className="flex min-h-[54px] items-center gap-2 rounded-lg border border-sky-400/20 bg-[#071225] px-3 py-2 text-[11px] font-semibold text-slate-200 transition hover:border-sky-300/60 hover:bg-[#102542]">
+                {pickEditor ? <GripVertical className="size-3 shrink-0 text-sky-400"/> : pickIcon(pick.icon)}
+                <span className="leading-tight">{pick.label}</span>
+              </Link>
+              {pickEditor && <button type="button" aria-label={"Remove "+pick.label} onClick={() => setPicks(items => items.filter(p => p.label !== pick.label))} className="absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full border border-rose-400/50 bg-[#31101a] text-rose-300"><X className="size-3"/></button>}
+            </div>)}
           </div>
-        </aside>
+          {pickEditor && <div className="mt-3 border-t border-sky-400/15 pt-3"><div className="mb-2 text-[9px] font-bold uppercase tracking-[.14em] text-slate-500">Add a shortcut</div><div className="flex flex-wrap gap-2">{PICK_CATALOG.filter(p => !picks.some(current => current.label === p.label)).map(p => <button key={p.label} type="button" onClick={() => addPick(p.label)} className="inline-flex items-center gap-1 rounded-md border border-sky-400/20 bg-sky-400/5 px-2 py-1.5 text-[10px] font-semibold text-sky-200 hover:bg-sky-400/15"><Plus className="size-3"/>{p.label}</button>)}</div><p className="mt-2 text-[9px] text-slate-500">Drag to reorder · remove with × · your choices are saved on this device</p></div>}
+        </Panel>
+
+        <Panel title="Bring the Work to You" icon={Activity} action={<span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-300">Awaiting live data connection</span>}>
+          <div className="mb-3 flex flex-wrap gap-1.5">{WORK_TABS.map(tab => <button key={tab} type="button" onClick={() => setWorkTab(tab)} className={cn("rounded-md border px-3 py-1.5 text-[10px] font-bold", workTab === tab ? "border-sky-400/50 bg-sky-400/15 text-sky-200" : "border-slate-700 bg-[#071225] text-slate-400 hover:text-white")}>{tab}</button>)}</div>
+          <div className="rounded-lg border border-dashed border-sky-400/20 bg-[#071225] px-4 py-6 text-center"><div className="mx-auto mb-2 grid size-9 place-items-center rounded-full border border-sky-400/25 bg-sky-400/10"><BriefcaseBusiness className="size-4 text-sky-300"/></div><div className="text-xs font-semibold text-slate-200">{workTab}</div><p className="mt-1 text-[10px] text-slate-500">Role-based work items will appear here when ticket and workflow records are connected.</p>{work.activeTicketId && <Link to="/m/$section/$group/$page" params={{section:"command-center",group:"ticket-management",page:"active-ticket-workspace"}} className="mt-3 inline-block text-xs font-semibold text-sky-300 hover:underline">Continue {work.activeTicketId}</Link>}</div>
+        </Panel>
+
+        <Panel title="Operations & Intelligence" icon={Radar}>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {[
+              ["Network Operations", "Infrastructure health, service status and alerts.", "noc-center","noc-overview","network-operations-dashboard",<Radar className="size-4"/>],
+              ["Security Operations", "Security posture, threat signals and incidents.", "security","security-overview","security-operations-dashboard",<ShieldCheck className="size-4"/>],
+              ["Governance & Audit", "Approvals, audit trails and compliance activity.", "governance","audit-management","ticket-audit-archive",<CheckCircle2 className="size-4"/>],
+              ["Knowledge & Learning", "Guides, runbooks and training resources.", "knowledge-and-learning","training-and-learning","learning-paths",<BookOpen className="size-4"/>],
+            ].map(([title,desc,section,group,page,icon]) => <Link key={String(title)} to="/m/$section/$group/$page" params={{section:String(section),group:String(group),page:String(page)}} className="flex items-start gap-3 rounded-lg border border-sky-400/15 bg-[#071225] p-3 hover:border-sky-300/50"><span className="mt-0.5 text-sky-300">{icon}</span><span><span className="block text-xs font-semibold text-slate-100">{String(title)}</span><span className="mt-1 block text-[10px] leading-relaxed text-slate-500">{String(desc)}</span></span></Link>)}
+          </div>
+        </Panel>
+
+        <Panel title="News & Intelligence Feed" icon={Megaphone}>
+          <div className="space-y-1.5">{news.map((source,index) => <div key={source} className="flex items-center gap-2 rounded-md border border-slate-700/60 bg-[#071225] px-3 py-2"><span className="flex-1 text-[11px] font-semibold text-slate-200">{source}</span><span className="text-[9px] text-slate-500">Source not connected</span><button type="button" aria-label="Move up" onClick={() => setNews(items => reorder(items,index,index-1))} className="text-slate-500 hover:text-sky-300"><ArrowUp className="size-3"/></button><button type="button" aria-label="Move down" onClick={() => setNews(items => reorder(items,index,index+1))} className="text-slate-500 hover:text-sky-300"><ArrowDown className="size-3"/></button><button type="button" aria-label="Remove news source" onClick={() => setNews(items => items.filter(item => item !== source))} className="text-slate-500 hover:text-rose-300"><X className="size-3"/></button></div>)}</div>
+          <form className="mt-2 flex gap-2" onSubmit={e => {e.preventDefault(); const value=newNews.trim(); if(value && !news.includes(value)) setNews(items=>[...items,value]); setNewNews("");}}><input value={newNews} onChange={e=>setNewNews(e.target.value)} placeholder="Add a news category" className="h-8 min-w-0 flex-1 rounded-md border border-slate-700 bg-[#071225] px-3 text-xs text-white outline-none focus:border-sky-400"/><button type="submit" aria-label="Add news category" className="grid size-8 place-items-center rounded-md border border-sky-400/30 text-sky-300"><Plus className="size-4"/></button></form>
+        </Panel>
       </div>
+
+      <aside className="space-y-4 xl:sticky xl:top-28">
+        <div className="rounded-xl border border-sky-400/25 bg-[#0a172b] shadow-[0_12px_34px_rgba(0,0,0,.24)]"><HelpBuddyPanel/></div>
+        <Panel title="Command Status" icon={ShieldCheck}>
+          <div className="space-y-3">
+            {[["Identity & Access","Role governed"],["Service Desk","Awaiting connection"],["Network Operations","Awaiting connection"],["Security Operations","Awaiting connection"]].map(([label,value],i)=><div key={label} className="flex items-center justify-between gap-2"><span className="text-[10px] text-slate-400">{label}</span><span className={cn("text-[9px] font-bold",i===0?"text-emerald-300":"text-amber-300")}>{value}</span></div>)}
+          </div>
+        </Panel>
+        <Panel title="Market Watch" icon={TrendingUp} action={<span className="text-[9px] font-bold text-amber-300">FEED NOT CONNECTED</span>}>
+          <div className="space-y-2">{["DOW JONES","S&P 500","NASDAQ","NYSE","RUSSELL 2000"].map(symbol=><div key={symbol} className="flex items-center justify-between border-b border-slate-700/50 pb-2 last:border-0 last:pb-0"><span className="text-[10px] font-bold tracking-wide text-slate-300">{symbol}</span><span className="text-[9px] text-slate-500">Awaiting market data</span></div>)}</div>
+        </Panel>
+      </aside>
     </div>
-  );
+
+    <section className="overflow-hidden rounded-lg border border-sky-400/25 bg-[#061326]">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5">
+        <span className="flex items-center gap-2 font-display text-[9px] font-black tracking-[.18em] text-sky-300"><TrendingUp className="size-3.5"/> MARKET TICKER</span>
+        {["DOW JONES","S&P 500","NASDAQ","NYSE","RUSSELL 2000","GLOBAL MARKETS"].map(item=><span key={item} className="border-l border-sky-400/20 pl-3 text-[9px] font-semibold tracking-wide text-slate-400">{item}<span className="ml-2 text-slate-600">DATA PENDING</span></span>)}
+      </div>
+    </section>
+  </div>;
 }
