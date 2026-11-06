@@ -28,7 +28,7 @@ export function NavMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (
       <SheetContent side="left" className="w-[92vw] max-w-sm gap-0 p-0">
         <SheetHeader className="border-b bg-header px-5 py-4 text-left">
           <SheetTitle className="font-display text-base tracking-wide">Navigation</SheetTitle>
-          <SheetDescription className="text-xs">Ten sections · Maximus Optimus Global Command Center</SheetDescription>
+          <SheetDescription className="text-xs">Nine primary areas · Maximus Optimus Global Command Center</SheetDescription>
         </SheetHeader>
         <ScrollArea className="h-[calc(100dvh-80px)]">
           <nav aria-label="Main" className="p-3">
