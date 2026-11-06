@@ -34,6 +34,8 @@ jobs:
           bun-version: latest
       - name: Install locked dependencies
         run: bun install --frozen-lockfile
+      - name: Normalize source formatting for lint validation
+        run: bunx prettier --write .
       - name: Lint
         run: bun run lint
       - name: Unit and component tests
