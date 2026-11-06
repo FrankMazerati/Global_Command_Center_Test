@@ -13,14 +13,13 @@ import {
 } from "lucide-react";
 
 export const SECTION_ICONS: Record<string, LucideIcon> = {
-  "my-business-center": Building2,
-  "new-active-directory": Users,
-  "command-center": Headset,
-  productivity: LayoutGrid,
-  collaboration: UsersRound,
-  "knowledge-and-learning": GraduationCap,
-  "ai-systems": Bot,
-  "noc-center": Radar,
-  security: ShieldCheck,
-  governance: Scale,
+  "home-and-command-center": Headset,
+  "business-products": Building2,
+  "identity-and-access-management": Users,
+  "productivity-and-collaboration": UsersRound,
+  "service-desk-and-enterprise-operations": Radar,
+  "security-risk-and-governance": ShieldCheck,
+  "ai-and-business-intelligence": Bot,
+  "employee-and-manager-workspace": UsersRound,
+  "account-and-administration": Scale,
 };
