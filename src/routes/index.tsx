@@ -133,6 +133,13 @@ function Dashboard() {
       </div>
     </section>
 
+    <section className="overflow-hidden rounded-lg border border-sky-400/25 bg-[#061326]">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5">
+        <span className="flex items-center gap-2 font-display text-[9px] font-black tracking-[.18em] text-sky-300"><TrendingUp className="size-3.5"/> MARKET TICKER</span>
+        {["DOW JONES","S&P 500","NASDAQ","NYSE","RUSSELL 2000","GLOBAL MARKETS"].map(item=><span key={item} className="border-l border-sky-400/20 pl-3 text-[9px] font-semibold tracking-wide text-slate-400">{item}<span className="ml-2 text-slate-600">DATA PENDING</span></span>)}
+      </div>
+    </section>
+
     <Panel title="Global time zones" icon={Clock3} action={<button type="button" onClick={() => setClockManager(v => !v)} className="text-[10px] font-semibold uppercase tracking-wider text-sky-300 hover:text-white">{clockManager ? "Done arranging" : "Arrange clocks"} <span className="ml-1">{clockManager ? "✓" : "↔"}</span></button>}>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
         {clocks.slice(0, clockManager ? 10 : 5).map(([city, zone]) => {
@@ -144,7 +151,7 @@ function Dashboard() {
         })}
       </div>
       <div className="mt-2 flex items-center justify-between text-[10px] text-slate-500"><span>{clockManager ? "Drag clocks to change their order. Your order is saved." : "Your five priority cities · expand to manage up to ten"}</span><button type="button" onClick={() => setClockManager(v => !v)} className="font-semibold text-sky-300">{clockManager ? "Show priority five" : "View all 10"}</button></div>
-      {clockManager && <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-5">{clocks.slice(5).map(([city, zone]) => <div key={city} draggable onDragStart={() => setClockDrag(clockOrder.indexOf(city))} onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); if (clockDrag !== null) setClockOrder(order => reorder(order, clockDrag, clockOrder.indexOf(city))); setClockDrag(null); }} className="flex cursor-grab items-center gap-2 rounded-lg border border-dashed border-sky-400/30 bg-[#071225] px-3 py-2"><GripVertical className="size-3 text-sky-400"/><div><div className="text-[10px] text-slate-400">{city}</div><div className="font-mono text-sm font-bold text-white">{now ? now.toLocaleTimeString([], { timeZone: zone, hour: "2-digit", minute: "2-digit" }) : "--:--"}</div></div></div>)}</div>}
+
     </Panel>
 
     <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
@@ -169,13 +176,31 @@ function Dashboard() {
               </select>
             </div>
           </div>
-          <div className="mt-4 grid gap-2 border-t border-sky-400/15 pt-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              ["Company", "IntelliStack Systems"], ["Global Company ID", "Directory assigned"],
-              ["Global User ID", "Directory assigned"], ["Work email", "Directory assigned"],
-              ["Phone", "Profile managed"], ["Location", "Profile managed"],
-              ["Department", "Organization assigned"], ["Manager", "Reporting structure assigned"],
-            ].map(([label, value]) => <div key={label} className="flex min-w-0 flex-col rounded-lg border border-slate-700/60 bg-[#071225] px-3 py-2"><span className="text-[9px] font-bold uppercase tracking-[.12em] text-slate-500">{label}</span><span className="mt-1 truncate text-xs font-semibold text-slate-200">{value}</span></div>)}
+          <div className="mt-4 grid gap-3 border-t border-sky-400/15 pt-3 lg:grid-cols-[1fr_1fr]">
+            <div>
+              <div className="mb-2 text-[9px] font-bold uppercase tracking-[.16em] text-sky-300">Identity record · system controlled</div>
+              <div className="space-y-1.5">
+                {[
+                  ["Company ID", "Assigned by IntelliStack IAM"],
+                  ["Global User ID", "Assigned by IntelliStack IAM"],
+                  ["Department", "Manager assigned"],
+                ].map(([label, value]) => <div key={label} className="flex items-center justify-between gap-3 border-b border-slate-700/50 py-1.5"><span className="text-[10px] text-slate-500">{label}</span><span className="text-right text-[11px] font-semibold text-slate-200">{value}</span></div>)}
+              </div>
+            </div>
+            <div>
+              <div className="mb-2 text-[9px] font-bold uppercase tracking-[.16em] text-sky-300">Work contact · user managed</div>
+              <div className="space-y-1.5">
+                {[
+                  ["Work email", "Profile record"],
+                  ["Work phone", "Profile record"],
+                  ["Work location", "Profile record"],
+                ].map(([label, value]) => <div key={label} className="flex items-center justify-between gap-3 border-b border-slate-700/50 py-1.5"><span className="text-[10px] text-slate-500">{label}</span><span className="text-right text-[11px] font-semibold text-slate-200">{value}</span></div>)}
+              </div>
+            </div>
+            <div className="rounded-lg border border-sky-400/15 bg-[#071225] px-3 py-2 lg:col-span-2">
+              <div className="text-[9px] font-bold uppercase tracking-[.16em] text-sky-300">Manager · read-only reporting record</div>
+              <div className="mt-1 flex flex-wrap items-center justify-between gap-2"><span className="text-[11px] font-semibold text-slate-200">Assigned manager and manager contact</span><span className="text-[10px] text-slate-500">Populated from the organization reporting structure</span></div>
+            </div>
           </div>
         </section>
 
@@ -227,11 +252,6 @@ function Dashboard() {
       </aside>
     </div>
 
-    <section className="overflow-hidden rounded-lg border border-sky-400/25 bg-[#061326]">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5">
-        <span className="flex items-center gap-2 font-display text-[9px] font-black tracking-[.18em] text-sky-300"><TrendingUp className="size-3.5"/> MARKET TICKER</span>
-        {["DOW JONES","S&P 500","NASDAQ","NYSE","RUSSELL 2000","GLOBAL MARKETS"].map(item=><span key={item} className="border-l border-sky-400/20 pl-3 text-[9px] font-semibold tracking-wide text-slate-400">{item}<span className="ml-2 text-slate-600">DATA PENDING</span></span>)}
-      </div>
-    </section>
+
   </div>;
 }
