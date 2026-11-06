@@ -1,10 +1,10 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Activity, ArrowDown, ArrowUp, Bell, BookOpen, BriefcaseBusiness, CalendarDays,
-  CheckCircle2, ChevronDown, ChevronUp, Clock3, GripVertical, Mail, Megaphone,
-  MessageSquare, Plus, Radar, ShieldCheck, Sparkles, TrendingUp, UserRound, X,
+  CheckCircle2, Clock3, GripVertical, Megaphone,
+  Plus, Radar, ShieldCheck, Sparkles, TrendingUp, UserRound, X,
 } from "lucide-react";
-import { useEffect, useMemo, useState, type DragEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getSupabaseClient } from "@/lib/supabase";
 import { HelpBuddyPanel } from "@/components/shell/HelpBuddy";
 import { StatusBadge } from "@/components/shell/StatusBadge";
