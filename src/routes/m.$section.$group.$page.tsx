@@ -67,7 +67,7 @@ function PageFoundation() {
           Your work on <span className="font-semibold text-primary">{activeTicketId}</span> is preserved.
           <Link
             to="/m/$section/$group/$page"
-            params={{ section: "command-center", group: "ticket-management", page: "active-ticket-workspace" }}
+            params={{ section: "service-desk-and-enterprise-operations", group: "ticket-management", page: "active-ticket-workspace" }}
             className="ml-auto inline-flex items-center gap-1 font-medium text-primary hover:underline"
           >
             <ArrowLeft className="size-3.5" /> Return to ticket
