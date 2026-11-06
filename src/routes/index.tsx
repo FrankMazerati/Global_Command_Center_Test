@@ -89,6 +89,7 @@ function Dashboard() {
   const [pickDrag, setPickDrag] = useState<number | null>(null);
   const [clockOrder, setClockOrder] = useState<string[]>(CLOCKS.map(([city]) => city));
   const [clockManager, setClockManager] = useState(false);
+  const [clockExpanded, setClockExpanded] = useState(false);
   const [clockDrag, setClockDrag] = useState<number | null>(null);
   const [news, setNews] = useState(NEWS_DEFAULT);
   const [newNews, setNewNews] = useState("");
@@ -129,40 +130,39 @@ function Dashboard() {
   if (!authReady) return <div className="grid min-h-[55vh] place-items-center text-sm text-slate-400"><div className="flex items-center gap-3"><span className="size-2 animate-pulse rounded-full bg-sky-400"/>Securing your command session…</div></div>;
 
   return <div className="space-y-4 text-slate-200">
-    <section className="overflow-hidden rounded-xl border border-sky-400/30 bg-gradient-to-r from-[#0b2342] via-[#0b1930] to-[#10172b] px-4 py-3 shadow-[0_10px_32px_rgba(0,0,0,.3)]">
+    <section className="glass-strong overflow-hidden rounded-xl px-4 py-3">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <span className="font-display text-[10px] font-black tracking-[.16em] text-sky-300">OPERATING PROMISE</span>
         <p className="font-display text-[11px] font-bold uppercase tracking-[.12em] text-white sm:text-xs">SEE EVERYTHING <span className="text-sky-300">LOCALLY.</span> CONNECT EVERYTHING <span className="text-sky-300">GLOBALLY.</span> POWERED BY <span className="text-sky-300">INTELLIGENCE.</span></p>
       </div>
     </section>
 
-    <section className="overflow-hidden rounded-lg border border-sky-400/25 bg-[#061326]">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5">
-        <span className="flex items-center gap-2 font-display text-[9px] font-black tracking-[.18em] text-sky-300"><TrendingUp className="size-3.5"/> MARKET TICKER</span>
-        {["DOW JONES","S&P 500","NASDAQ","NYSE","RUSSELL 2000","GLOBAL MARKETS"].map(item=><span key={item} className="border-l border-sky-400/20 pl-3 text-[9px] font-semibold tracking-wide text-slate-400">{item}<span className="ml-2 text-slate-600">DATA PENDING</span></span>)}
+    <section className="flex flex-wrap items-center gap-2 rounded-xl border border-sky-300/15 bg-slate-950/10 px-2 py-2 backdrop-blur-md">
+      <div className="mr-1 flex min-w-[105px] items-center gap-2 px-2">
+        <Clock3 className="size-3.5 text-sky-300"/>
+        <span className="font-display text-[9px] font-bold uppercase tracking-[.14em] text-slate-300">Global Time</span>
       </div>
-    </section>
-
-    <Panel title="Global time zones" icon={Clock3} action={<button type="button" onClick={() => setClockManager(v => !v)} className="text-[10px] font-semibold uppercase tracking-wider text-sky-300 hover:text-white">{clockManager ? "Done arranging" : "Arrange clocks"} <span className="ml-1">{clockManager ? "✓" : "↔"}</span></button>}>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-        {clocks.slice(0, 5).map(([city, zone]) => {
+      <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+        {clocks.slice(0, clockExpanded ? 10 : 5).map(([city, zone]) => {
           const idx = clockOrder.indexOf(city);
-          return <div key={city} draggable={clockManager} onDragStart={() => setClockDrag(idx)} onDragOver={e => { if (clockManager) e.preventDefault(); }} onDrop={e => { e.preventDefault(); if (clockDrag !== null) setClockOrder(order => reorder(order, clockDrag, idx)); setClockDrag(null); }} className={cn("flex min-w-0 items-center gap-2 rounded-lg border border-sky-400/15 bg-[#071225] px-3 py-2", clockManager && "cursor-grab border-dashed border-sky-400/50", clockDrag === idx && "opacity-40")}>
-            {clockManager && <GripVertical className="size-3 shrink-0 text-sky-400"/>}
-            <div className="min-w-0 flex-1"><div className="truncate text-[10px] font-semibold uppercase tracking-wider text-slate-400">{city}</div><div className="font-mono text-lg font-bold tabular-nums text-white">{now ? now.toLocaleTimeString([], { timeZone: zone, hour: "2-digit", minute: "2-digit" }) : "--:--"}</div></div>
+          return <div key={city} draggable={clockManager} onDragStart={() => setClockDrag(idx)} onDragOver={e => { if (clockManager) e.preventDefault(); }} onDrop={e => { e.preventDefault(); if (clockManager && clockDrag !== null) setClockOrder(order => reorder(order, clockDrag, idx)); setClockDrag(null); }} className={cn("glass flex min-w-[104px] items-center gap-1.5 rounded-md px-2 py-1", clockManager && "cursor-grab border-dashed border-sky-300/50", clockDrag === idx && "opacity-40")}>
+            {clockManager && <GripVertical className="size-3 shrink-0 text-sky-300"/>}
+            <div className="min-w-0 flex-1"><div className="truncate text-[8px] font-semibold uppercase tracking-[.12em] text-slate-400">{city}</div><div className="font-mono text-[13px] font-bold leading-tight tabular-nums text-white">{now ? now.toLocaleTimeString([], { timeZone: zone, hour: "2-digit", minute: "2-digit" }) : "--:--"}</div></div>
           </div>;
         })}
       </div>
-      <div className="mt-2 flex items-center justify-between text-[10px] text-slate-500"><span>{clockManager ? "Drag clocks to change their order. Your order is saved." : "Your five priority cities · expand to manage up to ten"}</span><button type="button" onClick={() => setClockManager(v => !v)} className="font-semibold text-sky-300">{clockManager ? "Show priority five" : "View all 10"}</button></div>
-
-    </Panel>
+      <div className="flex items-center gap-1.5 px-1">
+        <button type="button" onClick={() => setClockManager(v => !v)} className="rounded-md border border-sky-300/20 px-2 py-1 text-[9px] font-semibold text-sky-200 hover:bg-sky-300/10">{clockManager ? "Done" : "Reorder"}</button>
+        <button type="button" onClick={() => setClockExpanded(v => !v)} className="rounded-md border border-sky-300/20 px-2 py-1 text-[9px] font-semibold text-sky-200 hover:bg-sky-300/10">{clockExpanded ? "5 clocks" : "10 clocks"}</button>
+      </div>
+    </section>
 
     <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
       <div className="min-w-0 space-y-4">
         <section className="glass rounded-xl p-4">
           <div className="flex flex-wrap items-start gap-4">
             <div className="relative shrink-0">
-              <img src="https://raw.githubusercontent.com/FrankMazerati/Global_Command_Center_Test/main/frankmazerati.png" alt="Frank Mazerati" onError={e => { e.currentTarget.style.display = "none"; }} className="size-[88px] rounded-xl border-2 border-sky-400/60 bg-[#101f38] object-cover shadow-[0_0_22px_rgba(56,189,248,.18)]"/>
+              <img src={`${import.meta.env.BASE_URL}frankmazerati.png`} alt="Frank Mazerati" onError={e => { e.currentTarget.style.display = "none"; }} className="size-[88px] rounded-xl border-2 border-sky-400/60 bg-[#101f38] object-cover shadow-[0_0_22px_rgba(56,189,248,.18)]"/>
               <div className="absolute -bottom-1 -right-1 size-4 rounded-full border-2 border-[#0a172b] bg-emerald-400"/>
             </div>
             <div className="min-w-0 flex-1">
@@ -204,6 +204,19 @@ function Dashboard() {
               <div className="text-[9px] font-bold uppercase tracking-[.16em] text-sky-300">Manager · read-only reporting record</div>
               <div className="mt-1 flex flex-wrap items-center justify-between gap-2"><span className="text-[11px] font-semibold text-slate-200">Assigned manager and manager contact</span><span className="text-[10px] text-slate-500">Populated from the organization reporting structure</span></div>
             </div>
+          </div>
+        </section>
+
+        <section className="glass overflow-hidden rounded-xl px-3 py-2.5">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 font-display text-[9px] font-black uppercase tracking-[.16em] text-sky-300"><TrendingUp className="size-3.5"/> Market Watch</div>
+            <span className="text-[8px] font-semibold uppercase tracking-wider text-amber-300">Live data connector required</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
+            {["DOW","S&P 500","NASDAQ","NYSE","RUSSELL 2000","GLOBAL"].map(symbol => <div key={symbol} className="min-w-0 border-l border-sky-300/20 pl-2">
+              <div className="truncate text-[9px] font-bold tracking-wide text-slate-200">{symbol}</div>
+              <div className="mt-0.5 text-[8px] text-slate-500">Awaiting market feed</div>
+            </div>)}
           </div>
         </section>
 
