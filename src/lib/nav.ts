@@ -1,4 +1,4 @@
-// Single source of truth for the ten-section hamburger navigation.
+// Single source of truth for the nine primary hamburger navigation areas.
 // Every item resolves to a real route: /m/$section/$group/$page.
 
 export type SectionTone =
