@@ -25,6 +25,14 @@ const FOOTER_COLUMNS = [
 ];
 
 const FOOTER_DESTINATIONS: Record<string, [string, string, string]> = {
+  "Partner With Us": ["business-products", "intellisphere-marketplace", "products-and-services"],
+  "Become a Client": ["business-products", "business-overview", "business-overview-dashboard"],
+  "Looking for Work Marketplace": ["employee-and-manager-workspace", "workforce-experiences", "intellihire-overview"],
+  "Become a Vendor": ["business-products", "intellisphere-marketplace", "products-and-services"],
+  "Technology & Integration Partners": ["business-products", "business-overview", "business-integrations"],
+  "About IntelliStack": ["business-products", "company-and-organization-management", "intellistack-systems"],
+  "Our Ecosystem": ["business-products", "company-and-organization-management", "intellistack-systems"],
+  "Contact": ["home-and-command-center", "help-buddy", "conversation"],
   "Bring the Work to You": ["home-and-command-center", "command-center", "bring-the-work-to-you"],
   "IntelliDesk": ["service-desk-and-enterprise-operations", "intellidesk-overview", "intellidesk-dashboard"],
   "IntelliChat": ["productivity-and-collaboration", "intellistack-collaboration-tools", "intellichat"],
@@ -55,7 +63,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       navigate({ to: "/" });
       return;
     }
-    if (label === "Help & Support") {
+    if (label === "Help & Support" || label === "Contact") {
       w.openHelpBuddy();
       return;
     }
