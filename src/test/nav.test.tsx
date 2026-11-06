@@ -37,6 +37,6 @@ describe("hamburger navigation", () => {
     for (const url of urls) {
       expect(router.matchRoutes(url).at(-1)?.routeId).toBe("/m/$section/$group/$page");
     }
-    expect(router.matchRoutes("/m/governance").at(-1)?.routeId).not.toBe(rootRouteId);
+    expect(router.matchRoutes("/m/security-risk-and-governance").at(-1)?.routeId).not.toBe(rootRouteId);
   });
 });
