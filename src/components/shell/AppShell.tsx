@@ -78,14 +78,14 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
   };
 
-  const utilityClass = "relative grid size-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-slate-950/25 text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-md transition hover:border-sky-300/45 hover:bg-sky-400/10 hover:text-sky-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70";
+  const utilityClass = "holo-control relative grid size-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-slate-950/25 text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-md transition hover:border-sky-300/45 hover:bg-sky-400/10 hover:text-sky-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70";
 
   return (
     <div className="min-h-dvh bg-page text-foreground">
       <header className="command-header sticky top-0 z-30 border-b border-sky-300/25 shadow-[0_8px_30px_rgba(0,0,0,.35)]">
         <div className="mx-auto flex min-h-[68px] max-w-[1800px] items-center justify-between gap-2 px-3 sm:px-5">
           <div className="flex min-w-0 items-center gap-2">
-            <Button variant="ghost" size="icon" aria-label="Open command navigation" onClick={() => setMenuOpen(true)} className="size-10 rounded-xl border border-sky-300/25 bg-slate-950/30 text-sky-100 shadow-[inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-md hover:bg-sky-400/15 hover:text-white">
+            <Button variant="ghost" size="icon" aria-label="Open command navigation" onClick={() => setMenuOpen(true)} className="holo-control size-10 rounded-xl border border-sky-300/25 bg-slate-950/30 text-sky-100 shadow-[inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-md hover:bg-sky-400/15 hover:text-white">
               <Menu className="size-5" strokeWidth={1.8} />
             </Button>
             <div className="hidden items-center gap-2 sm:flex">
