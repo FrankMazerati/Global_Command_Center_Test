@@ -152,7 +152,7 @@ function Dashboard() {
         <section className="rounded-xl border border-sky-400/25 bg-[#0a172b] p-4 shadow-[0_12px_34px_rgba(0,0,0,.24)]">
           <div className="flex flex-wrap items-start gap-4">
             <div className="relative shrink-0">
-              <img src="/frankmazerati.png" alt="Frank Mazerati" onError={e => { e.currentTarget.style.display = "none"; }} className="size-[88px] rounded-xl border-2 border-sky-400/60 bg-[#101f38] object-cover shadow-[0_0_22px_rgba(56,189,248,.18)]"/>
+              <img src="https://raw.githubusercontent.com/FrankMazerati/Global_Command_Center_Test/main/frankmazerati.png" alt="Frank Mazerati" onError={e => { e.currentTarget.style.display = "none"; }} className="size-[88px] rounded-xl border-2 border-sky-400/60 bg-[#101f38] object-cover shadow-[0_0_22px_rgba(56,189,248,.18)]"/>
               <div className="absolute -bottom-1 -right-1 size-4 rounded-full border-2 border-[#0a172b] bg-emerald-400"/>
             </div>
             <div className="min-w-0 flex-1">
