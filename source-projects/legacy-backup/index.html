@@ -1,0 +1,518 @@
+&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+&lt;meta charset="UTF-8"&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+&lt;title&gt;Maximus Optimus — Global Command Center | IntelliStack Systems&lt;/title&gt;
+&lt;style&gt;
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--navy:#0a1628;--navy-light:#132240;--navy-mid:#1a3060;--cyan:#00e5ff;--cyan-dim:#0099aa;--cyan-glow:rgba(0,229,255,.15);--white:#e8edf3;--gray:#8892a4;--green:#00e676;--red:#ff4757;--orange:#ffa940;--gold:#ffd700;--radius:8px;--font:'Segoe UI',system-ui,-apple-system,sans-serif}
+html,body{height:100%;font-family:var(--font);background:var(--navy);color:var(--white);overflow-x:hidden}
+body{display:flex;flex-direction:column}
+
+/* === LOGIN VIEW === */
+#loginView{position:fixed;inset:0;z-index:1000;background:var(--navy);display:flex;align-items:center;justify-content:center}
+#loginView.hidden{display:none}
+.login-container{background:var(--navy-light);border:1px solid var(--navy-mid);border-radius:12px;padding:40px;width:420px;max-width:95vw;box-shadow:0 0 40px rgba(0,229,255,.08)}
+.login-logo{text-align:center;margin-bottom:24px}
+.login-logo .shield{width:56px;height:56px;margin:0 auto 12px;background:linear-gradient(135deg,var(--cyan-dim),var(--cyan));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:var(--navy);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%)}
+.login-logo h1{font-size:18px;font-weight:600;letter-spacing:1px}
+.login-logo h1 span{color:var(--cyan)}
+.login-logo p{font-size:12px;color:var(--gray);margin-top:4px}
+.role-selector{display:flex;gap:8px;margin-bottom:20px}
+.role-btn{flex:1;padding:10px 8px;border:1px solid var(--navy-mid);border-radius:var(--radius);background:transparent;color:var(--gray);cursor:pointer;font-size:12px;text-align:center;transition:.2s}
+.role-btn:hover,.role-btn.active{border-color:var(--cyan);color:var(--cyan);background:var(--cyan-glow)}
+.role-btn .role-icon{font-size:20px;display:block;margin-bottom:4px}
+.login-fields{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.login-fields label{font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.5px}
+.login-fields input{background:var(--navy);border:1px solid var(--navy-mid);border-radius:var(--radius);padding:10px 12px;color:var(--white);font-size:14px;outline:none;transition:.2s}
+.login-fields input:focus{border-color:var(--cyan);box-shadow:0 0 0 2px var(--cyan-glow)}
+.login-divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--gray);font-size:11px}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--navy-mid)}
+.provider-btns{display:flex;gap:8px;margin-bottom:16px}
+.provider-btn{flex:1;padding:8px;border:1px solid var(--navy-mid);border-radius:var(--radius);background:transparent;color:var(--gray);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;gap:6px;transition:.2s}
+.provider-btn:hover{border-color:var(--cyan);color:var(--white)}
+.demo-btn{width:100%;padding:12px;background:linear-gradient(135deg,var(--cyan-dim),var(--cyan));border:none;border-radius:var(--radius);color:var(--navy);font-weight:700;font-size:14px;cursor:pointer;transition:.2s}
+.demo-btn:hover{opacity:.9;transform:translateY(-1px)}
+.prototype-notice{text-align:center;font-size:10px;color:var(--gray);margin-top:16px;line-height:1.5}
+
+/* === DASHBOARD === */
+#dashboardView{display:none;flex:1;flex-direction:column;min-height:100vh}
+#dashboardView.active{display:flex}
+
+/* Top Status Strip */
+.top-strip{background:var(--navy-light);border-bottom:1px solid var(--navy-mid);padding:6px 20px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--gray);flex-shrink:0}
+.top-strip-left,.top-strip-right{display:flex;align-items:center;gap:16px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:4px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.top-clock{font-variant-numeric:tabular-nums;color:var(--cyan);font-weight:600}
+
+/* Header */
+.header{background:linear-gradient(180deg,var(--navy-light),var(--navy));border-bottom:1px solid var(--navy-mid);padding:16px 20px;display:flex;align-items:center;gap:16px;flex-shrink:0}
+.shield-icon{width:44px;height:44px;background:linear-gradient(135deg,var(--cyan-dim),var(--cyan));clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:900;color:var(--navy);flex-shrink:0}
+.header-text h1{font-size:16px;font-weight:700;letter-spacing:.5px;line-height:1.2}
+.header-text h1 span{color:var(--cyan)}
+.header-text .slogan{font-size:11px;color:var(--cyan-dim);letter-spacing:2px;text-transform:uppercase}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+.profile-area{display:flex;align-items:center;gap:10px;cursor:pointer;padding:4px 8px;border-radius:var(--radius);transition:.2s}
+.profile-area:hover{background:var(--cyan-glow)}
+.profile-hex{width:36px;height:36px;background:linear-gradient(135deg,var(--navy-mid),var(--navy-light));border:2px solid var(--cyan-dim);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--cyan)}
+.profile-info{line-height:1.3}
+.profile-info .name{font-size:12px;font-weight:600}
+.profile-info .status{font-size:10px;color:var(--green);display:flex;align-items:center;gap:4px}
+.status-badge{display:flex;align-items:center;gap:5px;padding:4px 10px;background:var(--cyan-glow);border:1px solid rgba(0,229,255,.2);border-radius:20px;font-size:11px;color:var(--cyan)}
+
+/* Body Layout */
+.body-layout{display:flex;flex:1;overflow:hidden}
+
+/* Left Nav */
+.left-nav{width:220px;background:var(--navy-light);border-right:1px solid var(--navy-mid);padding:12px 0;overflow-y:auto;flex-shrink:0}
+.nav-section{padding:0 12px;margin-bottom:8px}
+.nav-section-title{font-size:10px;text-transform:uppercase;color:var(--gray);letter-spacing:1px;padding:8px 0 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--radius);font-size:12px;color:var(--gray);cursor:pointer;transition:.15s;user-select:none}
+.nav-item:hover{background:var(--cyan-glow);color:var(--white)}
+.nav-item.active{background:var(--cyan-glow);color:var(--cyan);font-weight:600}
+.nav-item .nav-icon{width:18px;text-align:center;font-size:14px}
+.nav-toggle{font-size:10px;color:var(--gray)}
+
+/* Main Content */
+.main-content{flex:1;overflow-y:auto;padding:20px}
+.section{display:none}
+.section.active{display:block}
+.section h2{font-size:20px;font-weight:700;margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--navy-mid)}
+
+/* Greeting */
+.greeting{font-size:14px;color:var(--gray);margin-bottom:16px}
+.greeting strong{color:var(--white)}
+
+/* Cards Grid */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-bottom:20px}
+.card{background:var(--navy-light);border:1px solid var(--navy-mid);border-radius:var(--radius);padding:16px;transition:.2s;cursor:pointer}
+.card:hover{border-color:var(--cyan-dim);box-shadow:0 0 16px var(--cyan-glow)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.card-icon{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.card-icon.cyan{background:var(--cyan-glow);color:var(--cyan)}
+.card-icon.green{background:rgba(0,230,118,.12);color:var(--green)}
+.card-icon.orange{background:rgba(255,169,64,.12);color:var(--orange)}
+.card-icon.red{background:rgba(255,71,87,.12);color:var(--red)}
+.card h3{font-size:13px;font-weight:600;margin-bottom:4px}
+.card p{font-size:11px;color:var(--gray);line-height:1.5}
+.card-value{font-size:22px;font-weight:700;color:var(--cyan);margin:8px 0 4px}
+
+/* World Clock */
+.clock-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:20px}
+.clock-card{background:var(--navy-light);border:1px solid var(--navy-mid);border-radius:var(--radius);padding:12px;text-align:center}
+.clock-card .city{font-size:11px;color:var(--gray);margin-bottom:4px}
+.clock-card .time{font-size:20px;font-weight:700;color:var(--cyan);font-variant-numeric:tabular-nums}
+.clock-card .date{font-size:10px;color:var(--gray);margin-top:2px}
+
+/* Operations Status */
+.ops-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
+.ops-item{display:flex;align-items:center;gap:12px;background:var(--navy-light);border:1px solid var(--navy-mid);border-radius:var(--radius);padding:12px}
+.ops-status{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ops-status.online{background:var(--green)}
+.ops-status.warning{background:var(--orange)}
+.ops-status.offline{background:var(--red)}
+.ops-info{flex:1}
+.ops-info .ops-name{font-size:12px;font-weight:600}
+.ops-info .ops-detail{font-size:10px;color:var(--gray)}
+.ops-metric{font-size:11px;color:var(--gray);text-align:right}
+
+/* Module Cards */
+.module-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.module-card{background:var(--navy-light);border:1px solid var(--navy-mid);border-radius:var(--radius);padding:14px;text-align:center;cursor:pointer;transition:.2s}
+.module-card:hover{border-color:var(--cyan-dim);background:var(--navy-mid)}
+.module-card .mod-icon{font-size:28px;margin-bottom:8px}
+.module-card h4{font-size:12px;font-weight:600;margin-bottom:4px}
+.module-card p{font-size:10px;color:var(--gray)}
+
+/* Vibe Chat Drawer */
+.chat-drawer{position:fixed;right:-380px;top:0;bottom:0;width:380px;background:var(--navy-light);border-left:1px solid var(--navy-mid);z-index:500;display:flex;flex-direction:column;transition:right .3s ease}
+.chat-drawer.open{right:0}
+.chat-header{padding:16px;border-bottom:1px solid var(--navy-mid);display:flex;align-items:center;justify-content:space-between}
+.chat-header h3{font-size:14px;font-weight:600;color:var(--cyan)}
+.chat-close{background:none;border:none;color:var(--gray);font-size:20px;cursor:pointer;padding:4px 8px}
+.chat-close:hover{color:var(--white)}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px}
+.chat-msg{max-width:85%;padding:10px 14px;border-radius:12px;font-size:12px;line-height:1.5}
+.chat-msg.bot{background:var(--navy-mid);color:var(--white);align-self:flex-start;border-bottom-left-radius:2px}
+.chat-msg.user{background:var(--cyan-dim);color:var(--navy);align-self:flex-end;border-bottom-right-radius:2px}
+.chat-input-area{padding:12px;border-top:1px solid var(--navy-mid);display:flex;gap:8px}
+.chat-input-area input{flex:1;background:var(--navy);border:1px solid var(--navy-mid);border-radius:20px;padding:8px 14px;color:var(--white);font-size:12px;outline:none}
+.chat-input-area input:focus{border-color:var(--cyan)}
+.chat-send{background:var(--cyan);border:none;border-radius:20px;padding:8px 14px;color:var(--navy);font-weight:600;cursor:pointer;font-size:12px}
+.chat-send:hover{opacity:.85}
+
+/* Chat Toggle FAB */
+.chat-fab{position:fixed;bottom:20px;right:20px;width:48px;height:48px;background:linear-gradient(135deg,var(--cyan-dim),var(--cyan));border:none;border-radius:50%;color:var(--navy);font-size:22px;cursor:pointer;z-index:400;box-shadow:0 4px 16px rgba(0,229,255,.3);transition:.2s}
+.chat-fab:hover{transform:scale(1.1)}
+
+/* Profile Section */
+.profile-full{display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap}
+.profile-photo{width:120px;height:120px;background:linear-gradient(135deg,var(--navy-mid),var(--navy-light));border:3px solid var(--cyan-dim);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-size:36px;color:var(--cyan);flex-shrink:0}
+.profile-details{flex:1;min-width:200px}
+.profile-details h3{font-size:18px;font-weight:700;margin-bottom:4px}
+.profile-details .role{font-size:12px;color:var(--cyan);margin-bottom:8px}
+.profile-details .avail{font-size:12px;color:var(--green);display:flex;align-items:center;gap:6px;margin-bottom:12px}
+.profile-meta{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.meta-item{font-size:11px;color:var(--gray)}
+.meta-item span{display:block;color:var(--white);font-weight:600;font-size:13px}
+
+/* Tabs */
+.tabs{display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--navy-mid);padding-bottom:0}
+.tab{padding:8px 16px;font-size:12px;color:var(--gray);cursor:pointer;border-bottom:2px solid transparent;transition:.15s}
+.tab:hover{color:var(--white)}
+.tab.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+
+/* Footer prototype notice */
+.footer-notice{text-align:center;padding:16px;font-size:10px;color:var(--gray);border-top:1px solid var(--navy-mid);background:var(--navy-light)}
+
+/* Mobile */
+@media(max-width:768px){
+  .left-nav{display:none}
+  .header{padding:12px 14px}
+  .main-content{padding:14px}
+  .cards-grid{grid-template-columns:1fr}
+  .clock-grid{grid-template-columns:repeat(2,1fr)}
+  .module-grid{grid-template-columns:repeat(2,1fr)}
+  .login-container{padding:24px}
+  .profile-full{flex-direction:column;align-items:center}
+  .chat-drawer{width:100%;right:-100%}
+}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;!-- LOGIN VIEW --&gt;
+&lt;div id="loginView"&gt;
+  &lt;div class="login-container"&gt;
+    &lt;div class="login-logo"&gt;
+      &lt;div class="shield"&gt;MO&lt;/div&gt;
+      &lt;h1&gt;Maximus Optimus — &lt;span&gt;Global Command Center&lt;/span&gt;&lt;/h1&gt;
+      &lt;p&gt;One System. One World. — IntelliStack Systems&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div class="role-selector"&gt;
+      &lt;button class="role-btn active" onclick="selectRole(this,'employee')"&gt;&lt;span class="role-icon"&gt;👤&lt;/span&gt;Employee / Contractor&lt;/button&gt;
+      &lt;button class="role-btn" onclick="selectRole(this,'business')"&gt;&lt;span class="role-icon"&gt;🏢&lt;/span&gt;Business / Employer&lt;/button&gt;
+      &lt;button class="role-btn" onclick="selectRole(this,'tenant')"&gt;&lt;span class="role-icon"&gt;🔑&lt;/span&gt;Tenant&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;div class="login-fields"&gt;
+      &lt;label for="loginEmail"&gt;Email Address&lt;/label&gt;
+      &lt;input type="email" id="loginEmail" placeholder="your.email@company.com"&gt;
+      &lt;label for="loginPassword"&gt;Password&lt;/label&gt;
+      &lt;input type="password" id="loginPassword" placeholder="Enter password"&gt;
+    &lt;/div&gt;
+    &lt;div class="login-divider"&gt;or sign in with&lt;/div&gt;
+    &lt;div class="provider-btns"&gt;
+      &lt;button class="provider-btn" onclick="handleLogin()"&gt;🔐 Google&lt;/button&gt;
+      &lt;button class="provider-btn" onclick="handleLogin()"&gt;🔑 Microsoft&lt;/button&gt;
+      &lt;button class="provider-btn" onclick="handleLogin()"&gt;🛡️ SSO&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;button class="demo-btn" onclick="handleLogin()"&gt;▶ Demo — Sign In to Dashboard&lt;/button&gt;
+    &lt;p class="prototype-notice"&gt;⚠ Visual Prototype — This is a UI mockup only. No real authentication occurs. Demo credentials are accepted.&lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- DASHBOARD VIEW --&gt;
+&lt;div id="dashboardView"&gt;
+  &lt;!-- Top Strip --&gt;
+  &lt;div class="top-strip"&gt;
+    &lt;div class="top-strip-left"&gt;
+      &lt;span&gt;&lt;span class="status-dot"&gt;&lt;/span&gt;Systems Operational&lt;/span&gt;
+      &lt;span&gt;v2.0.0-prototype&lt;/span&gt;
+      &lt;span&gt;Build 2026.11.04&lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class="top-strip-right"&gt;
+      &lt;span&gt;📡 All Nodes Connected&lt;/span&gt;
+      &lt;span class="top-clock" id="topClock"&gt;--:--:-- UTC&lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Header --&gt;
+  &lt;div class="header"&gt;
+    &lt;div class="shield-icon"&gt;MO&lt;/div&gt;
+    &lt;div class="header-text"&gt;
+      &lt;h1&gt;Maximus Optimus — &lt;span&gt;Global Command Center&lt;/span&gt;&lt;/h1&gt;
+      &lt;div class="slogan"&gt;One System. One World.&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class="header-right"&gt;
+      &lt;div class="status-badge"&gt;&lt;span class="status-dot"&gt;&lt;/span&gt; All Systems Go&lt;/div&gt;
+      &lt;div class="profile-area" onclick="showSection('profile')"&gt;
+        &lt;div class="profile-hex"&gt;FM&lt;/div&gt;
+        &lt;div class="profile-info"&gt;
+          &lt;div class="name"&gt;Frank Mazerati&lt;/div&gt;
+          &lt;div class="status"&gt;&lt;span class="status-dot"&gt;&lt;/span&gt; Available&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Body --&gt;
+  &lt;div class="body-layout"&gt;
+    &lt;!-- Left Nav --&gt;
+    &lt;nav class="left-nav"&gt;
+      &lt;div class="nav-section"&gt;
+        &lt;div class="nav-section-title"&gt;Main&lt;/div&gt;
+        &lt;div class="nav-item active" onclick="showSection('dashboard',this)"&gt;&lt;span class="nav-icon"&gt;🏠&lt;/span&gt;Dashboard&lt;/div&gt;
+        &lt;div class="nav-item" onclick="showSection('profile',this)"&gt;&lt;span class="nav-icon"&gt;👤&lt;/span&gt;Profile&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class="nav-section"&gt;
+        &lt;div class="nav-section-title"&gt;Modules&lt;/div&gt;
+        &lt;div class="nav-item" onclick="showSection('operations',this)"&gt;&lt;span class="nav-icon"&gt;⚙️&lt;/span&gt;Operations&lt;/div&gt;
+        &lt;div class="nav-item" onclick="showSection('intellisync',this)"&gt;&lt;span class="nav-icon"&gt;🔄&lt;/span&gt;IntelliSync&lt;/div&gt;
+        &lt;div class="nav-item" onclick="showSection('identity',this)"&gt;&lt;span class="nav-icon"&gt;🛡️&lt;/span&gt;Identity &amp; Access&lt;/div&gt;
+        &lt;div class="nav-item" onclick="showSection('infrastructure',this)"&gt;&lt;span class="nav-icon"&gt;🖥️&lt;/span&gt;Infrastructure&lt;/div&gt;
+        &lt;div class="nav-item" onclick="showSection('security',this)"&gt;&lt;span class="nav-icon"&gt;🔒&lt;/span&gt;Security Center&lt;/div&gt;
+        &lt;div class="nav-item" onclick="showSection('servicedesk',this)"&gt;&lt;span class="nav-icon"&gt;🎧&lt;/span&gt;Service Desk&lt;/div&gt;
+        &lt;div class="nav-item" onclick="showSection('automation',this)"&gt;&lt;span class="nav-icon"&gt;🤖&lt;/span&gt;Automation&lt;/div&gt;
+        &lt;div class="nav-item" onclick="showSection('collaboration',this)"&gt;&lt;span class="nav-icon"&gt;💬&lt;/span&gt;Collaboration&lt;/div&gt;
+        &lt;div class="nav-item" onclick="showSection('reports',this)"&gt;&lt;span class="nav-icon"&gt;📊&lt;/span&gt;Reports &amp; Analytics&lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class="nav-section"&gt;
+        &lt;div class="nav-section-title"&gt;System&lt;/div&gt;
+        &lt;div class="nav-item" onclick="handleLogout()"&gt;&lt;span class="nav-icon"&gt;🚪&lt;/span&gt;Sign Out&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/nav&gt;
+
+    &lt;!-- Main --&gt;
+    &lt;div class="main-content"&gt;
+
+      &lt;!-- DASHBOARD SECTION --&gt;
+      &lt;div class="section active" id="sec-dashboard"&gt;
+        &lt;h2&gt;Command Center&lt;/h2&gt;
+        &lt;p class="greeting" id="greeting"&gt;Good evening, &lt;strong&gt;Frank Mazerati&lt;/strong&gt;&lt;/p&gt;
+
+        &lt;!-- World Clock --&gt;
+        &lt;h3 style="font-size:14px;margin-bottom:10px;color:var(--gray)"&gt;World Clocks&lt;/h3&gt;
+        &lt;div class="clock-grid"&gt;
+          &lt;div class="clock-card"&gt;&lt;div class="city"&gt;New York (EST)&lt;/div&gt;&lt;div class="time" id="clock-ny"&gt;--:--&lt;/div&gt;&lt;div class="date"&gt;&lt;/div&gt;&lt;/div&gt;
+          &lt;div class="clock-card"&gt;&lt;div class="city"&gt;London (GMT)&lt;/div&gt;&lt;div class="time" id="clock-london"&gt;--:--&lt;/div&gt;&lt;div class="date"&gt;&lt;/div&gt;&lt;/div&gt;
+          &lt;div class="clock-card"&gt;&lt;div class="city"&gt;Tokyo (JST)&lt;/div&gt;&lt;div class="time" id="clock-tokyo"&gt;--:--&lt;/div&gt;&lt;div class="date"&gt;&lt;/div&gt;&lt;/div&gt;
+          &lt;div class="clock-card"&gt;&lt;div class="city"&gt;Dubai (GST)&lt;/div&gt;&lt;div class="time" id="clock-dubai"&gt;--:--&lt;/div&gt;&lt;div class="date"&gt;&lt;/div&gt;&lt;/div&gt;
+          &lt;div class="clock-card"&gt;&lt;div class="city"&gt;Sydney (AEST)&lt;/div&gt;&lt;div class="time" id="clock-sydney"&gt;--:--&lt;/div&gt;&lt;div class="date"&gt;&lt;/div&gt;&lt;/div&gt;
+          &lt;div class="clock-card"&gt;&lt;div class="city"&gt;Singapore (SGT)&lt;/div&gt;&lt;div class="time" id="clock-singapore"&gt;--:--&lt;/div&gt;&lt;div class="date"&gt;&lt;/div&gt;&lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;!-- Quick Status Cards --&gt;
+        &lt;h3 style="font-size:14px;margin-bottom:10px;color:var(--gray)"&gt;System Overview&lt;/h3&gt;
+        &lt;div class="cards-grid"&gt;
+          &lt;div class="card"&gt;
+            &lt;div class="card-header"&gt;&lt;div class="card-icon cyan"&gt;⚡&lt;/div&gt;&lt;span style="font-size:10px;color:var(--green)"&gt;Nominal&lt;/span&gt;&lt;/div&gt;
+            &lt;h3&gt;Active Operations&lt;/h3&gt;
+            &lt;div class="card-value"&gt;47&lt;/div&gt;
+            &lt;p&gt;Ongoing across all regions&lt;/p&gt;
+          &lt;/div&gt;
+          &lt;div class="card"&gt;
+            &lt;div class="card-header"&gt;&lt;div class="card-icon green"&gt;✅&lt;/div&gt;&lt;span style="font-size:10px;color:var(--green)"&gt;Healthy&lt;/span&gt;&lt;/div&gt;
+            &lt;h3&gt;Modules Online&lt;/h3&gt;
+            &lt;div class="card-value"&gt;9/9&lt;/div&gt;
+            &lt;p&gt;All modules operational&lt;/p&gt;
+          &lt;/div&gt;
+          &lt;div class="card"&gt;
+            &lt;div class="card-header"&gt;&lt;div class="card-icon orange"&gt;⚠️&lt;/div&gt;&lt;span style="font-size:10px;color:var(--orange)"&gt;Attention&lt;/span&gt;&lt;/div&gt;
+            &lt;h3&gt;Open Tickets&lt;/h3&gt;
+            &lt;div class="card-value"&gt;12&lt;/div&gt;
+            &lt;p&gt;3 urgent, 9 standard&lt;/p&gt;
+          &lt;/div&gt;
+          &lt;div class="card"&gt;
+            &lt;div class="card-header"&gt;&lt;div class="card-icon cyan"&gt;🔐&lt;/div&gt;&lt;span style="font-size:10px;color:var(--green)"&gt;Secured&lt;/span&gt;&lt;/div&gt;
+            &lt;h3&gt;Security Posture&lt;/h3&gt;
+            &lt;div class="card-value"&gt;A+&lt;/div&gt;
+            &lt;p&gt;All scanners clear&lt;/p&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;!-- Operations Status --&gt;
+        &lt;h3 style="font-size:14px;margin-bottom:10px;color:var(--gray)"&gt;Operations Status&lt;/h3&gt;
+        &lt;div class="ops-list"&gt;
+          &lt;div class="ops-item"&gt;&lt;div class="ops-status online"&gt;&lt;/div&gt;&lt;div class="ops-info"&gt;&lt;div class="ops-name"&gt;Core Operations&lt;/div&gt;&lt;div class="ops-detail"&gt;All processes running normally&lt;/div&gt;&lt;/div&gt;&lt;div class="ops-metric"&gt;99.97% uptime&lt;/div&gt;&lt;/div&gt;
+          &lt;div class="ops-item"&gt;&lt;div class="ops-status online"&gt;&lt;/div&gt;&lt;div class="ops-info"&gt;&lt;div class="ops-name"&gt;IntelliSync Services&lt;/div&gt;&lt;div class="ops-detail"&gt;Data replication in sync&lt;/div&gt;&lt;/div&gt;&lt;div class="ops-metric"&gt;0ms lag&lt;/div&gt;&lt;/div&gt;
+          &lt;div class="ops-item"&gt;&lt;div class="ops-status online"&gt;&lt;/div&gt;&lt;div class="ops-info"&gt;&lt;div class="ops-name"&gt;Identity &amp; Access Mgmt&lt;/div&gt;&lt;div class="ops-detail"&gt;1,247 active sessions&lt;/div&gt;&lt;/div&gt;&lt;div class="ops-metric"&gt;Active&lt;/div&gt;&lt;/div&gt;
+          &lt;div class="ops-item"&gt;&lt;div class="ops-status warning"&gt;&lt;/div&gt;&lt;div class="ops-info"&gt;&lt;div class="ops-name"&gt;Infrastructure&lt;/div&gt;&lt;div class="ops-detail"&gt;Node eu-west-2 at 87% capacity&lt;/div&gt;&lt;/div&gt;&lt;div class="ops-metric"&gt;87% load&lt;/div&gt;&lt;/div&gt;
+          &lt;div class="ops-item"&gt;&lt;div class="ops-status online"&gt;&lt;/div&gt;&lt;div class="ops-info"&gt;&lt;div class="ops-name"&gt;Security Center&lt;/div&gt;&lt;div class="ops-detail"&gt;No active threats&lt;/div&gt;&lt;/div&gt;&lt;div class="ops-metric"&gt;Clean&lt;/div&gt;&lt;/div&gt;
+          &lt;div class="ops-item"&gt;&lt;div class="ops-status online"&gt;&lt;/div&gt;&lt;div class="ops-info"&gt;&lt;div class="ops-name"&gt;Service Desk&lt;/div&gt;&lt;div class="ops-detail"&gt;Avg response: 4.2 min&lt;/div&gt;&lt;/div&gt;&lt;div class="ops-metric"&gt;SLA met&lt;/div&gt;&lt;/div&gt;
+          &lt;div class="ops-item"&gt;&lt;div class="ops-status online"&gt;&lt;/div&gt;&lt;div class="ops-info"&gt;&lt;div class="ops-name"&gt;Automation Engine&lt;/div&gt;&lt;div class="ops-detail"&gt;128 workflows running&lt;/div&gt;&lt;/div&gt;&lt;div class="ops-metric"&gt;Active&lt;/div&gt;&lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;!-- Module Quick Access --&gt;
+        &lt;h3 style="font-size:14px;margin-bottom:10px;color:var(--gray)"&gt;Module Quick Access&lt;/h3&gt;
+        &lt;div class="module-grid"&gt;
+          &lt;div class="module-card" onclick="showSection('operations')"&gt;&lt;div class="mod-icon"&gt;⚙️&lt;/div&gt;&lt;h4&gt;Operations&lt;/h4&gt;&lt;p&gt;Monitor &amp; manage&lt;/p&gt;&lt;/div&gt;
+          &lt;div class="module-card" onclick="showSection('intellisync')"&gt;&lt;div class="mod-icon"&gt;🔄&lt;/div&gt;&lt;h4&gt;IntelliSync&lt;/h4&gt;&lt;p&gt;Data synchronization&lt;/p&gt;&lt;/div&gt;
+          &lt;div class="module-card" onclick="showSection('identity')"&gt;&lt;div class="mod-icon"&gt;🛡️&lt;/div&gt;&lt;h4&gt;Identity &amp; Access&lt;/h4&gt;&lt;p&gt;Users &amp; permissions&lt;/p&gt;&lt;/div&gt;
+          &lt;div class="module-card" onclick="showSection('infrastructure')"&gt;&lt;div class="mod-icon"&gt;🖥️&lt;/div&gt;&lt;h4&gt;Infrastructure&lt;/h4&gt;&lt;p&gt;Servers &amp; networks&lt;/p&gt;&lt;/div&gt;
+          &lt;div class="module-card" onclick="showSection('security')"&gt;&lt;div class="mod-icon"&gt;🔒&lt;/div&gt;&lt;h4&gt;Security Center&lt;/h4&gt;&lt;p&gt;Threats &amp; compliance&lt;/p&gt;&lt;/div&gt;
+          &lt;div class="module-card" onclick="showSection('servicedesk')"&gt;&lt;div class="mod-icon"&gt;🎧&lt;/div&gt;&lt;h4&gt;Service Desk&lt;/h4&gt;&lt;p&gt;Support &amp; tickets&lt;/p&gt;&lt;/div&gt;
+          &lt;div class="module-card" onclick="showSection('automation')"&gt;&lt;div class="mod-icon"&gt;🤖&lt;/div&gt;&lt;h4&gt;Automation&lt;/h4&gt;&lt;p&gt;Workflows &amp; scripts&lt;/p&gt;&lt;/div&gt;
+          &lt;div class="module-card" onclick="showSection('collaboration')"&gt;&lt;div class="mod-icon"&gt;💬&lt;/div&gt;&lt;h4&gt;Collaboration&lt;/h4&gt;&lt;p&gt;Teams &amp; channels&lt;/p&gt;&lt;/div&gt;
+          &lt;div class="module-card" onclick="showSection('reports')"&gt;&lt;div class="mod-icon"&gt;📊&lt;/div&gt;&lt;h4&gt;Reports &amp; Analytics&lt;/h4&gt;&lt;p&gt;Dashboards &amp; insights&lt;/p&gt;&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;!-- PROFILE SECTION --&gt;
+      &lt;div class="section" id="sec-profile"&gt;
+        &lt;h2&gt;My Profile&lt;/h2&gt;
+        &lt;div class="profile-full"&gt;
+          &lt;div class="profile-photo"&gt;👤&lt;/div&gt;
+          &lt;div class="profile-details"&gt;
+            &lt;h3&gt;Frank Mazerati&lt;/h3&gt;
+            &lt;div class="role"&gt;Global Command Center Administrator — IntelliStack Systems&lt;/div&gt;
+            &lt;div class="avail"&gt;&lt;span class="status-dot"&gt;&lt;/span&gt; Available — Online&lt;/div&gt;
+            &lt;div class="profile-meta"&gt;
+              &lt;div class="meta-item"&gt;Department&lt;span&gt;Executive / Global Ops&lt;/span&gt;&lt;/div&gt;
+              &lt;div class="meta-item"&gt;Clearance&lt;span&gt;Level 5 (Global)&lt;/span&gt;&lt;/div&gt;
+              &lt;div class="meta-item"&gt;Last Login&lt;span&gt;Today, just now&lt;/span&gt;&lt;/div&gt;
+              &lt;div class="meta-item"&gt;Role&lt;span&gt;Owner / Admin&lt;/span&gt;&lt;/div&gt;
+              &lt;div class="meta-item"&gt;Location&lt;span&gt;IntelliStack HQ&lt;/span&gt;&lt;/div&gt;
+              &lt;div class="meta-item"&gt;System&lt;span&gt;Maximus Optimus v2.0&lt;/span&gt;&lt;/div&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;!-- MODULE SECTIONS (placeholder for each) --&gt;
+      &lt;div class="section" id="sec-operations"&gt;&lt;h2&gt;⚙️ Operations&lt;/h2&gt;&lt;p style="color:var(--gray)"&gt;Monitor and manage all active operations across the global command center.&lt;/p&gt;&lt;div class="cards-grid"&gt;&lt;div class="card"&gt;&lt;div class="card-icon green" style="margin-bottom:8px"&gt;📋&lt;/div&gt;&lt;h3&gt;Active Tasks&lt;/h3&gt;&lt;div class="card-value"&gt;47&lt;/div&gt;&lt;p&gt;Tasks in progress&lt;/p&gt;&lt;/div&gt;&lt;div class="card"&gt;&lt;div class="card-icon cyan" style="margin-bottom:8px"&gt;⏰&lt;/div&gt;&lt;h3&gt;Scheduled&lt;/h3&gt;&lt;div class="card-value"&gt;23&lt;/div&gt;&lt;p&gt;Upcoming operations&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+      &lt;div class="section" id="sec-intellisync"&gt;&lt;h2&gt;🔄 IntelliSync&lt;/h2&gt;&lt;p style="color:var(--gray)"&gt;Global data synchronization and replication status.&lt;/p&gt;&lt;div class="cards-grid"&gt;&lt;div class="card"&gt;&lt;div class="card-icon green" style="margin-bottom:8px"&gt;📡&lt;/div&gt;&lt;h3&gt;Sync Status&lt;/h3&gt;&lt;div class="card-value"&gt;100%&lt;/div&gt;&lt;p&gt;All nodes in sync&lt;/p&gt;&lt;/div&gt;&lt;div class="card"&gt;&lt;div class="card-icon cyan" style="margin-bottom:8px"&gt;💾&lt;/div&gt;&lt;h3&gt;Replicated Databases&lt;/h3&gt;&lt;div class="card-value"&gt;14&lt;/div&gt;&lt;p&gt;Across 6 regions&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+      &lt;div class="section" id="sec-identity"&gt;&lt;h2&gt;🛡️ Identity &amp; Access&lt;/h2&gt;&lt;p style="color:var(--gray)"&gt;User management, permissions, and access control.&lt;/p&gt;&lt;div class="cards-grid"&gt;&lt;div class="card"&gt;&lt;div class="card-icon green" style="margin-bottom:8px"&gt;👥&lt;/div&gt;&lt;h3&gt;Active Users&lt;/h3&gt;&lt;div class="card-value"&gt;1,247&lt;/div&gt;&lt;p&gt;Currently logged in&lt;/p&gt;&lt;/div&gt;&lt;div class="card"&gt;&lt;div class="card-icon orange" style="margin-bottom:8px"&gt;🔑&lt;/div&gt;&lt;h3&gt;Pending Requests&lt;/h3&gt;&lt;div class="card-value"&gt;8&lt;/div&gt;&lt;p&gt;Awaiting approval&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+      &lt;div class="section" id="sec-infrastructure"&gt;&lt;h2&gt;🖥️ Infrastructure&lt;/h2&gt;&lt;p style="color:var(--gray)"&gt;Server health, network status, and resource monitoring.&lt;/p&gt;&lt;div class="cards-grid"&gt;&lt;div class="card"&gt;&lt;div class="card-icon green" style="margin-bottom:8px"&gt;🖥️&lt;/div&gt;&lt;h3&gt;Active Servers&lt;/h3&gt;&lt;div class="card-value"&gt;89&lt;/div&gt;&lt;p&gt;99.9% uptime&lt;/p&gt;&lt;/div&gt;&lt;div class="card"&gt;&lt;div class="card-icon orange" style="margin-bottom:8px"&gt;🌐&lt;/div&gt;&lt;h3&gt;Network Load&lt;/h3&gt;&lt;div class="card-value"&gt;72%&lt;/div&gt;&lt;p&gt;Within normal range&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+      &lt;div class="section" id="sec-security"&gt;&lt;h2&gt;🔒 Security Center&lt;/h2&gt;&lt;p style="color:var(--gray)"&gt;Threat detection, vulnerability scanning, and compliance.&lt;/p&gt;&lt;div class="cards-grid"&gt;&lt;div class="card"&gt;&lt;div class="card-icon green" style="margin-bottom:8px"&gt;✅&lt;/div&gt;&lt;h3&gt;Threat Level&lt;/h3&gt;&lt;div class="card-value"&gt;Low&lt;/div&gt;&lt;p&gt;No active threats&lt;/p&gt;&lt;/div&gt;&lt;div class="card"&gt;&lt;div class="card-icon cyan" style="margin-bottom:8px"&gt;🛡️&lt;/div&gt;&lt;h3&gt;Compliance Score&lt;/h3&gt;&lt;div class="card-value"&gt;98%&lt;/div&gt;&lt;p&gt;All frameworks aligned&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+      &lt;div class="section" id="sec-servicedesk"&gt;&lt;h2&gt;🎧 Service Desk&lt;/h2&gt;&lt;p style="color:var(--gray)"&gt;Ticket management, support queues, and SLA tracking.&lt;/p&gt;&lt;div class="cards-grid"&gt;&lt;div class="card"&gt;&lt;div class="card-icon orange" style="margin-bottom:8px"&gt;🎫&lt;/div&gt;&lt;h3&gt;Open Tickets&lt;/h3&gt;&lt;div class="card-value"&gt;12&lt;/div&gt;&lt;p&gt;3 urgent, 9 standard&lt;/p&gt;&lt;/div&gt;&lt;div class="card"&gt;&lt;div class="card-icon green" style="margin-bottom:8px"&gt;⏱️&lt;/div&gt;&lt;h3&gt;Avg Response&lt;/h3&gt;&lt;div class="card-value"&gt;4.2m&lt;/div&gt;&lt;p&gt;Within SLA&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+      &lt;div class="section" id="sec-automation"&gt;&lt;h2&gt;🤖 Automation&lt;/h2&gt;&lt;p style="color:var(--gray)"&gt;Workflow automation, scheduled jobs, and event triggers.&lt;/p&gt;&lt;div class="cards-grid"&gt;&lt;div class="card"&gt;&lt;div class="card-icon cyan" style="margin-bottom:8px"&gt;⚡&lt;/div&gt;&lt;h3&gt;Active Workflows&lt;/h3&gt;&lt;div class="card-value"&gt;128&lt;/div&gt;&lt;p&gt;Running automated processes&lt;/p&gt;&lt;/div&gt;&lt;div class="card"&gt;&lt;div class="card-icon green" style="margin-bottom:8px"&gt;✅&lt;/div&gt;&lt;h3&gt;Success Rate&lt;/h3&gt;&lt;div class="card-value"&gt;99.4%&lt;/div&gt;&lt;p&gt;Last 30 days&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+      &lt;div class="section" id="sec-collaboration"&gt;&lt;h2&gt;💬 Collaboration&lt;/h2&gt;&lt;p style="color:var(--gray)"&gt;Team channels, shared workspaces, and communication hubs.&lt;/p&gt;&lt;div class="cards-grid"&gt;&lt;div class="card"&gt;&lt;div class="card-icon cyan" style="margin-bottom:8px"&gt;💬&lt;/div&gt;&lt;h3&gt;Active Channels&lt;/h3&gt;&lt;div class="card-value"&gt;34&lt;/div&gt;&lt;p&gt;Across all teams&lt;/p&gt;&lt;/div&gt;&lt;div class="card"&gt;&lt;div class="card-icon green" style="margin-bottom:8px"&gt;👥&lt;/div&gt;&lt;h3&gt;Online Teams&lt;/h3&gt;&lt;div class="card-value"&gt;12&lt;/div&gt;&lt;p&gt;Currently active&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+      &lt;div class="section" id="sec-reports"&gt;&lt;h2&gt;📊 Reports &amp; Analytics&lt;/h2&gt;&lt;p style="color:var(--gray)"&gt;Business intelligence, KPI dashboards, and performance metrics.&lt;/p&gt;&lt;div class="cards-grid"&gt;&lt;div class="card"&gt;&lt;div class="card-icon cyan" style="margin-bottom:8px"&gt;📈&lt;/div&gt;&lt;h3&gt;KPI Health&lt;/h3&gt;&lt;div class="card-value"&gt;94%&lt;/div&gt;&lt;p&gt;Targets being met&lt;/p&gt;&lt;/div&gt;&lt;div class="card"&gt;&lt;div class="card-icon green" style="margin-bottom:8px"&gt;📋&lt;/div&gt;&lt;h3&gt;Reports Generated&lt;/h3&gt;&lt;div class="card-value"&gt;156&lt;/div&gt;&lt;p&gt;This month&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;
+
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Footer Notice --&gt;
+  &lt;div class="footer-notice"&gt;⚠ This is a visual prototype built for demonstration purposes only. No real authentication, data processing, or external services are connected. IntelliStack Systems — Maximus Optimus Global Command Center v2.0 Prototype.&lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- Vibe Chat Drawer --&gt;
+&lt;div class="chat-drawer" id="chatDrawer"&gt;
+  &lt;div class="chat-header"&gt;
+    &lt;h3&gt;✨ Vibe Chat&lt;/h3&gt;
+    &lt;button class="chat-close" onclick="toggleChat()"&gt;✕&lt;/button&gt;
+  &lt;/div&gt;
+  &lt;div class="chat-messages" id="chatMessages"&gt;
+    &lt;div class="chat-msg bot"&gt;👋 Welcome, Frank! I'm your Vibe Chat assistant. How can I help you today?&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class="chat-input-area"&gt;
+    &lt;input type="text" id="chatInput" placeholder="Type a message..." onkeydown="if(event.key==='Enter')sendChat()"&gt;
+    &lt;button class="chat-send" onclick="sendChat()"&gt;Send&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;!-- Chat FAB --&gt;
+&lt;button class="chat-fab" onclick="toggleChat()" title="Open Vibe Chat"&gt;💬&lt;/button&gt;
+
+&lt;script&gt;
+// === ROLE SELECTION ===
+let currentRole='employee';
+function selectRole(btn,role){
+  document.querySelectorAll('.role-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');currentRole=role;
+}
+
+// === LOGIN ===
+function handleLogin(){
+  document.getElementById('loginView').classList.add('hidden');
+  document.getElementById('dashboardView').classList.add('active');
+  updateGreeting();startClocks();
+}
+
+function handleLogout(){
+  document.getElementById('loginView').classList.remove('hidden');
+  document.getElementById('dashboardView').classList.remove('active');
+  document.getElementById('loginEmail').value='';
+  document.getElementById('loginPassword').value='';
+}
+
+// === GREETING ===
+function updateGreeting(){
+  const h=new Date().getHours();
+  let g='Good morning';if(h>=12&&h&lt;17)g='Good afternoon';if(h>=17)g='Good evening';
+  document.getElementById('greeting').innerHTML=g+', &lt;strong&gt;Frank Mazerati&lt;/strong&gt;';
+}
+
+// === NAVIGATION ===
+function showSection(name,navEl){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  const sec=document.getElementById('sec-'+name);
+  if(sec)sec.classList.add('active');
+  document.querySelectorAll('.left-nav .nav-item').forEach(n=>n.classList.remove('active'));
+  if(navEl)navEl.classList.add('active');
+  else{
+    document.querySelectorAll('.left-nav .nav-item').forEach(n=>{
+      if(n.textContent.trim().toLowerCase().includes(name.substring(0,4)))n.classList.add('active');
+    });
+  }
+}
+
+// === WORLD CLOCKS ===
+function startClocks(){
+  const zones=[
+    {id:'clock-ny',tz:'America/New_York'},
+    {id:'clock-london',tz:'Europe/London'},
+    {id:'clock-tokyo',tz:'Asia/Tokyo'},
+    {id:'clock-dubai',tz:'Asia/Dubai'},
+    {id:'clock-sydney',tz:'Australia/Sydney'},
+    {id:'clock-singapore',tz:'Asia/Singapore'}
+  ];
+  function update(){
+    const now=new Date();
+    zones.forEach(z=>{
+      const t=now.toLocaleTimeString('en-US',{timeZone:z.tz,hour:'2-digit',minute:'2-digit',hour12:false});
+      const d=document.getElementById(z.id);
+      if(d){d.textContent=t;
+        const dt=now.toLocaleDateString('en-US',{timeZone:z.tz,month:'short',day:'numeric'});
+        d.parentElement.querySelector('.date').textContent=dt;
+      }
+    });
+    const utc=now.toLocaleTimeString('en-US',{timeZone:'UTC',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})+' UTC';
+    const tc=document.getElementById('topClock');
+    if(tc)tc.textContent=utc;
+  }
+  update();setInterval(update,1000);
+}
+
+// === VIBE CHAT ===
+function toggleChat(){
+  const drawer=document.getElementById('chatDrawer');
+  drawer.classList.toggle('open');
+  if(drawer.classList.contains('open'))document.getElementById('chatInput').focus();
+}
+
+const botResponses=[
+  "I'm running as a local demo. Everything looks nominal on your dashboard, Frank! 🟢",
+  "All 9 modules are showing healthy status. Would you like me to drill into any specific one?",
+  "I detected 12 open tickets in Service Desk. 3 are marked urgent.",
+  "IntelliSync replication is at 100% across all 6 regions. ✅",
+  "Security posture is rated A+ with no active threats detected. 🔒",
+  "Automation engine has 128 active workflows running smoothly. 🤖",
+  "Your profile shows Level 5 clearance. All global systems accessible. 🛡️",
+  "I'm a visual prototype — real AI integration would come in v3.0! ✨",
+  "Infrastructure load is at 72%. eu-west-2 is approaching 87% capacity. 🖥️",
+  "Quick summary: 47 active operations, 99.9% uptime, all SLAs met. 📊"
+];
+let respIdx=0;
+function sendChat(){
+  const input=document.getElementById('chatInput');
+  const msg=input.value.trim();
+  if(!msg)return;
+  const container=document.getElementById('chatMessages');
+ container.innerHTML+'&lt;div class="chat-msg user"&gt;'+escapeHtml(msg)+'&lt;/div&gt;';
+  input.value='';
+  setTimeout(()=>{
+    const resp=botResponses[respIdx%botResponses.length];respIdx++;
+ container.innerHTML+='&lt;div class="chat-msg bot"&gt;'+resp+'&lt;/div&gt;';
+    container.scrollTop=container.scrollHeight;
+  },600);
+  container.scrollTop=container.scrollHeight;
+}
+function escapeHtml(t){return t.replace(/&amp;/g,'&amp;amp;').replace(/&lt;/g,'&amp;lt;').replace(/&gt;/g,'&amp;gt;').replace(/"/g,'&amp;quot;')}
+
+// === INIT ===
+updateGreeting();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
