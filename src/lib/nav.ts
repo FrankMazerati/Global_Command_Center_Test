@@ -42,12 +42,12 @@ type RawSection = [string, string, SectionTone, Array<[string, string[]]>];
 const RAW: RawSection[] = [
   [
     "My Business Center",
-    "The business workspace for IntelliStack Systems, Intella Hire, Intella Staff and authorized tenant business records.",
+    "The business workspace for IntelliStack Systems, IntelliHire, IntelliStaff and authorized tenant business records.",
     "primary",
     [
       ["Business Overview", ["Business Overview Dashboard", "Company Management", "Business Operations", "Business Locations", "Business Settings", "Business Activity", "Business Approvals", "Business Resources", "Business Integrations", "Business Performance", "Business Reporting and Analytics"]],
       ["Financial Center", ["Financial Overview", "Income and Revenue", "Expenses", "Transactions and Payments", "Accounts and Financial Records", "Budgets", "Cash Flow", "Forecasts", "Financial Projections", "Financial Reports", "Company Financial Comparisons", "Tenant Financial Records"]],
-      ["Company and Organization Management", ["IntelliStack Systems", "Intella Hire", "Intella Staff", "Tenant Business Records", "Company Profiles", "Organization Records", "Business Documentation"]],
+      ["Company and Organization Management", ["IntelliStack Systems", "IntelliHire", "IntelliStaff", "Tenant Business Records", "Company Profiles", "Organization Records", "Business Documentation"]],
       ["Executive Center", ["Executive Briefings", "CEO Talking Points", "CFO Talking Points", "Strategy and Planning", "Business Plans", "Presentations", "Spreadsheets and Reports", "Business Projections", "Side-by-Side Comparisons"]],
       ["IntelliSphere Marketplace", ["Marketplace Overview", "Products and Services", "Five Subscription Levels", "Pricing and Feature Comparisons", "Side-by-Side Product Comparisons", "Company Purchases", "Tenant Purchases", "Seats and Licensing", "Subscription Management", "Billing and Renewals", "Upgrades and Feature Access"]],
     ],
@@ -178,7 +178,7 @@ const MENU: RawSection[] = [
     ["Command Center", ["Dashboard", "Bring the Work to You", "Global Time Zones", "News and Intelligence Feed", "Market Watch", "Command Status"]],
     ["Help Buddy", ["Help Buddy Overview", "Conversation", "Attachments", "Notes", "Workflow Companion", "Checklists", "Knowledge Base", "Recognition Ledger", "Follow-Ups", "Pending and Open Work", "Closed Work", "Transferred Work", "Manager Sign-Off"]],
   ]],
-  ["Business Products", "Company operations, executive workspaces, financial products and the IntelliSphere marketplace.", "primary", rawGroups("My Business Center").map(([group, pages]) => [group.replace("Intella Hire", "IntelliHire").replace("Intella Staff", "IntelliStaff"), pages.map((page) => page.replace(/Intella Hire/g, "IntelliHire").replace(/Intella Staff/g, "IntelliStaff"))])],
+  ["Business Products", "Company operations, executive workspaces, financial products and the IntelliSphere marketplace.", "primary", rawGroups("My Business Center").map(([group, pages]) => [group.replace("IntelliHire", "IntelliHire").replace("IntelliStaff", "IntelliStaff"), pages.map((page) => page.replace(/IntelliHire/g, "IntelliHire").replace(/IntelliStaff/g, "IntelliStaff"))])],
   ["Identity & Access Management", "Global identity, directory services, tenants, organizations, roles and access governance.", "contractor", [
     ...rawGroups("New Active Directory"),
     ["Global Identity & Access Management", ["Global IAM Overview", "Global Company ID", "Global User ID", "Organizations", "Tenants", "Tenant Membership", "Company Profiles", "Organizational Units", "Departments", "Groups", "Roles", "Permissions", "Managers and Reporting Structure", "Identity Verification", "Authentication", "Multi-Factor Authentication", "Single Sign-On", "Access Requests", "Access Reviews", "Identity Audit"]],
