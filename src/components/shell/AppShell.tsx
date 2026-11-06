@@ -44,8 +44,8 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-dvh bg-page text-foreground">
-      <header className="sticky top-0 z-30 border-b border-sky-400/20 glass-strong bg-[#050d1c]/75 shadow-[0_8px_30px_rgba(0,0,0,.35)]">
-        <div className="mx-auto grid max-w-[1800px] grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2.5 sm:px-5">
+      <header className="command-header sticky top-0 z-30 border-b border-sky-400/25 glass-strong shadow-[0_8px_30px_rgba(0,0,0,.35)]">
+        <div className="mx-auto grid min-h-[82px] max-w-[1800px] grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-3 sm:px-5">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" aria-label="Open command navigation" onClick={() => setMenuOpen(true)} className="text-sky-200 hover:bg-sky-400/10 hover:text-white">
               <Menu className="size-6" />
