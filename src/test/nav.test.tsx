@@ -6,18 +6,17 @@ import { ALL_DESTINATIONS, NAV } from "@/lib/nav";
 import { routeTree } from "@/routeTree.gen";
 
 describe("hamburger navigation", () => {
-  it("has exactly the ten approved sections in order", () => {
+  it("has exactly the nine approved primary areas in order", () => {
     expect(NAV.map((s) => s.title)).toEqual([
-      "My Business Center",
-      "New Active Directory",
-      "Command Center",
-      "Productivity",
-      "Collaboration",
-      "Knowledge & Learning",
-      "AI Systems",
-      "NOC Center",
-      "Security",
-      "Governance",
+      "Home & Command Center",
+      "Business Products",
+      "Identity & Access Management",
+      "Productivity & Collaboration",
+      "Service Desk & Enterprise Operations",
+      "Security, Risk & Governance",
+      "AI & Business Intelligence",
+      "Employee & Manager Workspace",
+      "Account & Administration",
     ]);
   });
 
