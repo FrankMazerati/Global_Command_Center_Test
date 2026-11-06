@@ -151,3 +151,22 @@
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
+
+
+/* Profile command scene: cinematic image-backed glass, with readable compact context. */
+.dashboard-profile-scene {
+  position: relative;
+  isolation: isolate;
+  background-color: rgba(4, 14, 30, .48);
+  background-image:
+    linear-gradient(100deg, rgba(3, 10, 24, .74) 0%, rgba(3, 10, 24, .48) 52%, rgba(3, 10, 24, .66) 100%),
+    linear-gradient(180deg, rgba(3, 10, 24, .10) 0%, rgba(3, 10, 24, .62) 100%),
+    url("https://raw.githubusercontent.com/FrankMazerati/Global_Command_Center_Test/main/Meta_AI_886725249_1470003438386201_7166575789944365800_n_20261103_061537.webp");
+  background-position: center 48%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  border-color: rgba(125, 211, 252, .32);
+  box-shadow: 0 18px 48px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.12);
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+}
