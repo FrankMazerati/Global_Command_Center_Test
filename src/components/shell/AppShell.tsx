@@ -74,16 +74,16 @@ export function AppShell({ children }: { children: ReactNode }) {
               <PopoverTrigger asChild><Button variant="ghost" size="icon" aria-label="Notifications" className="text-slate-300 hover:bg-sky-400/10 hover:text-sky-200"><Bell className="size-[18px]"/></Button></PopoverTrigger>
               <PopoverContent align="end" className="w-64 border-sky-400/20 bg-[#0b1830] text-sm text-slate-100"><div className="font-semibold">Notifications</div><p className="mt-1 text-xs text-slate-400">Your notification stream will appear here.</p></PopoverContent>
             </Popover>
-            <Button variant="ghost" size="icon" aria-label="Email" onClick={() => go("collaboration","intellistack-collaboration-tools","mail")} className="hidden text-slate-300 hover:bg-sky-400/10 hover:text-sky-200 sm:inline-flex"><Mail className="size-[18px]"/></Button>
-            <Button variant="ghost" size="icon" aria-label="Messages" onClick={() => go("collaboration","intellistack-collaboration-tools","intellichat")} className="text-slate-300 hover:bg-sky-400/10 hover:text-sky-200"><MessageSquare className="size-[18px]"/></Button>
-            <Button variant="ghost" size="icon" aria-label="Calendar" onClick={() => go("collaboration","intellistack-collaboration-tools","intellicalendar")} className="hidden text-slate-300 hover:bg-sky-400/10 hover:text-sky-200 sm:inline-flex"><CalendarDays className="size-[18px]"/></Button>
-            <Button variant="ghost" size="icon" aria-label="Settings" onClick={() => go("governance","administration","system-configuration")} className="hidden text-slate-300 hover:bg-sky-400/10 hover:text-sky-200 sm:inline-flex"><Settings className="size-[18px]"/></Button>
+            <Button variant="ghost" size="icon" aria-label="Email" onClick={() => go("productivity-and-collaboration","intellistack-collaboration-tools","email")} className="hidden text-slate-300 hover:bg-sky-400/10 hover:text-sky-200 sm:inline-flex"><Mail className="size-[18px]"/></Button>
+            <Button variant="ghost" size="icon" aria-label="Messages" onClick={() => go("productivity-and-collaboration","intellistack-collaboration-tools","intellichat")} className="text-slate-300 hover:bg-sky-400/10 hover:text-sky-200"><MessageSquare className="size-[18px]"/></Button>
+            <Button variant="ghost" size="icon" aria-label="Calendar" onClick={() => go("productivity-and-collaboration","intellistack-collaboration-tools","intellicalendar")} className="hidden text-slate-300 hover:bg-sky-400/10 hover:text-sky-200 sm:inline-flex"><CalendarDays className="size-[18px]"/></Button>
+            <Button variant="ghost" size="icon" aria-label="Settings" onClick={() => go("account-and-administration","account-and-system-administration","system-settings")} className="hidden text-slate-300 hover:bg-sky-400/10 hover:text-sky-200 sm:inline-flex"><Settings className="size-[18px]"/></Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" aria-label="Profile menu" className="text-slate-300 hover:bg-sky-400/10 hover:text-sky-200"><UserRound className="size-[18px]"/></Button></DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 border-sky-400/20 bg-[#0b1830] text-slate-100">
                 <DropdownMenuLabel>Frank Mazerati<div className="text-xs font-normal text-slate-400">{w.availability}</div></DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-slate-700"/>
-                <DropdownMenuItem onSelect={() => go("new-active-directory","users-and-identity","user-profiles")}><UserRound className="mr-2 size-4"/>My profile</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => go("identity-and-access-management","users-and-identity","user-profiles")}><UserRound className="mr-2 size-4"/>My profile</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => go("governance","administration","system-configuration")}><Settings className="mr-2 size-4"/>Settings</DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-slate-700"/>
                 <DropdownMenuItem onSelect={() => navigate({ to: "/login" })}><LogOut className="mr-2 size-4"/>Sign out</DropdownMenuItem>
