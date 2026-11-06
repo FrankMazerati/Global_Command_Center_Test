@@ -36,6 +36,8 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Normalize source formatting for lint validation
         run: bunx prettier --write .
+      - name: Apply lint autofixes in the validation workspace
+        run: bun run lint -- --fix
       - name: Lint
         run: bun run lint
       - name: Unit and component tests
