@@ -119,8 +119,11 @@ function Dashboard() {
     Away: "border-amber-400/40 bg-amber-400/10 text-amber-300",
     Busy: "border-rose-400/40 bg-rose-400/10 text-rose-300",
     "Out to Lunch": "border-orange-400/40 bg-orange-400/10 text-orange-300",
-    Meeting: "border-violet-400/40 bg-violet-400/10 text-violet-300",
-    Break: "border-cyan-400/40 bg-cyan-400/10 text-cyan-300",
+    "In a Meeting": "border-violet-400/40 bg-violet-400/10 text-violet-300",
+    "On Break": "border-cyan-400/40 bg-cyan-400/10 text-cyan-300",
+    "On a Call": "border-blue-400/40 bg-blue-400/10 text-blue-300",
+    "Helping a User": "border-emerald-400/40 bg-emerald-400/10 text-emerald-300",
+    "Out of Office": "border-slate-400/40 bg-slate-400/10 text-slate-300",
   };
 
   if (!authReady) return <div className="grid min-h-[55vh] place-items-center text-sm text-slate-400"><div className="flex items-center gap-3"><span className="size-2 animate-pulse rounded-full bg-sky-400"/>Securing your command session…</div></div>;
@@ -142,7 +145,7 @@ function Dashboard() {
 
     <Panel title="Global time zones" icon={Clock3} action={<button type="button" onClick={() => setClockManager(v => !v)} className="text-[10px] font-semibold uppercase tracking-wider text-sky-300 hover:text-white">{clockManager ? "Done arranging" : "Arrange clocks"} <span className="ml-1">{clockManager ? "✓" : "↔"}</span></button>}>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-        {clocks.slice(0, clockManager ? 10 : 5).map(([city, zone]) => {
+        {clocks.slice(0, 5).map(([city, zone]) => {
           const idx = clockOrder.indexOf(city);
           return <div key={city} draggable={clockManager} onDragStart={() => setClockDrag(idx)} onDragOver={e => { if (clockManager) e.preventDefault(); }} onDrop={e => { e.preventDefault(); if (clockDrag !== null) setClockOrder(order => reorder(order, clockDrag, idx)); setClockDrag(null); }} className={cn("flex min-w-0 items-center gap-2 rounded-lg border border-sky-400/15 bg-[#071225] px-3 py-2", clockManager && "cursor-grab border-dashed border-sky-400/50", clockDrag === idx && "opacity-40")}>
             {clockManager && <GripVertical className="size-3 shrink-0 text-sky-400"/>}
@@ -166,7 +169,7 @@ function Dashboard() {
               <div className="text-xs font-medium text-slate-400">{greeting},</div>
               <h1 className="mt-0.5 font-display text-2xl font-black tracking-wide text-white">Frank Mazerati</h1>
               <div className="mt-1 text-xs font-semibold text-sky-300">Founder & Chief Principal Architect</div>
-              <div className="mt-1 text-[11px] text-slate-400">Role: Global Admin <span className="mx-2 text-slate-600">|</span> Position: Chief Principal Systems Architect</div>
+              <div className="mt-1 text-[11px] text-slate-400">Role: Global Admin <span className="mx-2 text-slate-600">|</span> Position: Chief Principal Architect and Design Engineer</div>
               <p className="mt-2 text-[11px] text-slate-400">Every ticket you close makes someone's day easier.</p>
             </div>
             <div className="flex items-center gap-2">
