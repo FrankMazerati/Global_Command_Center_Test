@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
   Bell, CalendarDays, CloudSun, LogOut, Mail, Menu, MessageSquare,
-  Search, Settings, ShieldCheck, UserRound, X,
+  Search, Settings, ShieldCheck, UserRound,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
@@ -35,7 +35,6 @@ const FOOTER_COLUMNS = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [mobileToolsOpen, setMobileToolsOpen] = useState(false);
   const now = useNow();
   const w = useWork();
   const navigate = useNavigate();
