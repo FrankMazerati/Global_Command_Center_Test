@@ -1,7 +1,7 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Activity, ArrowDown, ArrowUp, Bell, BookOpen, BriefcaseBusiness, CalendarDays,
-  CheckCircle2, Clock3, GripVertical, Megaphone,
+  CheckCircle2, Clock3, CloudSun, GripVertical, Megaphone,
   Plus, Radar, ShieldCheck, Sparkles, TrendingUp, UserRound, X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
