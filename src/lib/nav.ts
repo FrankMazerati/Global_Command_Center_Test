@@ -164,7 +164,47 @@ const RAW: RawSection[] = [
   ],
 ];
 
-export const NAV: NavSection[] = RAW.map(([title, summary, tone, groups], i) => ({
+
+const rawSection = (name: string) => RAW.find((item) => item[0] === name)!;
+const rawGroups = (...names: string[]) => names.flatMap((name) => rawSection(name)[3]);
+const commandGroups = rawSection("Command Center")[3];
+const workforceGroup = commandGroups.find(([name]) => name === "Workforce Performance & Recognition")!;
+const serviceDeskGroups = commandGroups.filter(([name]) => name !== "Workforce Performance & Recognition");
+const productivityGroups = rawGroups("Productivity", "Collaboration");
+const securityGroups = rawGroups("Security", "Governance");
+
+const MENU: RawSection[] = [
+  ["Home & Command Center", "Your personal command surface and the central place to see and act on work.", "maximus", [
+    ["Command Center", ["Dashboard", "Bring the Work to You", "Global Time Zones", "News and Intelligence Feed", "Market Watch", "Command Status"]],
+    ["Help Buddy", ["Help Buddy Overview", "Conversation", "Attachments", "Notes", "Workflow Companion", "Checklists", "Knowledge Base", "Recognition Ledger", "Follow-Ups", "Pending and Open Work", "Closed Work", "Transferred Work", "Manager Sign-Off"]],
+  ]],
+  ["Business Products", "Company operations, executive workspaces, financial products and the IntelliSphere marketplace.", "primary", rawGroups("My Business Center").map(([group, pages]) => [group.replace("Intella Hire", "IntelliHire").replace("Intella Staff", "IntelliStaff"), pages.map((page) => page.replace(/Intella/g, "Intelli"))])],
+  ["Identity & Access Management", "Global identity, directory services, tenants, organizations, roles and access governance.", "contractor", [
+    ...rawGroups("New Active Directory"),
+    ["Global Identity & Access Management", ["Global IAM Overview", "Global Company ID", "Global User ID", "Organizations", "Tenants", "Tenant Membership", "Company Profiles", "Organizational Units", "Departments", "Groups", "Roles", "Permissions", "Managers and Reporting Structure", "Identity Verification", "Authentication", "Multi-Factor Authentication", "Single Sign-On", "Access Requests", "Access Reviews", "Identity Audit"]],
+    ["Directory Services", ["IntelliDirectory Overview", "Directory Services", "Directory Objects", "Directory Synchronization", "Directory Health", "Directory Audit History"]],
+  ]],
+  ["Productivity & Collaboration", "Native IntelliStack work tools and approved external collaboration integrations.", "world", productivityGroups.map(([group, pages]) => [group, [...pages, ...(group === "IntelliStack Collaboration Tools" ? ["Email"] : [])]])],
+  ["Service Desk & Enterprise Operations", "IntelliDesk, ticket and mission execution, SLA operations, NOC, infrastructure, remote support and war room.", "network", [
+    ...serviceDeskGroups,
+    ...rawGroups("NOC Center"),
+    ["Infrastructure and Field Operations", ["Infrastructure Overview", "Infrastructure Inventory", "Server Operations", "Network Operations", "Field Service", "Remote Support", "Remote Sessions", "War Room", "Incident Coordination", "Service Health", "Operational Runbooks"]],
+  ]],
+  ["Security, Risk & Governance", "Security operations, risk, compliance, policies, audit, approvals and sign-offs.", "tenant", securityGroups],
+  ["AI & Business Intelligence", "Governed intelligence experiences, analytics, insights and executive decision support.", "everything", rawGroups("AI Systems")],
+  ["Employee & Manager Workspace", "Employee, contractor and workforce experiences with manager oversight, progression and recognition.", "optimus", [
+    ["Workforce Experiences", ["IntelliStaff", "IntelliStaff Overview", "IntelliHire", "IntelliHire Overview", "IntelliWork", "IntelliWork Overview"]],
+    ["People and Organization", ["Employees", "Contractors", "Workforce Directory", "Teams", "Managers", "Reporting Structure", "Availability and Shifts", "Onboarding", "Offboarding"]],
+    [workforceGroup[0], workforceGroup[1]],
+    ["Manager Workspace", ["Manager Dashboard", "Team Overview", "Work Assignment Overview", "Progression and XP Levels", "Stars and Recognition", "Manager Sign-Off Queue", "Performance Reviews", "Objectives and Checkpoints", "Team Reporting"]],
+  ]],
+  ["Account & Administration", "Personal preferences, system administration, knowledge, documentation, integrations and service status.", "primary", [
+    ...rawGroups("Knowledge & Learning"),
+    ["Account and System Administration", ["My Account", "Profile Settings", "Preferences", "Notification Settings", "Security Settings", "System Settings", "Global Administration", "Tenant Administration", "Role and Permission Administration", "Integration Management", "Service Status", "Documentation", "Help and Support", "Sign Out"]],
+  ]],
+];
+
+export const NAV: NavSection[] = MENU.map(([title, summary, tone, groups], i) => ({
   number: String(i + 1).padStart(2, "0"),
   title,
   slug: slugify(title),
