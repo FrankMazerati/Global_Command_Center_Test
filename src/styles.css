@@ -105,3 +105,29 @@
   body { background:#030914; color:var(--color-foreground); }
   button, input, select { font:inherit; }
 }
+
+
+/* Frosted command-center glass, reused from the approved glass prototype. */
+:root {
+  --glass-surface: oklch(.21 .045 255 / 62%);
+  --glass-surface-strong: oklch(.16 .04 255 / 82%);
+  --glass-edge: oklch(.78 .11 225 / 24%);
+  --glass-shadow: 0 14px 42px -12px rgba(0,0,0,.62), inset 0 1px 0 rgba(255,255,255,.07);
+}
+@utility glass {
+  background: var(--glass-surface);
+  border: 1px solid var(--glass-edge);
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+  box-shadow: var(--glass-shadow);
+}
+@utility glass-strong {
+  background: var(--glass-surface-strong);
+  border: 1px solid var(--glass-edge);
+  backdrop-filter: blur(24px) saturate(155%);
+  -webkit-backdrop-filter: blur(24px) saturate(155%);
+  box-shadow: var(--glass-shadow);
+}
+@utility glow-blue {
+  box-shadow: 0 0 0 1px rgba(56,189,248,.35), 0 0 24px -5px rgba(56,189,248,.42);
+}
