@@ -1,0 +1,187 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * IntelliStack Glass Design System
+ * - Dark command-center base with frosted glass surfaces.
+ * - Environment accent is driven by [data-env] on <html>:
+ *   intellistack = blue, workforce = purple, tenant = green (reserved).
+ * - Only accent tokens (--env-*) change between environments; text stays neutral.
+ */
+
+@theme inline {
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Sora", ui-sans-serif, system-ui, sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-glass: var(--glass);
+  --color-glass-strong: var(--glass-strong);
+  --color-glass-border: var(--glass-border);
+  --color-env: var(--env);
+  --color-env-glow: var(--env-glow);
+  --color-env-soft: var(--env-soft);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root,
+[data-env="intellistack"] {
+  --env: oklch(0.66 0.19 252);
+  --env-glow: oklch(0.78 0.15 230);
+  --env-soft: oklch(0.66 0.19 252 / 18%);
+}
+[data-env="workforce"] {
+  --env: oklch(0.62 0.22 300);
+  --env-glow: oklch(0.76 0.16 310);
+  --env-soft: oklch(0.62 0.22 300 / 18%);
+}
+[data-env="tenant"] {
+  --env: oklch(0.7 0.17 155);
+  --env-glow: oklch(0.82 0.15 160);
+  --env-soft: oklch(0.7 0.17 155 / 18%);
+}
+
+:root {
+  --radius: 0.85rem;
+  --background: oklch(0.15 0.04 260);
+  --foreground: oklch(0.96 0.01 250);
+  --card: oklch(0.22 0.05 258 / 55%);
+  --card-foreground: var(--foreground);
+  --popover: oklch(0.2 0.05 258 / 95%);
+  --popover-foreground: var(--foreground);
+  --primary: var(--env);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.28 0.05 258 / 70%);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(0.26 0.04 258 / 60%);
+  --muted-foreground: oklch(0.74 0.03 250);
+  --accent: var(--env-soft);
+  --accent-foreground: var(--foreground);
+  --destructive: oklch(0.63 0.22 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.75 0.08 250 / 18%);
+  --input: oklch(0.75 0.08 250 / 22%);
+  --ring: var(--env);
+  --glass: oklch(0.24 0.06 258 / 45%);
+  --glass-strong: oklch(0.2 0.06 258 / 78%);
+  --glass-border: oklch(0.8 0.1 245 / 22%);
+  --success: oklch(0.74 0.18 150);
+  --warning: oklch(0.8 0.16 80);
+  --danger: oklch(0.65 0.23 25);
+  --info: oklch(0.72 0.14 230);
+  --chart-1: var(--env);
+  --chart-2: oklch(0.72 0.14 200);
+  --chart-3: oklch(0.8 0.16 80);
+  --chart-4: oklch(0.65 0.23 25);
+  --chart-5: oklch(0.74 0.18 150);
+  --sidebar: var(--glass-strong);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--env);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: var(--env-soft);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--glass-border);
+  --sidebar-ring: var(--env);
+
+  --shadow-glass: 0 10px 40px -12px oklch(0 0 0 / 60%), inset 0 1px 0 oklch(1 0 0 / 6%);
+  --shadow-glow: 0 0 0 1px var(--env), 0 0 22px -2px var(--env);
+  --app-backdrop:
+    radial-gradient(1200px 600px at 70% -10%, oklch(0.45 0.18 255 / 45%), transparent 60%),
+    radial-gradient(900px 500px at 0% 100%, oklch(0.4 0.15 240 / 35%), transparent 60%),
+    linear-gradient(180deg, oklch(0.16 0.05 262), oklch(0.12 0.04 262));
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    color-scheme: dark;
+  }
+  body {
+    background: var(--app-backdrop);
+    background-attachment: fixed;
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    min-height: 100vh;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+  }
+}
+
+/* Faint grid overlay on the app backdrop */
+@utility app-grid {
+  background-image:
+    linear-gradient(oklch(0.8 0.1 245 / 5%) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.8 0.1 245 / 5%) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Frosted glass surfaces */
+@utility glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: var(--shadow-glass);
+}
+@utility glass-strong {
+  background: var(--glass-strong);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  box-shadow: var(--shadow-glass);
+}
+@utility glow-env {
+  box-shadow: var(--shadow-glow);
+  border-color: var(--env);
+}
+@utility text-env-gradient {
+  background: linear-gradient(90deg, var(--env-glow), var(--env));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

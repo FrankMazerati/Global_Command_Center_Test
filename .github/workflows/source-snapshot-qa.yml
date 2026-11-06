@@ -1,0 +1,46 @@
+name: Source Snapshot Build and QA
+
+on:
+  push:
+    branches:
+      - consolidation/source-import-2026-11-06
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: ${{ matrix.project }} — install, lint, tests, build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - screenshot-perfect
+          - screenshot-exact-replica
+          - screenshot-match
+    defaults:
+      run:
+        working-directory: source-projects/${{ matrix.project }}
+    steps:
+      - name: Checkout staging branch
+        uses: actions/checkout@v4
+        with:
+          ref: consolidation/source-import-2026-11-06
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+      - name: Normalize source formatting for lint validation
+        run: bunx prettier --write .
+      - name: Apply lint autofixes in the validation workspace
+        run: bun run lint -- --fix
+      - name: Lint
+        run: bun run lint
+      - name: Unit and component tests
+        run: bun run test
+      - name: Production build
+        run: bun run build
