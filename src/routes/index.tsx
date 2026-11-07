@@ -136,7 +136,7 @@ function Dashboard() {
   if (!authReady) return <div className="grid min-h-[55vh] place-items-center text-sm text-slate-400"><div className="flex items-center gap-3"><span className="size-2 animate-pulse rounded-full bg-sky-400"/>Securing your command session…</div></div>;
 
   return <div className="command-dashboard space-y-3 text-slate-100">
-    <div className="grid items-start gap-2 xl:grid-cols-[minmax(0,1fr)_300px]">
+    <div className="dashboard-layout grid items-start gap-2">
       <div className="min-w-0 space-y-2">
         <section className="dashboard-profile-scene glass-strong overflow-hidden rounded-xl p-2.5 sm:p-3">
           <div className="relative z-10 flex flex-wrap items-center gap-4">
@@ -234,6 +234,11 @@ function Dashboard() {
           <p className="mt-2 text-[8px] text-slate-400">This workspace is organized around your role. Live tasks, commitments, approvals and activity populate when their source systems are connected.</p>
         </Panel>
 
+        <Panel title="News & Intelligence Feed" icon={Megaphone}>
+          <div className="space-y-1.5">{news.map((source,index) => <div key={source} className="flex items-center gap-2 rounded-md border border-slate-700/60 bg-[#071225] px-3 py-2"><span className="flex-1 text-[11px] font-semibold text-slate-200">{source}</span><span className="text-[9px] text-slate-500">Source not connected</span><button type="button" aria-label="Move up" onClick={() => setNews(items => reorder(items,index,index-1))} className="text-slate-500 hover:text-sky-300"><ArrowUp className="size-3"/></button><button type="button" aria-label="Move down" onClick={() => setNews(items => reorder(items,index,index+1))} className="text-slate-500 hover:text-sky-300"><ArrowDown className="size-3"/></button><button type="button" aria-label="Remove news source" onClick={() => setNews(items => items.filter(item => item !== source))} className="text-slate-500 hover:text-rose-300"><X className="size-3"/></button></div>)}</div>
+          <form className="mt-2 flex gap-2" onSubmit={e => {e.preventDefault(); const value=newNews.trim(); if(value && !news.includes(value)) setNews(items=>[...items,value]); setNewNews("");}}><input value={newNews} onChange={e=>setNewNews(e.target.value)} placeholder="Add a news category" className="h-8 min-w-0 flex-1 rounded-md border border-slate-700 bg-[#071225] px-3 text-xs text-white outline-none focus:border-sky-400"/><button type="submit" aria-label="Add news category" className="grid size-8 place-items-center rounded-md border border-sky-400/30 text-sky-300"><Plus className="size-4"/></button></form>
+        </Panel>
+
         <Panel title="Operations & Intelligence" icon={Radar}>
           <div className="grid gap-2 sm:grid-cols-2">
             {[
@@ -245,10 +250,7 @@ function Dashboard() {
           </div>
         </Panel>
 
-        <Panel title="News & Intelligence Feed" icon={Megaphone}>
-          <div className="space-y-1.5">{news.map((source,index) => <div key={source} className="flex items-center gap-2 rounded-md border border-slate-700/60 bg-[#071225] px-3 py-2"><span className="flex-1 text-[11px] font-semibold text-slate-200">{source}</span><span className="text-[9px] text-slate-500">Source not connected</span><button type="button" aria-label="Move up" onClick={() => setNews(items => reorder(items,index,index-1))} className="text-slate-500 hover:text-sky-300"><ArrowUp className="size-3"/></button><button type="button" aria-label="Move down" onClick={() => setNews(items => reorder(items,index,index+1))} className="text-slate-500 hover:text-sky-300"><ArrowDown className="size-3"/></button><button type="button" aria-label="Remove news source" onClick={() => setNews(items => items.filter(item => item !== source))} className="text-slate-500 hover:text-rose-300"><X className="size-3"/></button></div>)}</div>
-          <form className="mt-2 flex gap-2" onSubmit={e => {e.preventDefault(); const value=newNews.trim(); if(value && !news.includes(value)) setNews(items=>[...items,value]); setNewNews("");}}><input value={newNews} onChange={e=>setNewNews(e.target.value)} placeholder="Add a news category" className="h-8 min-w-0 flex-1 rounded-md border border-slate-700 bg-[#071225] px-3 text-xs text-white outline-none focus:border-sky-400"/><button type="submit" aria-label="Add news category" className="grid size-8 place-items-center rounded-md border border-sky-400/30 text-sky-300"><Plus className="size-4"/></button></form>
-        </Panel>
+
       </div>
 
       <aside className="space-y-2 xl:sticky xl:top-28">
