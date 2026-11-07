@@ -402,3 +402,15 @@ body::before {
   .command-dashboard .dashboard-layout { min-height:500px; }
   .command-dashboard .global-clock-list { gap:.35rem .6rem; }
 }
+
+.command-dashboard .dashboard-helpbuddy {
+  overflow:hidden;
+  border:1px solid rgba(224,244,255,.34);
+  border-radius:.8rem;
+  background:linear-gradient(125deg,rgba(210,235,255,.17),rgba(151,201,238,.085) 48%,rgba(228,244,255,.12));
+  box-shadow:0 10px 30px rgba(2,13,31,.20),inset 0 1px 0 rgba(255,255,255,.28);
+  backdrop-filter:blur(16px) saturate(155%);
+  -webkit-backdrop-filter:blur(16px) saturate(155%);
+}
+.command-dashboard .dashboard-helpbuddy > div { background:transparent !important; border-color:rgba(224,244,255,.18) !important; }
+.command-dashboard .dashboard-work > section { background:linear-gradient(125deg,rgba(210,235,255,.17),rgba(151,201,238,.085) 48%,rgba(228,244,255,.12)); border-color:rgba(224,244,255,.34); }
