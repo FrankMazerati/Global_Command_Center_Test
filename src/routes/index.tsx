@@ -199,14 +199,16 @@ function Dashboard() {
         <section className="glass overflow-hidden rounded-lg px-2.5 py-2">
           <div className="mb-2 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 font-display text-[9px] font-black uppercase tracking-[.16em] text-sky-300"><TrendingUp className="size-3.5"/> Market Watch</div>
-            <span className="text-[8px] font-semibold uppercase tracking-wider text-amber-300">Live data connector required</span>
+            <button type="button" onClick={() => setStockManager(v => !v)} className="rounded-md border border-sky-300/25 px-2 py-1 text-[9px] font-semibold text-sky-200 hover:bg-sky-300/10">{stockManager ? "Done" : "Manage"}</button>
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-6">
-            {["DOW","S&P 500","NASDAQ","NYSE","RUSSELL 2000","GLOBAL"].map(symbol => <div key={symbol} className="min-w-0 border-l border-sky-300/20 pl-2">
-              <div className="truncate text-[9px] font-bold tracking-wide text-slate-200">{symbol}</div>
-              <div className="mt-0.5 text-[8px] text-slate-500">Awaiting market feed</div>
+          <div className="flex flex-wrap gap-2">
+            {stockWatch.map(symbol => <div key={symbol} className="flex min-w-[74px] items-center gap-1 border-l border-sky-300/20 pl-2">
+              <div><div className="text-[9px] font-bold tracking-wide text-slate-100">{symbol}</div><div className="text-[8px] text-slate-400">Feed unavailable</div></div>
+              {stockManager && <button type="button" aria-label={"Remove "+symbol} onClick={() => setStockWatch(items => items.filter(x => x !== symbol))} className="ml-1 text-rose-300"><X className="size-3"/></button>}
             </div>)}
           </div>
+          {stockManager && <div className="mt-2 flex flex-wrap gap-1.5 border-t border-white/10 pt-2">{STOCK_CATALOG.filter(x => !stockWatch.includes(x)).map(symbol => <button type="button" key={symbol} onClick={() => setStockWatch(items => [...items,symbol])} className="rounded-md border border-sky-300/20 px-2 py-1 text-[9px] text-sky-100 hover:bg-sky-300/10"><Plus className="mr-1 inline size-3"/>{symbol}</button>)}</div>}
+          <p className="mt-1 text-[8px] text-slate-400">Choose the indices and symbols you want to follow. Live prices require a market-data connection.</p>
         </section>
 
         <Panel title="Quick Picks" icon={Sparkles} action={<button type="button" onClick={() => setPickEditor(v => !v)} className="inline-flex items-center gap-1 rounded-md border border-sky-400/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-300 hover:bg-sky-400/10">{pickEditor ? "Finish" : <><Plus className="size-3"/> Manage</>}</button>}>
@@ -251,9 +253,7 @@ function Dashboard() {
             {[["Identity & Access","Role governed"],["Service Desk","Awaiting connection"],["Network Operations","Awaiting connection"],["Security Operations","Awaiting connection"]].map(([label,value],i)=><div key={label} className="flex items-center justify-between gap-2"><span className="text-[10px] text-slate-400">{label}</span><span className={cn("text-[9px] font-bold",i===0?"text-emerald-300":"text-amber-300")}>{value}</span></div>)}
           </div>
         </Panel>
-        <Panel title="Market Watch" icon={TrendingUp} action={<span className="text-[9px] font-bold text-amber-300">FEED NOT CONNECTED</span>}>
-          <div className="space-y-2">{["DOW JONES","S&P 500","NASDAQ","NYSE","RUSSELL 2000"].map(symbol=><div key={symbol} className="flex items-center justify-between border-b border-slate-700/50 pb-2 last:border-0 last:pb-0"><span className="text-[10px] font-bold tracking-wide text-slate-300">{symbol}</span><span className="text-[9px] text-slate-500">Awaiting market data</span></div>)}</div>
-        </Panel>
+
       </aside>
     </div>
 
