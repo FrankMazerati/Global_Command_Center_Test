@@ -234,7 +234,8 @@ function Dashboard() {
             </div>)}
           </div>
           {pickEditor && <div className="mt-3 border-t border-sky-400/15 pt-3"><div className="mb-2 text-[9px] font-bold uppercase tracking-[.14em] text-slate-500">Add a shortcut</div><div className="flex flex-wrap gap-2">{PICK_CATALOG.filter(p => !picks.some(current => current.label === p.label)).map(p => <button key={p.label} type="button" onClick={() => addPick(p.label)} className="inline-flex items-center gap-1 rounded-md border border-sky-400/20 bg-sky-400/5 px-2 py-1.5 text-[10px] font-semibold text-sky-200 hover:bg-sky-400/15"><Plus className="size-3"/>{p.label}</button>)}</div><p className="mt-2 text-[9px] text-slate-500">Drag to reorder · remove with × · your choices are saved on this device</p></div>}
-        </Panel>\n    <div className="dashboard-layout grid gap-2">
+        </Panel>
+    <div className="dashboard-layout grid gap-2">
       <main className="dashboard-work min-w-0 min-h-0">
                 <Panel className="h-full overflow-y-auto" title="Bring the Work to You" icon={Activity} action={<span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-300">Awaiting live data connection</span>}>
           <div className="mb-2 flex flex-wrap gap-1">{WORK_TABS.map(tab => <button key={tab} type="button" onClick={() => setWorkTab(tab)} className={cn("rounded-md border px-2.5 py-1 text-[9px] font-bold", workTab === tab ? "border-sky-200/50 bg-sky-200/15 text-white" : "border-white/20 bg-white/5 text-slate-200/75 hover:bg-white/10")}>{tab}</button>)}</div>
@@ -253,10 +254,7 @@ function Dashboard() {
     </div>
     <div className="dashboard-lower grid gap-2 lg:grid-cols-2">
 
-              <Panel title="News & Intelligence Feed" icon={Megaphone}>
-          <div className="space-y-1.5">{news.map((source,index) => <div key={source} className="flex items-center gap-2 rounded-md border border-slate-700/60 bg-[#071225] px-3 py-2"><span className="flex-1 text-[11px] font-semibold text-slate-200">{source}</span><span className="text-[9px] text-slate-500">Source not connected</span><button type="button" aria-label="Move up" onClick={() => setNews(items => reorder(items,index,index-1))} className="text-slate-500 hover:text-sky-300"><ArrowUp className="size-3"/></button><button type="button" aria-label="Move down" onClick={() => setNews(items => reorder(items,index,index+1))} className="text-slate-500 hover:text-sky-300"><ArrowDown className="size-3"/></button><button type="button" aria-label="Remove news source" onClick={() => setNews(items => items.filter(item => item !== source))} className="text-slate-500 hover:text-rose-300"><X className="size-3"/></button></div>)}</div>
-          <form className="mt-2 flex gap-2" onSubmit={e => {e.preventDefault(); const value=newNews.trim(); if(value && !news.includes(value)) setNews(items=>[...items,value]); setNewNews("");}}><input value={newNews} onChange={e=>setNewNews(e.target.value)} placeholder="Add a news category" className="h-8 min-w-0 flex-1 rounded-md border border-slate-700 bg-[#071225] px-3 text-xs text-white outline-none focus:border-sky-400"/><button type="submit" aria-label="Add news category" className="grid size-8 place-items-center rounded-md border border-sky-400/30 text-sky-300"><Plus className="size-4"/></button></form>
-        </Panel>
+              
               <Panel title="Operations & Intelligence" icon={Radar}>
           <div className="grid gap-2 sm:grid-cols-2">
             {[
