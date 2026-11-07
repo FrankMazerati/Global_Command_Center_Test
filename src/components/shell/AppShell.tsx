@@ -82,7 +82,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const utilityClass = "holo-control relative grid size-9 shrink-0 place-items-center rounded-xl border border-white/10 bg-slate-950/25 text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,.08)] backdrop-blur-md transition hover:border-sky-300/45 hover:bg-sky-400/10 hover:text-sky-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70";
 
   return (
-    <div className="min-h-dvh bg-page text-foreground">
+    <div className="min-h-dvh bg-transparent text-foreground">
       <header className="command-header sticky top-0 z-30 border-b border-sky-300/25 shadow-[0_8px_30px_rgba(0,0,0,.35)]">
         <div className="mx-auto flex min-h-[68px] max-w-[1800px] items-center justify-between gap-2 px-3 sm:px-5">
           <div className="flex min-w-0 items-center gap-2">
@@ -128,7 +128,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1800px] px-3 pb-10 pt-4 sm:px-5">{children}</main>
+      <main className="w-full px-2 pb-8 pt-2 sm:px-3">{children}</main>
 
       <footer className="border-t border-sky-300/20 bg-[#030a16]/95 text-slate-300">
         <div className="mx-auto grid max-w-[1800px] gap-7 px-5 py-8 sm:grid-cols-2 lg:grid-cols-5">
