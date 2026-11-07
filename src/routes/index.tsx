@@ -20,9 +20,9 @@ export const Route = createFileRoute("/")({
 });
 
 const CLOCKS = [
-  ["London", "Europe/London"], ["Chicago", "America/Chicago"], ["New York", "America/New_York"],
-  ["Sydney", "Australia/Sydney"], ["Tokyo", "Asia/Tokyo"], ["Los Angeles", "America/Los_Angeles"],
-  ["Dubai", "Asia/Dubai"], ["Berlin", "Europe/Berlin"], ["Mumbai", "Asia/Kolkata"], ["São Paulo", "America/Sao_Paulo"],
+  ["Tokyo", "Asia/Tokyo"], ["Dubai", "Asia/Dubai"], ["New York", "America/New_York"],
+  ["London", "Europe/London"], ["Chicago", "America/Chicago"], ["Los Angeles", "America/Los_Angeles"],
+  ["Sydney", "Australia/Sydney"], ["Berlin", "Europe/Berlin"], ["Mumbai", "Asia/Kolkata"], ["São Paulo", "America/Sao_Paulo"],
 ] as const;
 
 type Pick = { label: string; section: string; group: string; page: string; icon: string };
@@ -88,7 +88,7 @@ function Dashboard() {
   const [picks, setPicks] = useState<Pick[]>(DEFAULT_PICKS);
   const [pickEditor, setPickEditor] = useState(false);
   const [pickDrag, setPickDrag] = useState<number | null>(null);
-  const [clockOrder, setClockOrder] = useState<string[]>(CLOCKS.map(([city]) => city));
+  const [clockOrder, setClockOrder] = useState<string[]>(["Tokyo","Dubai","New York","London","Chicago"]);
   const [clockManager, setClockManager] = useState(false);
   const [stockWatch, setStockWatch] = useState<string[]>(["DOW","S&P 500","NASDAQ","AAPL","MSFT","NVDA"]);
   const [stockManager, setStockManager] = useState(false);
@@ -103,7 +103,7 @@ function Dashboard() {
       const savedPicks = localStorage.getItem("mo:quick-picks");
       if (savedPicks) setPicks(JSON.parse(savedPicks) as Pick[]);
       const savedClocks = localStorage.getItem("mo:clock-order");
-      if (savedClocks) setClockOrder(JSON.parse(savedClocks) as string[]);
+      if (savedClocks) { const saved = (JSON.parse(savedClocks) as string[]).filter(city => CLOCKS.some(([name]) => name === city)); setClockOrder(saved.length ? saved : ["Tokyo","Dubai","New York","London","Chicago"]); }
       const savedStocks = localStorage.getItem("mo:market-watch");
       if (savedStocks) setStockWatch(JSON.parse(savedStocks) as string[]);
     } catch { /* Keep the safe defaults when saved preferences are unavailable. */ }
@@ -173,26 +173,25 @@ function Dashboard() {
 
 
         </section>
-      <section className="global-time-strip glass flex flex-wrap items-center gap-2 rounded-xl px-2 py-1 backdrop-blur-xl">
-      <div className="mr-1 flex min-w-[105px] items-center gap-2 px-2">
-        <Clock3 className="size-3.5 text-sky-300"/>
-        <span className="font-display text-[9px] font-bold uppercase tracking-[.14em] text-slate-300">Global Time</span>
-      </div>
-      <div className="global-clock-list flex min-w-0 flex-1 flex-wrap gap-1">
-        {clocks.slice(0, clockExpanded ? 10 : 5).map(([city, zone]) => {
-          const idx = clockOrder.indexOf(city);
-          return <div key={city} draggable={clockManager} onDragStart={() => setClockDrag(idx)} onDragOver={e => { if (clockManager) e.preventDefault(); }} onDrop={e => { e.preventDefault(); if (clockManager && clockDrag !== null) setClockOrder(order => reorder(order, clockDrag, idx)); setClockDrag(null); }} className={cn("global-clock-item glass flex items-center gap-1 rounded-md px-1.5 py-0.5", clockManager && "cursor-grab border-dashed border-sky-300/50", clockDrag === idx && "opacity-40")}>
-            {clockManager && <GripVertical className="size-3 shrink-0 text-sky-300"/>}
-            <div className="min-w-0 flex-1"><div className="truncate text-[7px] font-semibold uppercase tracking-[.1em] text-slate-400">{city}</div><div className="font-mono text-[9px] font-medium leading-tight tabular-nums text-white">{now ? now.toLocaleTimeString([], { timeZone: zone, hour: "2-digit", minute: "2-digit" }) : "--:--"}</div></div>{clockManager && <button type="button" aria-label={"Remove "+city} onClick={() => setClockOrder(items => items.filter(x => x !== city))} className="text-rose-300"><X className="size-3"/></button>}
-          </div>;
-        })}
-      </div>
-      <div className="flex items-center gap-1.5 px-1">
-        <button type="button" onClick={() => {setClockManager(v => !v);setClockExpanded(true);}} className="rounded-md border border-sky-300/20 px-2 py-1 text-[9px] font-semibold text-sky-200 hover:bg-sky-300/10">{clockManager ? "Done" : "Manage"}</button>
-        <button type="button" onClick={() => setClockExpanded(v => !v)} className="rounded-md border border-sky-300/20 px-2 py-1 text-[9px] font-semibold text-sky-200 hover:bg-sky-300/10">{clockExpanded ? "Show 5" : "Show all"}</button>
-      </div>
-      {clockManager && <div className="flex w-full flex-wrap gap-1 border-t border-white/10 pt-2">{CLOCKS.filter(([city]) => !clockOrder.includes(city)).map(([city]) => <button key={city} type="button" onClick={() => setClockOrder(items => [...items,city])} className="rounded-md border border-sky-300/20 px-2 py-1 text-[8px] text-sky-100 hover:bg-sky-300/10"><Plus className="mr-1 inline size-3"/>{city}</button>)}</div>}
-    </section>
+      <section className="global-time-strip flex min-h-0 flex-wrap items-center gap-2 border-y border-white/15 px-1 py-1">
+        <div className="flex items-center gap-1.5 pr-2 text-sky-200"><Clock3 className="size-3"/><span className="font-display text-[8px] font-bold uppercase tracking-[.12em]">Global Time</span></div>
+        <div className="global-clock-list flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
+          {clocks.slice(0, clockExpanded ? 10 : 5).map(([city, zone]) => {
+            const idx = clockOrder.indexOf(city);
+            return <div key={city} draggable={clockManager} onDragStart={() => setClockDrag(idx)} onDragOver={e => { if (clockManager) e.preventDefault(); }} onDrop={e => { e.preventDefault(); if (clockManager && clockDrag !== null) setClockOrder(order => reorder(order, clockDrag, idx)); setClockDrag(null); }} className={cn("global-clock-item flex items-center gap-1", clockManager && "cursor-grab", clockDrag === idx && "opacity-40")}>
+              {clockManager && <GripVertical className="size-2.5 text-sky-300/70"/>}
+              <span className="text-[7px] font-semibold uppercase tracking-[.08em] text-slate-300/70">{city}</span>
+              <span className="font-mono text-[9px] leading-none tabular-nums text-white">{now ? now.toLocaleTimeString([], {timeZone:zone,hour:"2-digit",minute:"2-digit"}) : "--:--"}</span>
+              {clockManager && <button type="button" aria-label={"Remove "+city} onClick={() => setClockOrder(items => items.filter(x => x !== city))} className="grid size-4 place-items-center rounded-full border border-sky-300/30 text-sky-100 hover:bg-sky-400/20"><X className="size-2.5"/></button>}
+            </div>;
+          })}
+        </div>
+        <div className="flex items-center gap-1">
+          <button type="button" aria-label="Manage global clocks" onClick={() => {setClockManager(v=>!v);setClockExpanded(true);}} className="holo-control grid size-6 place-items-center rounded-full text-sky-100">{clockManager ? <X className="size-3"/> : <GripVertical className="size-3"/>}</button>
+          <button type="button" aria-label={clockExpanded ? "Show five clocks" : "Show all clocks"} onClick={() => setClockExpanded(v=>!v)} className="holo-control grid size-6 place-items-center rounded-full text-sky-100">{clockExpanded ? <ArrowUp className="size-3"/> : <ArrowDown className="size-3"/>}</button>
+          {clockManager && <select aria-label="Add a global clock" value="" onChange={e=>{if(e.target.value)setClockOrder(items=>items.includes(e.target.value)?items:[...items,e.target.value]);}} className="holo-control h-6 max-w-[110px] rounded-full px-1.5 text-[8px] text-sky-100"><option value="" className="bg-slate-900">+ Add city</option>{CLOCKS.filter(([city])=>!clockOrder.includes(city)).map(([city])=><option key={city} value={city} className="bg-slate-900">{city}</option>)}</select>}
+        </div>
+      </section>
       <section className="market-watch-strip glass overflow-hidden rounded-lg px-2 py-1.5">
           <div className="mb-2 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 font-display text-[9px] font-black uppercase tracking-[.16em] text-sky-300"><TrendingUp className="size-3.5"/> Market Watch</div>
