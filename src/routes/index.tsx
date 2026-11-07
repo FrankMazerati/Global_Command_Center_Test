@@ -135,14 +135,13 @@ function Dashboard() {
 
   if (!authReady) return <div className="grid min-h-[55vh] place-items-center text-sm text-slate-400"><div className="flex items-center gap-3"><span className="size-2 animate-pulse rounded-full bg-sky-400"/>Securing your command session…</div></div>;
 
-  return <div className="command-dashboard space-y-3 text-slate-100">
-    <div className="dashboard-layout grid items-start gap-2">
-      <div className="min-w-0 space-y-2">
-        <section className="dashboard-profile-scene glass-strong overflow-hidden rounded-xl p-2.5 sm:p-3">
+  return <div className="command-dashboard space-y-2 text-slate-100">
+    <div className="space-y-2">
+      <section className="dashboard-profile-scene glass-strong overflow-hidden rounded-xl p-2.5 sm:p-3">
           <div className="relative z-10 flex flex-wrap items-center gap-4">
             <div className="relative grid size-[68px] shrink-0 place-items-center">
               <div className="absolute inset-1 rotate-45 rounded-[14px] border border-sky-200/60 bg-sky-100/10 shadow-[0_0_18px_rgba(56,189,248,.2)]"/>
-              <img src={`${import.meta.env.BASE_URL}frankmazerati.png`} alt="Frank Mazerati" onError={e => { e.currentTarget.style.display = "none"; }} className="relative size-[62px] border border-sky-100/70 object-cover shadow-[0_0_16px_rgba(56,189,248,.2)]" style={{clipPath:"polygon(50% 0%,100% 50%,50% 100%,0% 50%)"}}/>
+              <span className="absolute font-display text-sm font-black text-sky-100">FM</span><img src={`${import.meta.env.BASE_URL}frankmazerati.png`} alt="Frank Mazerati" onError={e => { e.currentTarget.style.display = "none"; }} className="relative size-[50px] border border-sky-100/70 object-cover shadow-[0_0_16px_rgba(56,189,248,.2)]" style={{clipPath:"polygon(50% 0%,100% 50%,50% 100%,0% 50%)"}}/>
               <span className="absolute bottom-1 right-0 size-3.5 rounded-full border-2 border-slate-950 bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,.8)]"/>
             </div>
             <div className="min-w-0 flex-1">
@@ -161,30 +160,29 @@ function Dashboard() {
             </div>
           </div>
 
-          <div className="relative z-10 mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-white/15 pt-2 text-[9px] text-slate-100/85">
+          <div className="relative z-10 mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 border-t border-white/15 pt-1.5 text-[8px] text-slate-100/85">
             <span className="inline-flex items-center gap-1"><Clock3 className="size-3 text-sky-200"/>Local <strong className="font-mono text-[10px] font-semibold text-white tabular-nums">{now ? now.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) : "--:--"}</strong></span>
             <span className="text-slate-200/65">{now ? now.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"}) : "Local date"}</span>
             <span className="inline-flex items-center gap-1"><CloudSun className="size-3 text-sky-200"/>Weather: <strong className="font-semibold text-white">Not connected</strong></span>
             <span className="inline-flex items-center gap-1"><ShieldCheck className="size-3 text-emerald-200"/>Authenticated</span>
           </div>
 
-          <div className="relative z-10 mt-2 flex flex-wrap items-center justify-between gap-2 border-t border-white/10 pt-2">
+          <div className="relative z-10 mt-1.5 flex flex-wrap items-center justify-between gap-1 border-t border-white/10 pt-1.5">
             <div className="font-display text-[9px] font-black uppercase tracking-[.13em] text-slate-100">SEE EVERYTHING <span className="text-sky-200">LOCALLY.</span> CONNECT EVERYTHING <span className="text-sky-200">GLOBALLY.</span> POWERED BY <span className="text-sky-200">INTELLIGENCE.</span></div>
             <div className="text-[8px] font-bold uppercase tracking-[.12em] text-slate-300/70">ONE WORLD · ONE SYSTEM · ONE INTELLIGENT NETWORK</div>
           </div>
 
 
         </section>
-
-        <section className="glass flex flex-wrap items-center gap-2 rounded-xl px-2 py-1.5 backdrop-blur-xl">
+      <section className="global-time-strip glass flex flex-wrap items-center gap-2 rounded-xl px-2 py-1 backdrop-blur-xl">
       <div className="mr-1 flex min-w-[105px] items-center gap-2 px-2">
         <Clock3 className="size-3.5 text-sky-300"/>
         <span className="font-display text-[9px] font-bold uppercase tracking-[.14em] text-slate-300">Global Time</span>
       </div>
-      <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
+      <div className="global-clock-list flex min-w-0 flex-1 flex-wrap gap-1">
         {clocks.slice(0, clockExpanded ? 10 : 5).map(([city, zone]) => {
           const idx = clockOrder.indexOf(city);
-          return <div key={city} draggable={clockManager} onDragStart={() => setClockDrag(idx)} onDragOver={e => { if (clockManager) e.preventDefault(); }} onDrop={e => { e.preventDefault(); if (clockManager && clockDrag !== null) setClockOrder(order => reorder(order, clockDrag, idx)); setClockDrag(null); }} className={cn("glass flex min-w-[76px] items-center gap-1 rounded-md px-1.5 py-0.5", clockManager && "cursor-grab border-dashed border-sky-300/50", clockDrag === idx && "opacity-40")}>
+          return <div key={city} draggable={clockManager} onDragStart={() => setClockDrag(idx)} onDragOver={e => { if (clockManager) e.preventDefault(); }} onDrop={e => { e.preventDefault(); if (clockManager && clockDrag !== null) setClockOrder(order => reorder(order, clockDrag, idx)); setClockDrag(null); }} className={cn("global-clock-item glass flex items-center gap-1 rounded-md px-1.5 py-0.5", clockManager && "cursor-grab border-dashed border-sky-300/50", clockDrag === idx && "opacity-40")}>
             {clockManager && <GripVertical className="size-3 shrink-0 text-sky-300"/>}
             <div className="min-w-0 flex-1"><div className="truncate text-[7px] font-semibold uppercase tracking-[.1em] text-slate-400">{city}</div><div className="font-mono text-[9px] font-medium leading-tight tabular-nums text-white">{now ? now.toLocaleTimeString([], { timeZone: zone, hour: "2-digit", minute: "2-digit" }) : "--:--"}</div></div>{clockManager && <button type="button" aria-label={"Remove "+city} onClick={() => setClockOrder(items => items.filter(x => x !== city))} className="text-rose-300"><X className="size-3"/></button>}
           </div>;
@@ -196,8 +194,7 @@ function Dashboard() {
       </div>
       {clockManager && <div className="flex w-full flex-wrap gap-1 border-t border-white/10 pt-2">{CLOCKS.filter(([city]) => !clockOrder.includes(city)).map(([city]) => <button key={city} type="button" onClick={() => setClockOrder(items => [...items,city])} className="rounded-md border border-sky-300/20 px-2 py-1 text-[8px] text-sky-100 hover:bg-sky-300/10"><Plus className="mr-1 inline size-3"/>{city}</button>)}</div>}
     </section>
-
-        <section className="glass overflow-hidden rounded-lg px-2.5 py-2">
+      <section className="market-watch-strip glass overflow-hidden rounded-lg px-2 py-1.5">
           <div className="mb-2 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 font-display text-[9px] font-black uppercase tracking-[.16em] text-sky-300"><TrendingUp className="size-3.5"/> Market Watch</div>
             <button type="button" onClick={() => setStockManager(v => !v)} className="rounded-md border border-sky-300/25 px-2 py-1 text-[9px] font-semibold text-sky-200 hover:bg-sky-300/10">{stockManager ? "Done" : "Manage"}</button>
@@ -209,10 +206,28 @@ function Dashboard() {
             </div>)}
           </div>
           {stockManager && <div className="mt-2 flex flex-wrap gap-1.5 border-t border-white/10 pt-2">{STOCK_CATALOG.filter(x => !stockWatch.includes(x)).map(symbol => <button type="button" key={symbol} onClick={() => setStockWatch(items => [...items,symbol])} className="rounded-md border border-sky-300/20 px-2 py-1 text-[9px] text-sky-100 hover:bg-sky-300/10"><Plus className="mr-1 inline size-3"/>{symbol}</button>)}</div>}
-          <p className="mt-1 text-[8px] text-slate-400">Choose the indices and symbols you want to follow. Live prices require a market-data connection.</p>
+          
         </section>
+    </div>
+    <div className="dashboard-layout grid gap-2">
+      <main className="dashboard-work min-w-0 min-h-0">
+                <Panel className="h-full overflow-y-auto" title="Bring the Work to You" icon={Activity} action={<span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-300">Awaiting live data connection</span>}>
+          <div className="mb-2 flex flex-wrap gap-1">{WORK_TABS.map(tab => <button key={tab} type="button" onClick={() => setWorkTab(tab)} className={cn("rounded-md border px-2.5 py-1 text-[9px] font-bold", workTab === tab ? "border-sky-200/50 bg-sky-200/15 text-white" : "border-white/20 bg-white/5 text-slate-200/75 hover:bg-white/10")}>{tab}</button>)}</div>
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+            {[["Today’s Work","Tasks and actions assigned to your role."],["Upcoming Commitments","Meetings, due dates and scheduled work."],["Pending Decisions","Approvals and items awaiting your direction."],["Recent Activity","Work completed and updates from your teams."]].map(([title,description]) => <div key={title} className="rounded-lg border border-white/15 bg-white/[.06] p-2.5"><div className="text-[10px] font-semibold text-slate-100">{title}</div><p className="mt-1 text-[9px] leading-relaxed text-slate-300/75">{description}</p><div className="mt-2 border-t border-white/10 pt-1.5 text-[8px] text-slate-400">{work.activeTicketId && title === "Today’s Work" ? "Active ticket available" : "No connected records yet"}</div></div>)}
+          </div>
+          {work.activeTicketId && <div className="mt-2 flex items-center justify-between rounded-lg border border-sky-300/20 bg-sky-300/[.06] px-3 py-2"><span className="text-[10px] text-slate-200">Active ticket: {work.activeTicketId}</span><Link to="/m/$section/$group/$page" params={{section:"service-desk-and-enterprise-operations",group:"ticket-management",page:"active-ticket-workspace"}} className="text-[10px] font-semibold text-sky-200 hover:underline">Continue work</Link></div>}
+          <p className="mt-2 text-[8px] text-slate-400">This workspace is organized around your role. Live tasks, commitments, approvals and activity populate when their source systems are connected.</p>
+        </Panel>
+      </main>
+            <aside className="space-y-2 xl:sticky xl:top-28">
+        <div className="dashboard-helpbuddy h-full overflow-y-auto rounded-xl border border-sky-400/25 bg-[#0a172b]/40 shadow-[0_12px_34px_rgba(0,0,0,.18)]"><HelpBuddyPanel className="h-full"/></div>
+        
 
-        <Panel title="Quick Picks" icon={Sparkles} action={<button type="button" onClick={() => setPickEditor(v => !v)} className="inline-flex items-center gap-1 rounded-md border border-sky-400/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-300 hover:bg-sky-400/10">{pickEditor ? "Finish" : <><Plus className="size-3"/> Manage</>}</button>}>
+      </aside>
+    </div>
+    <div className="dashboard-lower grid gap-2 lg:grid-cols-2">
+              <Panel title="Quick Picks" icon={Sparkles} action={<button type="button" onClick={() => setPickEditor(v => !v)} className="inline-flex items-center gap-1 rounded-md border border-sky-400/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-300 hover:bg-sky-400/10">{pickEditor ? "Finish" : <><Plus className="size-3"/> Manage</>}</button>}>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
             {picks.map((pick, index) => <div key={pick.label} draggable={pickEditor} onDragStart={() => setPickDrag(index)} onDragOver={e => { if (pickEditor) e.preventDefault(); }} onDrop={e => { e.preventDefault(); if (pickDrag !== null) setPicks(items => reorder(items, pickDrag, index)); setPickDrag(null); }} className={cn("group relative", pickEditor && "cursor-grab", pickDrag === index && "opacity-40")}>
               <Link to="/m/$section/$group/$page" params={{section:pick.section,group:pick.group,page:pick.page}} className="holo-control flex min-h-[38px] items-center gap-2 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-slate-100 transition">
@@ -224,22 +239,11 @@ function Dashboard() {
           </div>
           {pickEditor && <div className="mt-3 border-t border-sky-400/15 pt-3"><div className="mb-2 text-[9px] font-bold uppercase tracking-[.14em] text-slate-500">Add a shortcut</div><div className="flex flex-wrap gap-2">{PICK_CATALOG.filter(p => !picks.some(current => current.label === p.label)).map(p => <button key={p.label} type="button" onClick={() => addPick(p.label)} className="inline-flex items-center gap-1 rounded-md border border-sky-400/20 bg-sky-400/5 px-2 py-1.5 text-[10px] font-semibold text-sky-200 hover:bg-sky-400/15"><Plus className="size-3"/>{p.label}</button>)}</div><p className="mt-2 text-[9px] text-slate-500">Drag to reorder · remove with × · your choices are saved on this device</p></div>}
         </Panel>
-
-        <Panel title="Bring the Work to You" icon={Activity} action={<span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-300">Awaiting live data connection</span>}>
-          <div className="mb-2 flex flex-wrap gap-1">{WORK_TABS.map(tab => <button key={tab} type="button" onClick={() => setWorkTab(tab)} className={cn("rounded-md border px-2.5 py-1 text-[9px] font-bold", workTab === tab ? "border-sky-200/50 bg-sky-200/15 text-white" : "border-white/20 bg-white/5 text-slate-200/75 hover:bg-white/10")}>{tab}</button>)}</div>
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-            {[["Today’s Work","Tasks and actions assigned to your role."],["Upcoming Commitments","Meetings, due dates and scheduled work."],["Pending Decisions","Approvals and items awaiting your direction."],["Recent Activity","Work completed and updates from your teams."]].map(([title,description]) => <div key={title} className="rounded-lg border border-white/15 bg-white/[.06] p-2.5"><div className="text-[10px] font-semibold text-slate-100">{title}</div><p className="mt-1 text-[9px] leading-relaxed text-slate-300/75">{description}</p><div className="mt-2 border-t border-white/10 pt-1.5 text-[8px] text-slate-400">{work.activeTicketId && title === "Today’s Work" ? "Active ticket available" : "No connected records yet"}</div></div>)}
-          </div>
-          {work.activeTicketId && <div className="mt-2 flex items-center justify-between rounded-lg border border-sky-300/20 bg-sky-300/[.06] px-3 py-2"><span className="text-[10px] text-slate-200">Active ticket: {work.activeTicketId}</span><Link to="/m/$section/$group/$page" params={{section:"service-desk-and-enterprise-operations",group:"ticket-management",page:"active-ticket-workspace"}} className="text-[10px] font-semibold text-sky-200 hover:underline">Continue work</Link></div>}
-          <p className="mt-2 text-[8px] text-slate-400">This workspace is organized around your role. Live tasks, commitments, approvals and activity populate when their source systems are connected.</p>
-        </Panel>
-
-        <Panel title="News & Intelligence Feed" icon={Megaphone}>
+              <Panel title="News & Intelligence Feed" icon={Megaphone}>
           <div className="space-y-1.5">{news.map((source,index) => <div key={source} className="flex items-center gap-2 rounded-md border border-slate-700/60 bg-[#071225] px-3 py-2"><span className="flex-1 text-[11px] font-semibold text-slate-200">{source}</span><span className="text-[9px] text-slate-500">Source not connected</span><button type="button" aria-label="Move up" onClick={() => setNews(items => reorder(items,index,index-1))} className="text-slate-500 hover:text-sky-300"><ArrowUp className="size-3"/></button><button type="button" aria-label="Move down" onClick={() => setNews(items => reorder(items,index,index+1))} className="text-slate-500 hover:text-sky-300"><ArrowDown className="size-3"/></button><button type="button" aria-label="Remove news source" onClick={() => setNews(items => items.filter(item => item !== source))} className="text-slate-500 hover:text-rose-300"><X className="size-3"/></button></div>)}</div>
           <form className="mt-2 flex gap-2" onSubmit={e => {e.preventDefault(); const value=newNews.trim(); if(value && !news.includes(value)) setNews(items=>[...items,value]); setNewNews("");}}><input value={newNews} onChange={e=>setNewNews(e.target.value)} placeholder="Add a news category" className="h-8 min-w-0 flex-1 rounded-md border border-slate-700 bg-[#071225] px-3 text-xs text-white outline-none focus:border-sky-400"/><button type="submit" aria-label="Add news category" className="grid size-8 place-items-center rounded-md border border-sky-400/30 text-sky-300"><Plus className="size-4"/></button></form>
         </Panel>
-
-        <Panel title="Operations & Intelligence" icon={Radar}>
+              <Panel title="Operations & Intelligence" icon={Radar}>
           <div className="grid gap-2 sm:grid-cols-2">
             {[
               ["Network Operations", "Infrastructure health, service status and alerts.", "service-desk-and-enterprise-operations","noc-overview","network-operations-dashboard",<Radar className="size-4"/>],
@@ -249,21 +253,6 @@ function Dashboard() {
             ].map(([title,desc,section,group,page,icon]) => <Link key={String(title)} to="/m/$section/$group/$page" params={{section:String(section),group:String(group),page:String(page)}} className="flex items-start gap-3 rounded-lg border border-sky-400/15 bg-[#071225] p-3 hover:border-sky-300/50"><span className="mt-0.5 text-sky-300">{icon}</span><span><span className="block text-xs font-semibold text-slate-100">{String(title)}</span><span className="mt-1 block text-[10px] leading-relaxed text-slate-500">{String(desc)}</span></span></Link>)}
           </div>
         </Panel>
-
-
-      </div>
-
-      <aside className="space-y-2 xl:sticky xl:top-28">
-        <div className="rounded-xl border border-sky-400/25 bg-[#0a172b] shadow-[0_12px_34px_rgba(0,0,0,.24)]"><HelpBuddyPanel/></div>
-        <Panel title="Command Status" icon={ShieldCheck}>
-          <div className="space-y-3">
-            {[["Identity & Access","Role governed"],["Service Desk","Awaiting connection"],["Network Operations","Awaiting connection"],["Security Operations","Awaiting connection"]].map(([label,value],i)=><div key={label} className="flex items-center justify-between gap-2"><span className="text-[10px] text-slate-400">{label}</span><span className={cn("text-[9px] font-bold",i===0?"text-emerald-300":"text-amber-300")}>{value}</span></div>)}
-          </div>
-        </Panel>
-
-      </aside>
     </div>
-
-
   </div>;
 }
