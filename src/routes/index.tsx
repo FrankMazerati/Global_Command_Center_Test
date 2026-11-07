@@ -194,6 +194,11 @@ function Dashboard() {
           {clockManager && <select aria-label="Add a global clock" value="" onChange={e=>{if(e.target.value)setClockOrder(items=>items.includes(e.target.value)?items:[...items,e.target.value]);}} className="holo-control h-6 max-w-[110px] rounded-full px-1.5 text-[8px] text-sky-100"><option value="" className="bg-slate-900">+ Add city</option>{CLOCKS.filter(([city])=>!clockOrder.includes(city)).map(([city])=><option key={city} value={city} className="bg-slate-900">{city}</option>)}</select>}
         </div>
       </section>
+      <div className="global-news-row flex min-w-0 flex-wrap items-center gap-2 border-t border-white/15 px-1 pt-2">
+        <span className="shrink-0 font-display text-[8px] font-bold uppercase tracking-[.12em] text-sky-200">Global News</span>
+        {news.map((source) => <span key={source} className="inline-flex items-center gap-1 rounded-full border border-sky-200/20 bg-white/[.06] px-2 py-1 text-[9px] text-white/90">{source}{<button type="button" aria-label={"Remove "+source} onClick={() => setNews(items => items.filter(item => item !== source))} className="text-sky-100/70 hover:text-rose-200"><X className="size-2.5"/></button>}</span>)}
+        <form className="ml-auto flex gap-1" onSubmit={e=>{e.preventDefault();const v=newNews.trim();if(v&&!news.includes(v))setNews(items=>[...items,v]);setNewNews("");}}><input aria-label="Add global news category" value={newNews} onChange={e=>setNewNews(e.target.value)} placeholder="Add news" className="h-6 w-24 rounded-md border border-sky-200/20 bg-white/[.06] px-2 text-[9px] text-white placeholder:text-white/50"/><button type="submit" aria-label="Add news category" className="holo-control grid size-6 place-items-center rounded-md"><Plus className="size-3"/></button></form>
+      </div>
       <section className="market-watch-strip glass overflow-hidden rounded-lg px-2 py-1.5">
           <div className="mb-2 flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 font-display text-[9px] font-black uppercase tracking-[.16em] text-sky-300"><TrendingUp className="size-3.5"/> Market Watch</div>
@@ -208,11 +213,6 @@ function Dashboard() {
           {stockManager && <div className="mt-2 flex flex-wrap gap-1.5 border-t border-white/10 pt-2">{STOCK_CATALOG.filter(x => !stockWatch.includes(x)).map(symbol => <button type="button" key={symbol} onClick={() => setStockWatch(items => [...items,symbol])} className="rounded-md border border-sky-300/20 px-2 py-1 text-[9px] text-sky-100 hover:bg-sky-300/10"><Plus className="mr-1 inline size-3"/>{symbol}</button>)}</div>}
           
         </section>
-      <div className="global-news-row flex min-w-0 flex-wrap items-center gap-2 border-t border-white/15 px-1 pt-2">
-        <span className="shrink-0 font-display text-[8px] font-bold uppercase tracking-[.12em] text-sky-200">Global News</span>
-        {news.map((source) => <span key={source} className="inline-flex items-center gap-1 rounded-full border border-sky-200/20 bg-white/[.06] px-2 py-1 text-[9px] text-white/90">{source}{<button type="button" aria-label={"Remove "+source} onClick={() => setNews(items => items.filter(item => item !== source))} className="text-sky-100/70 hover:text-rose-200"><X className="size-2.5"/></button>}</span>)}
-        <form className="ml-auto flex gap-1" onSubmit={e=>{e.preventDefault();const v=newNews.trim();if(v&&!news.includes(v))setNews(items=>[...items,v]);setNewNews("");}}><input aria-label="Add global news category" value={newNews} onChange={e=>setNewNews(e.target.value)} placeholder="Add news" className="h-6 w-24 rounded-md border border-sky-200/20 bg-white/[.06] px-2 text-[9px] text-white placeholder:text-white/50"/><button type="submit" aria-label="Add news category" className="holo-control grid size-6 place-items-center rounded-md"><Plus className="size-3"/></button></form>
-      </div>
       <div className="company-announcements flex min-w-0 items-center gap-2 border-t border-white/15 px-1 pt-2 text-[9px] text-white/85"><Megaphone className="size-3 shrink-0 text-sky-200"/><span className="font-display text-[8px] font-bold uppercase tracking-[.12em] text-sky-200">Company Announcements</span><span className="min-w-0">No new company announcements</span></div>
     </section>
     </div>
