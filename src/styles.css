@@ -313,3 +313,20 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 @media (max-width: 767px) {
   .dashboard-layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 3fr) minmax(0, 2fr); }
 }
+
+/* Correct responsive command-center composition: profile and utility rails
+   precede a true 60/40 work area. Portrait uses the same ratio vertically. */
+.dashboard-layout { height:min(68vh,740px); min-height:520px; grid-template-columns:minmax(0,3fr) minmax(280px,2fr); }
+.dashboard-work,.dashboard-helpbuddy { min-width:0; min-height:0; height:100%; }
+.dashboard-work>section { height:100%; overflow-y:auto; }
+.dashboard-helpbuddy>div { min-height:100%; }
+.dashboard-lower { grid-template-columns:repeat(2,minmax(0,1fr)); }
+.global-clock-list { flex:1 1 auto; }
+.global-clock-item { flex:0 0 86px; min-width:0; }
+@media(max-width:767px) {
+ .dashboard-layout { height:min(76vh,820px); min-height:600px; grid-template-columns:minmax(0,1fr); grid-template-rows:minmax(0,3fr) minmax(0,2fr); }
+ .dashboard-lower { grid-template-columns:minmax(0,1fr); }
+ .global-time-strip { gap:.35rem; }
+ .global-clock-list { flex:1 1 100%; }
+ .global-clock-item { flex-basis:76px; }
+}
