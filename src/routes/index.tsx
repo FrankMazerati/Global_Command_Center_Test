@@ -1,7 +1,7 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Activity, ArrowDown, ArrowUp, Bell, BookOpen, BriefcaseBusiness, CalendarDays,
-  CheckCircle2, Clock3, CloudSun, GripVertical, Megaphone,
+  CheckCircle2, Clock3, CloudSun, GripVertical, Megaphone, Search,
   Plus, Radar, ShieldCheck, Sparkles, TrendingUp, UserRound, X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -97,6 +97,7 @@ function Dashboard() {
   const [news, setNews] = useState(NEWS_DEFAULT);
   const [newNews, setNewNews] = useState("");
   const [workTab, setWorkTab] = useState<(typeof WORK_TABS)[number]>("Critical & Urgent");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     try {
@@ -173,6 +174,7 @@ function Dashboard() {
 
 
         </section>
+      <section className="utility-rail glass rounded-xl p-2 space-y-2">
       <section className="global-time-strip flex min-h-0 flex-wrap items-center gap-2 border-y border-white/15 px-1 py-1">
         <div className="flex items-center gap-1.5 pr-2 text-sky-200"><Clock3 className="size-3"/><span className="font-display text-[8px] font-bold uppercase tracking-[.12em]">Global Time</span></div>
         <div className="global-clock-list flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
@@ -206,8 +208,33 @@ function Dashboard() {
           {stockManager && <div className="mt-2 flex flex-wrap gap-1.5 border-t border-white/10 pt-2">{STOCK_CATALOG.filter(x => !stockWatch.includes(x)).map(symbol => <button type="button" key={symbol} onClick={() => setStockWatch(items => [...items,symbol])} className="rounded-md border border-sky-300/20 px-2 py-1 text-[9px] text-sky-100 hover:bg-sky-300/10"><Plus className="mr-1 inline size-3"/>{symbol}</button>)}</div>}
           
         </section>
+      <div className="global-news-row flex min-w-0 flex-wrap items-center gap-2 border-t border-white/15 px-1 pt-2">
+        <span className="shrink-0 font-display text-[8px] font-bold uppercase tracking-[.12em] text-sky-200">Global News</span>
+        {news.map((source,index) => <span key={source} className="inline-flex items-center gap-1 rounded-full border border-sky-200/20 bg-white/[.06] px-2 py-1 text-[9px] text-white/90">{source}{<button type="button" aria-label={"Remove "+source} onClick={() => setNews(items => items.filter(item => item !== source))} className="text-sky-100/70 hover:text-rose-200"><X className="size-2.5"/></button>}</span>)}
+        <form className="ml-auto flex gap-1" onSubmit={e=>{e.preventDefault();const v=newNews.trim();if(v&&!news.includes(v))setNews(items=>[...items,v]);setNewNews("");}}><input aria-label="Add global news category" value={newNews} onChange={e=>setNewNews(e.target.value)} placeholder="Add news" className="h-6 w-24 rounded-md border border-sky-200/20 bg-white/[.06] px-2 text-[9px] text-white placeholder:text-white/50"/><button type="submit" aria-label="Add news category" className="holo-control grid size-6 place-items-center rounded-md"><Plus className="size-3"/></button></form>
+      </div>
+      <div className="company-announcements flex min-w-0 items-center gap-2 border-t border-white/15 px-1 pt-2 text-[9px] text-white/85"><Megaphone className="size-3 shrink-0 text-sky-200"/><span className="font-display text-[8px] font-bold uppercase tracking-[.12em] text-sky-200">Company Announcements</span><span className="min-w-0">No new company announcements</span></div>
+    </section>
     </div>
-    <div className="dashboard-layout grid gap-2">
+    <Panel title="Global Search" icon={Search} className="w-full">
+      <form className="flex w-full items-center gap-2" onSubmit={e=>{e.preventDefault();const q=searchQuery.trim().toLowerCase();const match=PICK_CATALOG.find(p=>p.label.toLowerCase().includes(q));if(match)navigate({to:"/m/$section/$group/$page",params:{section:match.section,group:match.group,page:match.page}});}}>
+        <Search className="size-3.5 shrink-0 text-sky-200"/>
+        <input value={searchQuery} onChange={e=>setSearchQuery(e.target.value)} placeholder="Search people, services, tickets, systems…" aria-label="Global Search" className="h-8 min-w-0 flex-1 bg-transparent text-[11px] text-white outline-none placeholder:text-white/55"/>
+        <button type="submit" className="holo-control rounded-md px-3 py-1 text-[9px] font-bold">Search</button>
+      </form>
+    </Panel>
+      <Panel title="Quick Picks" icon={Sparkles} action={<button type="button" onClick={() => setPickEditor(v => !v)} className="inline-flex items-center gap-1 rounded-md border border-sky-400/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-300 hover:bg-sky-400/10">{pickEditor ? "Finish" : <><Plus className="size-3"/> Manage</>}</button>}>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+            {picks.map((pick, index) => <div key={pick.label} draggable={pickEditor} onDragStart={() => setPickDrag(index)} onDragOver={e => { if (pickEditor) e.preventDefault(); }} onDrop={e => { e.preventDefault(); if (pickDrag !== null) setPicks(items => reorder(items, pickDrag, index)); setPickDrag(null); }} className={cn("group relative", pickEditor && "cursor-grab", pickDrag === index && "opacity-40")}>
+              <Link to="/m/$section/$group/$page" params={{section:pick.section,group:pick.group,page:pick.page}} className="holo-control flex min-h-[38px] items-center gap-2 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-slate-100 transition">
+                {pickEditor ? <GripVertical className="size-3 shrink-0 text-sky-400"/> : pickIcon(pick.icon)}
+                <span className="leading-tight">{pick.label}</span>
+              </Link>
+              {pickEditor && <button type="button" aria-label={"Remove "+pick.label} onClick={() => setPicks(items => items.filter(p => p.label !== pick.label))} className="absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full border border-rose-400/50 bg-[#31101a] text-rose-300"><X className="size-3"/></button>}
+            </div>)}
+          </div>
+          {pickEditor && <div className="mt-3 border-t border-sky-400/15 pt-3"><div className="mb-2 text-[9px] font-bold uppercase tracking-[.14em] text-slate-500">Add a shortcut</div><div className="flex flex-wrap gap-2">{PICK_CATALOG.filter(p => !picks.some(current => current.label === p.label)).map(p => <button key={p.label} type="button" onClick={() => addPick(p.label)} className="inline-flex items-center gap-1 rounded-md border border-sky-400/20 bg-sky-400/5 px-2 py-1.5 text-[10px] font-semibold text-sky-200 hover:bg-sky-400/15"><Plus className="size-3"/>{p.label}</button>)}</div><p className="mt-2 text-[9px] text-slate-500">Drag to reorder · remove with × · your choices are saved on this device</p></div>}
+        </Panel>\n    <div className="dashboard-layout grid gap-2">
       <main className="dashboard-work min-w-0 min-h-0">
                 <Panel className="h-full overflow-y-auto" title="Bring the Work to You" icon={Activity} action={<span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-300">Awaiting live data connection</span>}>
           <div className="mb-2 flex flex-wrap gap-1">{WORK_TABS.map(tab => <button key={tab} type="button" onClick={() => setWorkTab(tab)} className={cn("rounded-md border px-2.5 py-1 text-[9px] font-bold", workTab === tab ? "border-sky-200/50 bg-sky-200/15 text-white" : "border-white/20 bg-white/5 text-slate-200/75 hover:bg-white/10")}>{tab}</button>)}</div>
@@ -225,18 +252,7 @@ function Dashboard() {
       </aside>
     </div>
     <div className="dashboard-lower grid gap-2 lg:grid-cols-2">
-              <Panel title="Quick Picks" icon={Sparkles} action={<button type="button" onClick={() => setPickEditor(v => !v)} className="inline-flex items-center gap-1 rounded-md border border-sky-400/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-300 hover:bg-sky-400/10">{pickEditor ? "Finish" : <><Plus className="size-3"/> Manage</>}</button>}>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
-            {picks.map((pick, index) => <div key={pick.label} draggable={pickEditor} onDragStart={() => setPickDrag(index)} onDragOver={e => { if (pickEditor) e.preventDefault(); }} onDrop={e => { e.preventDefault(); if (pickDrag !== null) setPicks(items => reorder(items, pickDrag, index)); setPickDrag(null); }} className={cn("group relative", pickEditor && "cursor-grab", pickDrag === index && "opacity-40")}>
-              <Link to="/m/$section/$group/$page" params={{section:pick.section,group:pick.group,page:pick.page}} className="holo-control flex min-h-[38px] items-center gap-2 rounded-lg px-2.5 py-1.5 text-[10px] font-semibold text-slate-100 transition">
-                {pickEditor ? <GripVertical className="size-3 shrink-0 text-sky-400"/> : pickIcon(pick.icon)}
-                <span className="leading-tight">{pick.label}</span>
-              </Link>
-              {pickEditor && <button type="button" aria-label={"Remove "+pick.label} onClick={() => setPicks(items => items.filter(p => p.label !== pick.label))} className="absolute -right-1.5 -top-1.5 grid size-5 place-items-center rounded-full border border-rose-400/50 bg-[#31101a] text-rose-300"><X className="size-3"/></button>}
-            </div>)}
-          </div>
-          {pickEditor && <div className="mt-3 border-t border-sky-400/15 pt-3"><div className="mb-2 text-[9px] font-bold uppercase tracking-[.14em] text-slate-500">Add a shortcut</div><div className="flex flex-wrap gap-2">{PICK_CATALOG.filter(p => !picks.some(current => current.label === p.label)).map(p => <button key={p.label} type="button" onClick={() => addPick(p.label)} className="inline-flex items-center gap-1 rounded-md border border-sky-400/20 bg-sky-400/5 px-2 py-1.5 text-[10px] font-semibold text-sky-200 hover:bg-sky-400/15"><Plus className="size-3"/>{p.label}</button>)}</div><p className="mt-2 text-[9px] text-slate-500">Drag to reorder · remove with × · your choices are saved on this device</p></div>}
-        </Panel>
+
               <Panel title="News & Intelligence Feed" icon={Megaphone}>
           <div className="space-y-1.5">{news.map((source,index) => <div key={source} className="flex items-center gap-2 rounded-md border border-slate-700/60 bg-[#071225] px-3 py-2"><span className="flex-1 text-[11px] font-semibold text-slate-200">{source}</span><span className="text-[9px] text-slate-500">Source not connected</span><button type="button" aria-label="Move up" onClick={() => setNews(items => reorder(items,index,index-1))} className="text-slate-500 hover:text-sky-300"><ArrowUp className="size-3"/></button><button type="button" aria-label="Move down" onClick={() => setNews(items => reorder(items,index,index+1))} className="text-slate-500 hover:text-sky-300"><ArrowDown className="size-3"/></button><button type="button" aria-label="Remove news source" onClick={() => setNews(items => items.filter(item => item !== source))} className="text-slate-500 hover:text-rose-300"><X className="size-3"/></button></div>)}</div>
           <form className="mt-2 flex gap-2" onSubmit={e => {e.preventDefault(); const value=newNews.trim(); if(value && !news.includes(value)) setNews(items=>[...items,value]); setNewNews("");}}><input value={newNews} onChange={e=>setNewNews(e.target.value)} placeholder="Add a news category" className="h-8 min-w-0 flex-1 rounded-md border border-slate-700 bg-[#071225] px-3 text-xs text-white outline-none focus:border-sky-400"/><button type="submit" aria-label="Add news category" className="grid size-8 place-items-center rounded-md border border-sky-400/30 text-sky-300"><Plus className="size-4"/></button></form>
