@@ -143,10 +143,17 @@ function RootComponent() {
       <WorkContextProvider>
         {bare ? (
           <Outlet />
-        ) : (
+        ) : authorized ? (
           <AppShell>
             <Outlet />
           </AppShell>
+        ) : (
+          <div className="grid min-h-dvh place-items-center bg-transparent text-sm text-sky-100">
+            <div className="flex items-center gap-3 rounded-xl border border-sky-200/20 bg-white/10 px-5 py-3 backdrop-blur-xl">
+              <span className="size-2 animate-pulse rounded-full bg-sky-300" />
+              Verifying secure command session…
+            </div>
+          </div>
         )}
         <Toaster />
       </WorkContextProvider>
