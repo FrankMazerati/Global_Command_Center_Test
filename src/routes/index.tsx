@@ -40,6 +40,7 @@ const PICK_CATALOG: Pick[] = [
 ];
 const DEFAULT_PICKS = PICK_CATALOG.slice(0, 5);
 const NEWS_DEFAULT = ["IT", "Corporate", "Security", "Network", "Help Desk / Executive"];
+const STOCK_CATALOG = ["AAPL","MSFT","NVDA","GOOGL","AMZN","META","TSLA","SPY","QQQ","DOW","S&P 500","NASDAQ","NYSE","RUSSELL 2000","GLOBAL"];
 const WORK_TABS = ["Critical & Urgent", "High Priority", "Upcoming", "Follow-ups", "Help Desk / Tickets"] as const;
 
 function useNow() {
@@ -89,6 +90,8 @@ function Dashboard() {
   const [pickDrag, setPickDrag] = useState<number | null>(null);
   const [clockOrder, setClockOrder] = useState<string[]>(CLOCKS.map(([city]) => city));
   const [clockManager, setClockManager] = useState(false);
+  const [stockWatch, setStockWatch] = useState<string[]>(["DOW","S&P 500","NASDAQ","AAPL","MSFT","NVDA"]);
+  const [stockManager, setStockManager] = useState(false);
   const [clockExpanded, setClockExpanded] = useState(false);
   const [clockDrag, setClockDrag] = useState<number | null>(null);
   const [news, setNews] = useState(NEWS_DEFAULT);
@@ -101,10 +104,13 @@ function Dashboard() {
       if (savedPicks) setPicks(JSON.parse(savedPicks) as Pick[]);
       const savedClocks = localStorage.getItem("mo:clock-order");
       if (savedClocks) setClockOrder(JSON.parse(savedClocks) as string[]);
+      const savedStocks = localStorage.getItem("mo:market-watch");
+      if (savedStocks) setStockWatch(JSON.parse(savedStocks) as string[]);
     } catch { /* Keep the safe defaults when saved preferences are unavailable. */ }
   }, []);
   useEffect(() => { try { localStorage.setItem("mo:quick-picks", JSON.stringify(picks)); } catch { /* Storage is optional. */ } }, [picks]);
   useEffect(() => { try { localStorage.setItem("mo:clock-order", JSON.stringify(clockOrder)); } catch { /* Storage is optional. */ } }, [clockOrder]);
+  useEffect(() => { try { localStorage.setItem("mo:market-watch", JSON.stringify(stockWatch)); } catch { /* Storage is optional. */ } }, [stockWatch]);
 
   const clocks = useMemo(() => clockOrder.map(city => CLOCKS.find(([name]) => name === city)).filter((x): x is (typeof CLOCKS)[number] => Boolean(x)), [clockOrder]);
   const addPick = (label: string) => {
@@ -182,15 +188,15 @@ function Dashboard() {
       <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
         {clocks.slice(0, clockExpanded ? 10 : 5).map(([city, zone]) => {
           const idx = clockOrder.indexOf(city);
-          return <div key={city} draggable={clockManager} onDragStart={() => setClockDrag(idx)} onDragOver={e => { if (clockManager) e.preventDefault(); }} onDrop={e => { e.preventDefault(); if (clockManager && clockDrag !== null) setClockOrder(order => reorder(order, clockDrag, idx)); setClockDrag(null); }} className={cn("glass flex min-w-[104px] items-center gap-1.5 rounded-md px-2 py-1", clockManager && "cursor-grab border-dashed border-sky-300/50", clockDrag === idx && "opacity-40")}>
+          return <div key={city} draggable={clockManager} onDragStart={() => setClockDrag(idx)} onDragOver={e => { if (clockManager) e.preventDefault(); }} onDrop={e => { e.preventDefault(); if (clockManager && clockDrag !== null) setClockOrder(order => reorder(order, clockDrag, idx)); setClockDrag(null); }} className={cn("glass flex min-w-[82px] items-center gap-1 rounded-md px-1.5 py-0.5", clockManager && "cursor-grab border-dashed border-sky-300/50", clockDrag === idx && "opacity-40")}>
             {clockManager && <GripVertical className="size-3 shrink-0 text-sky-300"/>}
-            <div className="min-w-0 flex-1"><div className="truncate text-[8px] font-semibold uppercase tracking-[.12em] text-slate-400">{city}</div><div className="font-mono text-[13px] font-bold leading-tight tabular-nums text-white">{now ? now.toLocaleTimeString([], { timeZone: zone, hour: "2-digit", minute: "2-digit" }) : "--:--"}</div></div>
+            <div className="min-w-0 flex-1"><div className="truncate text-[8px] font-semibold uppercase tracking-[.12em] text-slate-400">{city}</div><div className="font-mono text-[9px] font-medium leading-tight tabular-nums text-white">{now ? now.toLocaleTimeString([], { timeZone: zone, hour: "2-digit", minute: "2-digit" }) : "--:--"}</div></div>
           </div>;
         })}
       </div>
       <div className="flex items-center gap-1.5 px-1">
-        <button type="button" onClick={() => setClockManager(v => !v)} className="rounded-md border border-sky-300/20 px-2 py-1 text-[9px] font-semibold text-sky-200 hover:bg-sky-300/10">{clockManager ? "Done" : "Reorder"}</button>
-        <button type="button" onClick={() => setClockExpanded(v => !v)} className="rounded-md border border-sky-300/20 px-2 py-1 text-[9px] font-semibold text-sky-200 hover:bg-sky-300/10">{clockExpanded ? "5 clocks" : "10 clocks"}</button>
+        <button type="button" onClick={() => setClockManager(v => !v)} className="rounded-md border border-sky-300/20 px-2 py-1 text-[9px] font-semibold text-sky-200 hover:bg-sky-300/10">{clockManager ? "Done" : "Manage"}</button>
+        <button type="button" onClick={() => setClockExpanded(v => !v)} className="rounded-md border border-sky-300/20 px-2 py-1 text-[9px] font-semibold text-sky-200 hover:bg-sky-300/10">{clockExpanded ? "Show 5" : "Show all"}</button>
       </div>
     </section>
 
