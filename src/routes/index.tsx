@@ -184,16 +184,17 @@ function Dashboard() {
       <div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
         {clocks.slice(0, clockExpanded ? 10 : 5).map(([city, zone]) => {
           const idx = clockOrder.indexOf(city);
-          return <div key={city} draggable={clockManager} onDragStart={() => setClockDrag(idx)} onDragOver={e => { if (clockManager) e.preventDefault(); }} onDrop={e => { e.preventDefault(); if (clockManager && clockDrag !== null) setClockOrder(order => reorder(order, clockDrag, idx)); setClockDrag(null); }} className={cn("glass flex min-w-[82px] items-center gap-1 rounded-md px-1.5 py-0.5", clockManager && "cursor-grab border-dashed border-sky-300/50", clockDrag === idx && "opacity-40")}>
+          return <div key={city} draggable={clockManager} onDragStart={() => setClockDrag(idx)} onDragOver={e => { if (clockManager) e.preventDefault(); }} onDrop={e => { e.preventDefault(); if (clockManager && clockDrag !== null) setClockOrder(order => reorder(order, clockDrag, idx)); setClockDrag(null); }} className={cn("glass flex min-w-[76px] items-center gap-1 rounded-md px-1.5 py-0.5", clockManager && "cursor-grab border-dashed border-sky-300/50", clockDrag === idx && "opacity-40")}>
             {clockManager && <GripVertical className="size-3 shrink-0 text-sky-300"/>}
-            <div className="min-w-0 flex-1"><div className="truncate text-[8px] font-semibold uppercase tracking-[.12em] text-slate-400">{city}</div><div className="font-mono text-[9px] font-medium leading-tight tabular-nums text-white">{now ? now.toLocaleTimeString([], { timeZone: zone, hour: "2-digit", minute: "2-digit" }) : "--:--"}</div></div>
+            <div className="min-w-0 flex-1"><div className="truncate text-[7px] font-semibold uppercase tracking-[.1em] text-slate-400">{city}</div><div className="font-mono text-[9px] font-medium leading-tight tabular-nums text-white">{now ? now.toLocaleTimeString([], { timeZone: zone, hour: "2-digit", minute: "2-digit" }) : "--:--"}</div></div>{clockManager && <button type="button" aria-label={"Remove "+city} onClick={() => setClockOrder(items => items.filter(x => x !== city))} className="text-rose-300"><X className="size-3"/></button>}
           </div>;
         })}
       </div>
       <div className="flex items-center gap-1.5 px-1">
-        <button type="button" onClick={() => setClockManager(v => !v)} className="rounded-md border border-sky-300/20 px-2 py-1 text-[9px] font-semibold text-sky-200 hover:bg-sky-300/10">{clockManager ? "Done" : "Manage"}</button>
+        <button type="button" onClick={() => {setClockManager(v => !v);setClockExpanded(true);}} className="rounded-md border border-sky-300/20 px-2 py-1 text-[9px] font-semibold text-sky-200 hover:bg-sky-300/10">{clockManager ? "Done" : "Manage"}</button>
         <button type="button" onClick={() => setClockExpanded(v => !v)} className="rounded-md border border-sky-300/20 px-2 py-1 text-[9px] font-semibold text-sky-200 hover:bg-sky-300/10">{clockExpanded ? "Show 5" : "Show all"}</button>
       </div>
+      {clockManager && <div className="flex w-full flex-wrap gap-1 border-t border-white/10 pt-2">{CLOCKS.filter(([city]) => !clockOrder.includes(city)).map(([city]) => <button key={city} type="button" onClick={() => setClockOrder(items => [...items,city])} className="rounded-md border border-sky-300/20 px-2 py-1 text-[8px] text-sky-100 hover:bg-sky-300/10"><Plus className="mr-1 inline size-3"/>{city}</button>)}</div>}
     </section>
 
         <section className="glass overflow-hidden rounded-lg px-2.5 py-2">
