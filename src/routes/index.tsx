@@ -150,6 +150,7 @@ function Dashboard() {
               <h1 className="mt-0.5 font-display text-lg font-black tracking-wide text-white sm:text-xl">Frank Mazerati</h1>
               <div className="mt-1 text-xs font-semibold text-sky-200">Founder & Chief Principal Architect</div>
               <div className="mt-1 text-[10px] text-slate-200/80">Role: Global Admin <span className="mx-2 text-slate-400">|</span> Position: Chief Principal Architect and Design Engineer</div>
+              <div className="mt-1 flex flex-wrap gap-x-3 text-[9px] text-slate-100/85"><span>Company ID: <strong className="text-white">IntelliStack Systems</strong></span><span>User ID: <strong className="text-white">001</strong></span></div>
               <p className="mt-2 text-[10px] text-slate-200/75">Every ticket you close makes someone's day easier.</p>
             </div>
             <div className="flex min-w-0 flex-col items-start gap-1 sm:items-end">
@@ -161,7 +162,7 @@ function Dashboard() {
           </div>
 
           <div className="relative z-10 mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-white/15 pt-2 text-[9px] text-slate-100/85">
-            <span className="inline-flex items-center gap-1"><Clock3 className="size-3 text-sky-200"/>Local <strong className="font-mono text-[12px] text-white tabular-nums">{now ? now.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) : "--:--"}</strong></span>
+            <span className="inline-flex items-center gap-1"><Clock3 className="size-3 text-sky-200"/>Local <strong className="font-mono text-[10px] font-semibold text-white tabular-nums">{now ? now.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) : "--:--"}</strong></span>
             <span className="text-slate-200/65">{now ? now.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"}) : "Local date"}</span>
             <span className="inline-flex items-center gap-1"><CloudSun className="size-3 text-sky-200"/>Weather: <strong className="font-semibold text-white">Not connected</strong></span>
             <span className="inline-flex items-center gap-1"><ShieldCheck className="size-3 text-emerald-200"/>Authenticated</span>
@@ -172,12 +173,7 @@ function Dashboard() {
             <div className="text-[8px] font-bold uppercase tracking-[.12em] text-slate-300/70">ONE WORLD · ONE SYSTEM · ONE INTELLIGENT NETWORK</div>
           </div>
 
-          <div className="relative z-10 mt-2 flex flex-wrap gap-x-4 gap-y-1 border-t border-white/10 pt-2 text-[9px] text-slate-100/85">
-            <span>Company ID: <strong className="text-white">Assigned by IntelliStack IAM</strong></span>
-            <span>User ID: <strong className="text-white">Assigned by IntelliStack IAM</strong></span>
-            <span>Department: <strong className="text-white">Manager assigned</strong></span>
-            <span>Work email / phone / location: <strong className="text-white">Profile record</strong></span>
-          </div>
+
         </section>
 
         <section className="glass flex flex-wrap items-center gap-2 rounded-xl px-2 py-1.5 backdrop-blur-xl">
