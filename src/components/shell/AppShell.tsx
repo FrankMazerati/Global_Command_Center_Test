@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useWork } from "@/lib/work-context";
+import { getSupabaseClient } from "@/lib/supabase";
 import { NAV, slugify } from "@/lib/nav";
 import { GlobalSearch } from "./GlobalSearch";
 import { HelpBuddyLauncher, HelpBuddySheet } from "./HelpBuddy";
@@ -55,6 +56,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();
   const w = useWork();
   const navigate = useNavigate();
+
+  const signOut = async () => {
+    const supabase = getSupabaseClient();
+    if (supabase) await supabase.auth.signOut();
+    navigate({ to: "/login", replace: true });
+  };
 
   const go = (section: string, group: string, page: string) =>
     navigate({ to: "/m/$section/$group/$page", params: { section, group, page } });
@@ -120,10 +127,10 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuItem onSelect={() => go("identity-and-access-management","users-and-identity","user-profiles")}><UserRound className="mr-2 size-4"/>My profile</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => go("account-and-administration","account-and-system-administration","preferences")}><Settings2 className="mr-2 size-4"/>Preferences</DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-slate-700"/>
-                <DropdownMenuItem onSelect={() => navigate({ to: "/login" })}><LogOut className="mr-2 size-4"/>Sign out</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => { void signOut(); }}><LogOut className="mr-2 size-4"/>Sign out</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <button type="button" aria-label="Sign out" title="Sign out" onClick={() => navigate({to:"/login"})} className={utilityClass + " hidden lg:grid"}><LogOut className="size-[17px]" strokeWidth={1.7}/></button>
+            <button type="button" aria-label="Sign out" title="Sign out" onClick={() => { void signOut(); }} className={utilityClass + " hidden lg:grid"}><LogOut className="size-[17px]" strokeWidth={1.7}/></button>
           </nav>
         </div>
       </header>
