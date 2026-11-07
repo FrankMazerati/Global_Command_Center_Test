@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
   Bell, CalendarDays, LogOut, Mail, Menu, MessageSquare,
   Search, Settings2, ShieldCheck, UserRound,
@@ -52,6 +52,7 @@ const FOOTER_DESTINATIONS: Record<string, [string, string, string]> = {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const location = useLocation();
   const w = useWork();
   const navigate = useNavigate();
 
@@ -144,7 +145,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <NavMenu open={menuOpen} onOpenChange={setMenuOpen}/>
       <GlobalSearch/>
       <HelpBuddySheet/>
-      <HelpBuddyLauncher/>
+      {location.pathname !== "/" && <HelpBuddyLauncher/>}
     </div>
   );
 }
