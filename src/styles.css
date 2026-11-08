@@ -414,3 +414,111 @@ body::before {
 }
 .command-dashboard .dashboard-helpbuddy > div { background:transparent !important; border-color:rgba(224,244,255,.18) !important; }
 .command-dashboard .dashboard-work > section { background:linear-gradient(125deg,rgba(210,235,255,.17),rgba(151,201,238,.085) 48%,rgba(228,244,255,.12)); border-color:rgba(224,244,255,.34); }
+
+
+/* Responsive fit correction — keep the same hierarchy in both tablet orientations. */
+.command-dashboard,
+.command-dashboard * { box-sizing: border-box; }
+.command-dashboard { min-width: 0; overflow-x: clip; }
+.command-dashboard > div,
+.command-dashboard section,
+.command-dashboard main,
+.command-dashboard aside { min-width: 0; }
+.command-dashboard h1,
+.command-dashboard h2,
+.command-dashboard p,
+.command-dashboard span,
+.command-dashboard a,
+.command-dashboard button,
+.command-dashboard label { overflow-wrap: anywhere; }
+.command-dashboard button,
+.command-dashboard select { max-width: 100%; }
+.command-dashboard button { line-height: 1.15; }
+.command-dashboard .dashboard-profile-scene { padding: .55rem .7rem; }
+.command-dashboard .dashboard-profile-scene > .relative.z-10:first-child { gap: .65rem; }
+.command-dashboard .dashboard-profile-scene .relative.grid.size-\\[68px\\] { width: 48px; height: 48px; }
+.command-dashboard .dashboard-profile-scene img { width: 38px; height: 38px; }
+.command-dashboard .dashboard-profile-scene h1 { font-size: 15px; line-height: 1.15; }
+.command-dashboard .dashboard-profile-scene .text-xs { font-size: 10px; line-height: 1.25; }
+.command-dashboard .profile-local-context { display:flex; align-items:center; flex-wrap:wrap; gap:.2rem .65rem; margin-top:.35rem; padding-top:.35rem; font-size:8px; line-height:1.2; }
+.command-dashboard .profile-local-context svg { width:11px; height:11px; }
+.command-dashboard .profile-local-context strong { font-size:8px; }
+.command-dashboard .dashboard-profile-scene > .relative.z-10.mt-1\\.5 { min-width:0; }
+.command-dashboard .utility-rail { padding:.35rem .55rem; gap:.25rem; }
+.command-dashboard .global-time-strip,
+.command-dashboard .global-news-row,
+.command-dashboard .market-watch-strip,
+.command-dashboard .company-announcements { min-width:0; width:100%; padding:.25rem .2rem; gap:.35rem; }
+.command-dashboard .global-clock-list { min-width:0; flex:1 1 0; gap:.25rem .65rem; }
+.command-dashboard .global-clock-item { flex:0 1 auto; min-width:0; white-space:nowrap; gap:.2rem; }
+.command-dashboard .global-clock-item > span:first-of-type { font-size:7px; }
+.command-dashboard .global-clock-item > span:nth-of-type(2) { font-size:9px; }
+.command-dashboard .global-news-row > span,
+.command-dashboard .global-news-row > form { min-width:0; }
+.command-dashboard .global-news-row > span:not(:first-child) { padding:.15rem .35rem; font-size:8px; line-height:1.15; }
+.command-dashboard .global-news-row form { margin-left:auto; }
+.command-dashboard .global-news-row input { width:76px; min-width:0; height:22px; font-size:8px; }
+.command-dashboard .market-watch-strip { padding:.25rem .35rem; }
+.command-dashboard .market-watch-strip > div:first-child { margin-bottom:.25rem; }
+.command-dashboard .market-watch-strip > div:last-child { gap:.35rem; }
+.command-dashboard .market-watch-strip > div:last-child > div { min-width:0; padding-left:.35rem; }
+.command-dashboard .market-watch-strip button,
+.command-dashboard .company-announcements { font-size:8px; }
+.command-dashboard .holo-control { min-height:24px; padding:.2rem .45rem; font-size:8px; }
+.command-dashboard .holo-control.grid { min-height:22px; }
+.command-dashboard .dashboard-layout {
+  display:grid;
+  width:100%;
+  min-width:0;
+  height:clamp(360px, 60svh, 720px);
+  min-height:0;
+  grid-template-columns:minmax(0, 3fr) minmax(0, 2fr);
+  grid-template-rows:minmax(0, 1fr);
+  gap:.45rem;
+}
+.command-dashboard .dashboard-work,
+.command-dashboard .dashboard-helpbuddy,
+.command-dashboard .dashboard-work > section,
+.command-dashboard .dashboard-helpbuddy > div { min-width:0; min-height:0; }
+.command-dashboard .dashboard-work > section,
+.command-dashboard .dashboard-helpbuddy > div { overflow:auto; }
+.command-dashboard .dashboard-work .mb-2.flex.flex-wrap.gap-1 { gap:.2rem; }
+.command-dashboard .dashboard-work .mb-2.flex.flex-wrap.gap-1 button { padding:.2rem .4rem; font-size:8px; line-height:1.15; }
+.command-dashboard .dashboard-work .grid { min-width:0; }
+.command-dashboard .dashboard-work .rounded-lg,
+.command-dashboard .dashboard-helpbuddy .rounded-lg { min-width:0; }
+.command-dashboard .dashboard-lower { grid-template-columns:minmax(0,1fr); gap:.45rem; }
+.command-dashboard .connector-panel { padding:.45rem; }
+.command-dashboard .connector-panel > div { min-width:0; }
+.command-dashboard .connector-panel button { min-height:23px; padding:.2rem .4rem; font-size:8px; }
+.command-dashboard .dashboard-lower a { min-width:0; padding:.55rem; }
+.command-dashboard .dashboard-lower a > span:last-child { min-width:0; overflow-wrap:anywhere; }
+
+/* Tablet portrait: same full-width utility bars; only the work split turns vertical. */
+@media (orientation: portrait) {
+  .command-dashboard .dashboard-layout {
+    height:clamp(440px, 62svh, 760px);
+    min-height:0;
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:minmax(0,3fr) minmax(0,2fr);
+  }
+  .command-dashboard .global-clock-list { flex:1 1 100%; }
+  .command-dashboard .global-time-strip { flex-wrap:wrap; }
+}
+
+/* Landscape: do not create a horizontal utility rail; only the work area uses columns. */
+@media (orientation: landscape) {
+  .command-dashboard .dashboard-layout {
+    height:clamp(340px, 58svh, 680px);
+    min-height:0;
+    grid-template-columns:minmax(0,3fr) minmax(0,2fr);
+    grid-template-rows:minmax(0,1fr);
+  }
+  .command-dashboard .global-clock-list { flex-wrap:wrap; }
+}
+@media (max-width: 520px) {
+  .command-dashboard .dashboard-profile-scene > .relative.z-10:first-child { gap:.45rem; }
+  .command-dashboard .dashboard-profile-scene .relative.grid.size-\\[68px\\] { width:42px; height:42px; }
+  .command-dashboard .dashboard-profile-scene img { width:34px; height:34px; }
+  .command-dashboard .dashboard-layout { height:clamp(440px, 66svh, 700px); }
+}
