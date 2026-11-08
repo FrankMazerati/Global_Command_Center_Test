@@ -28,6 +28,8 @@ jobs:
           bun-version: latest
       - name: Install dependencies
         run: bun install
+      - name: Apply repository formatting for validation
+        run: bun run lint -- --fix
       - name: Lint
         run: bun run lint
       - name: Tests
