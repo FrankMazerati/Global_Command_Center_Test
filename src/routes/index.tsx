@@ -10,6 +10,7 @@ import { HelpBuddyPanel } from "@/components/shell/HelpBuddy";
 import { StatusBadge } from "@/components/shell/StatusBadge";
 import { AVAILABILITY, useWork, type Availability } from "@/lib/work-context";
 import { cn } from "@/lib/utils";
+import { ALL_DESTINATIONS } from "@/lib/nav";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [
@@ -41,7 +42,24 @@ const PICK_CATALOG: Pick[] = [
 const DEFAULT_PICKS = PICK_CATALOG.slice(0, 5);
 const NEWS_DEFAULT = ["IT", "Corporate", "Security", "Network", "Help Desk / Executive"];
 const STOCK_CATALOG = ["AAPL","MSFT","NVDA","GOOGL","AMZN","META","TSLA","SPY","QQQ","DOW","S&P 500","NASDAQ","NYSE","RUSSELL 2000","GLOBAL"];
-const WORK_TABS = ["Critical & Urgent", "High Priority", "Upcoming", "Follow-ups", "Help Desk / Tickets"] as const;
+const WORK_TABS = ["Critical & Urgent", "High Priority", "Upcoming", "Follow-ups", "Help Desk / Tickets", "System Build Register"] as const;
+
+type Connector = { id: string; name: string; category: string; destination: string };
+const CONNECTOR_CATALOG: Connector[] = [
+  { id: "m365", name: "Microsoft 365", category: "Productivity", destination: "Microsoft 365" },
+  { id: "github", name: "GitHub", category: "Development", destination: "Integration Management" },
+  { id: "supabase", name: "Supabase", category: "Database & Auth", destination: "Integration Management" },
+  { id: "vercel", name: "Vercel", category: "Deployment", destination: "Integration Management" },
+  { id: "entra", name: "Microsoft Entra ID", category: "Identity", destination: "User Accounts" },
+  { id: "email", name: "Email", category: "Communication", destination: "Email" },
+  { id: "calendar", name: "Calendar", category: "Scheduling", destination: "IntelliCalendar" },
+  { id: "slack", name: "Slack", category: "Communication", destination: "Communication Platforms" },
+  { id: "salesforce", name: "Salesforce", category: "CRM", destination: "External Productivity Applications" },
+  { id: "api", name: "Internal APIs", category: "Platform", destination: "Integration Management" },
+];
+const DEFAULT_CONNECTORS = CONNECTOR_CATALOG.slice(0, 5);
+type BuildStatus = "Not assessed" | "Not started" | "Designed" | "Configured" | "Verified";
+type PageProgress = { stars: number; status: BuildStatus; note?: string };
 
 function useNow() {
   const [now, setNow] = useState<Date | null>(null);
@@ -98,6 +116,12 @@ function Dashboard() {
   const [newNews, setNewNews] = useState("");
   const [workTab, setWorkTab] = useState<(typeof WORK_TABS)[number]>("Critical & Urgent");
   const [searchQuery, setSearchQuery] = useState("");
+  const [connectors, setConnectors] = useState<Connector[]>(DEFAULT_CONNECTORS);
+  const [connectorManager, setConnectorManager] = useState(false);
+  const [connectorDrag, setConnectorDrag] = useState<number | null>(null);
+  const [activeConnector, setActiveConnector] = useState<Connector | null>(null);
+  const [pageProgress, setPageProgress] = useState<Record<string, PageProgress>>({});
+  const [registerSearch, setRegisterSearch] = useState("");
 
   useEffect(() => {
     try {
@@ -111,7 +135,7 @@ function Dashboard() {
   }, []);
   useEffect(() => { try { localStorage.setItem("mo:quick-picks", JSON.stringify(picks)); } catch { /* Storage is optional. */ } }, [picks]);
   useEffect(() => { try { localStorage.setItem("mo:clock-order", JSON.stringify(clockOrder)); } catch { /* Storage is optional. */ } }, [clockOrder]);
-  useEffect(() => { try { localStorage.setItem("mo:market-watch", JSON.stringify(stockWatch)); } catch { /* Storage is optional. */ } }, [stockWatch]);
+  useEffect(() => { try { localStorage.setItem("mo:market-watch", JSON.stringify(stockWatch)); } catch { /* Storage is optional. */ } }, [stockWatch]);\n  useEffect(() => { try { localStorage.setItem("mo:connectors", JSON.stringify(connectors)); } catch { /* Storage is optional. */ } }, [connectors]);\n  useEffect(() => { try { localStorage.setItem("mo:page-progress", JSON.stringify(pageProgress)); } catch { /* Storage is optional. */ } }, [pageProgress]);
 
   const clocks = useMemo(() => clockOrder.map(city => CLOCKS.find(([name]) => name === city)).filter((x): x is (typeof CLOCKS)[number] => Boolean(x)), [clockOrder]);
   const addPick = (label: string) => {
@@ -238,16 +262,43 @@ function Dashboard() {
     <div className="dashboard-layout grid gap-2">
       <main className="dashboard-work min-w-0 min-h-0">
                 <Panel className="h-full overflow-y-auto" title="Bring the Work to You" icon={Activity} action={<span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-300">Awaiting live data connection</span>}>
-          <div className="mb-2 flex flex-wrap gap-1">{WORK_TABS.map(tab => <button key={tab} type="button" onClick={() => setWorkTab(tab)} className={cn("rounded-md border px-2.5 py-1 text-[9px] font-bold", workTab === tab ? "border-sky-200/50 bg-sky-200/15 text-white" : "border-white/20 bg-white/5 text-slate-200/75 hover:bg-white/10")}>{tab}</button>)}</div>
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+          {activeConnector && <div className="mb-2 rounded-lg border border-sky-200/35 bg-sky-300/10 p-2.5 shadow-[0_0_18px_rgba(56,189,248,.12)]">
+            <div className="flex flex-wrap items-center gap-2"><span className="grid size-7 place-items-center rounded-md border border-sky-200/30 bg-sky-400/15 text-sky-100"><Activity className="size-4"/></span><div className="min-w-0 flex-1"><div className="text-[8px] font-bold uppercase tracking-[.14em] text-sky-200">Opened connector · moved to top of your work</div><div className="text-[11px] font-bold text-white">{activeConnector.name}</div><div className="text-[9px] text-slate-300">{activeConnector.category} · Connection and permission status require verification</div></div><button type="button" onClick={()=>setActiveConnector(null)} className="holo-control grid size-6 place-items-center rounded-md" aria-label="Dismiss connector workspace"><X className="size-3"/></button></div>
+            <div className="mt-2 text-[9px] text-slate-300">Connector workspace is selected. Complete authentication and data mapping before treating this connector as live.</div>
+          </div>}
+                    <div className="mb-2 flex flex-wrap gap-1">{WORK_TABS.map(tab => <button key={tab} type="button" onClick={() => setWorkTab(tab)} className={cn("rounded-md border px-2.5 py-1 text-[9px] font-bold", workTab === tab ? "border-sky-200/50 bg-sky-200/15 text-white" : "border-white/20 bg-white/5 text-slate-200/75 hover:bg-white/10")}>{tab}</button>)}</div>
+          {workTab === "System Build Register" ? <div className="space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2"><div><div className="text-[10px] font-semibold text-white">Super Global Admin · Complete System Build Register</div><p className="text-[9px] text-slate-300/75">Every configured navigation page is listed. Rate maturity from zero to five stars and record its actual build stage.</p></div><input value={registerSearch} onChange={e=>setRegisterSearch(e.target.value)} placeholder="Filter every page…" aria-label="Filter build register" className="h-7 w-44 rounded-md border border-white/20 bg-white/[.06] px-2 text-[9px] text-white placeholder:text-white/50"/></div>
+            <div className="flex flex-wrap gap-2 text-[8px] text-slate-300"><span>☆ Not assessed</span><span>★ Designed</span><span>★★ Configured</span><span>★★★ Verified</span><span>★★★★★ Production-ready maturity</span></div>
+            <div className="max-h-[48vh] space-y-1 overflow-y-auto pr-1">
+              {ALL_DESTINATIONS.filter(item => (item.section.title+" "+item.group.title+" "+item.page.title).toLowerCase().includes(registerSearch.toLowerCase())).map(item => {
+                const key = item.section.slug+"/"+item.group.slug+"/"+item.page.slug;
+                const progress = pageProgress[key] ?? {stars:0,status:"Not assessed" as BuildStatus};
+                return <div key={key} className="flex flex-wrap items-center gap-2 rounded-md border border-white/12 bg-white/[.045] px-2 py-1.5">
+                  <div className="min-w-[170px] flex-1"><div className="text-[9px] font-semibold text-white">{item.page.title}</div><div className="text-[8px] text-slate-400">{item.section.title} / {item.group.title}</div></div>
+                  <div className="flex items-center gap-0.5" aria-label={"Maturity "+progress.stars+" of 5 stars"}>{[1,2,3,4,5].map(star=><button key={star} type="button" onClick={()=>setPageProgress(old=>({...old,[key]:{...progress,stars:star}}))} aria-label={"Set "+star+" stars"} className={cn("px-0.5 text-[13px]",star<=progress.stars?"text-amber-300":"text-slate-500")}>★</button>)}</div>
+                  <select aria-label={"Build status for "+item.page.title} value={progress.status} onChange={e=>setPageProgress(old=>({...old,[key]:{...progress,status:e.target.value as BuildStatus}}))} className="h-6 max-w-[118px] rounded border border-white/20 bg-slate-900/80 px-1 text-[8px] text-white"><option>Not assessed</option><option>Not started</option><option>Designed</option><option>Configured</option><option>Verified</option></select>
+                  <Link to="/m/$section/$group/$page" params={{section:item.section.slug,group:item.group.slug,page:item.page.slug}} className="text-[8px] font-semibold text-sky-200 hover:underline">Open page</Link>
+                </div>;
+              })}
+            </div>
+            <p className="text-[8px] text-slate-400">This register is an audit workspace, not an automatic claim that a page is complete. Progress is currently saved in this browser until connected to the system-wide project database.</p>
+          </div> : <>
+                    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
             {[["Today’s Work","Tasks and actions assigned to your role."],["Upcoming Commitments","Meetings, due dates and scheduled work."],["Pending Decisions","Approvals and items awaiting your direction."],["Recent Activity","Work completed and updates from your teams."]].map(([title,description]) => <div key={title} className="rounded-lg border border-white/15 bg-white/[.06] p-2.5"><div className="text-[10px] font-semibold text-slate-100">{title}</div><p className="mt-1 text-[9px] leading-relaxed text-slate-300/75">{description}</p><div className="mt-2 border-t border-white/10 pt-1.5 text-[8px] text-slate-400">{work.activeTicketId && title === "Today’s Work" ? "Active ticket available" : "No connected records yet"}</div></div>)}
           </div>
           {work.activeTicketId && <div className="mt-2 flex items-center justify-between rounded-lg border border-sky-300/20 bg-sky-300/[.06] px-3 py-2"><span className="text-[10px] text-slate-200">Active ticket: {work.activeTicketId}</span><Link to="/m/$section/$group/$page" params={{section:"service-desk-and-enterprise-operations",group:"ticket-management",page:"active-ticket-workspace"}} className="text-[10px] font-semibold text-sky-200 hover:underline">Continue work</Link></div>}
-          <p className="mt-2 text-[8px] text-slate-400">This workspace is organized around your role. Live tasks, commitments, approvals and activity populate when their source systems are connected.</p>
+          <p className="mt-2 text-[8px] text-slate-400">This workspace is organized around your role. Live tasks, commitments, approvals and activity populate when their source systems are connected.</p>\n          </>}
         </Panel>
       </main>
             <aside className="space-y-2 xl:sticky xl:top-28">
-        <div className="dashboard-helpbuddy h-full overflow-y-auto rounded-xl border border-sky-400/25 bg-[#0a172b]/40 shadow-[0_12px_34px_rgba(0,0,0,.18)]"><HelpBuddyPanel className="h-full"/></div>
+        <div className="dashboard-helpbuddy h-full overflow-y-auto rounded-xl border border-sky-400/25 bg-[#0a172b]/40 shadow-[0_12px_34px_rgba(0,0,0,.18)]"><HelpBuddyPanel className="h-full"/></div>\n        <div className="connector-panel glass rounded-xl border border-sky-200/25 p-2.5">
+          <div className="mb-2 flex items-center gap-2"><Activity className="size-3.5 text-sky-200"/><h2 className="flex-1 font-display text-[10px] font-bold uppercase tracking-[.12em] text-white">Connected Apps & Integrations</h2><button type="button" onClick={()=>setConnectorManager(v=>!v)} className="holo-control inline-flex items-center gap-1 rounded-md px-2 py-1 text-[9px] font-semibold">{connectorManager?<CheckCircle2 className="size-3"/>:<Plus className="size-3"/>}{connectorManager?"Done":"Add / Manage"}</button></div>
+          <div className="space-y-1">{connectors.map((connector,index)=><div key={connector.id} draggable={connectorManager} onDragStart={()=>setConnectorDrag(index)} onDragOver={e=>{if(connectorManager)e.preventDefault();}} onDrop={e=>{e.preventDefault();if(connectorManager&&connectorDrag!==null)setConnectors(items=>reorder(items,connectorDrag,index));setConnectorDrag(null);}} className={cn("flex items-center gap-2 rounded-md border border-white/12 bg-white/[.055] px-2 py-1.5",connectorManager&&"cursor-grab",connectorDrag===index&&"opacity-40")}>
+            {connectorManager&&<GripVertical className="size-3 text-sky-200/70"/>}<span className="grid size-6 shrink-0 place-items-center rounded border border-sky-200/25 bg-sky-300/10 text-[8px] font-bold text-sky-100">{index+1}</span><div className="min-w-0 flex-1"><div className="text-[9px] font-semibold text-white">{connector.name}</div><div className="text-[8px] text-slate-400">{connector.category}</div></div><button type="button" onClick={()=>{setActiveConnector(connector);setWorkTab("Critical & Urgent");}} className="holo-control rounded-md px-2 py-1 text-[8px] font-semibold">Open</button>{connectorManager&&<button type="button" aria-label={"Remove "+connector.name} onClick={()=>setConnectors(items=>items.filter(x=>x.id!==connector.id))} className="text-rose-200"><X className="size-3"/></button>}
+          </div>)}</div>
+          {connectorManager&&<div className="mt-2 border-t border-white/15 pt-2"><div className="mb-1 text-[8px] font-bold uppercase tracking-wider text-sky-100">Add a connector</div><div className="flex flex-wrap gap-1">{CONNECTOR_CATALOG.filter(item=>!connectors.some(cn=>cn.id===item.id)).map(item=><button key={item.id} type="button" onClick={()=>setConnectors(items=>[...items,item])} className="holo-control inline-flex items-center gap-1 rounded-md px-2 py-1 text-[8px]"><Plus className="size-2.5"/>{item.name}</button>)}</div><p className="mt-1 text-[8px] text-slate-400">Drag to reorder · open any connector to bring its workspace to the top of Bring the Work to You.</p></div>}
+        </div>
         
 
       </aside>
