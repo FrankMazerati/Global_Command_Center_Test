@@ -136,7 +136,8 @@ function Dashboard() {
   useEffect(() => { try { localStorage.setItem("mo:quick-picks", JSON.stringify(picks)); } catch { /* Storage is optional. */ } }, [picks]);
   useEffect(() => { try { localStorage.setItem("mo:clock-order", JSON.stringify(clockOrder)); } catch { /* Storage is optional. */ } }, [clockOrder]);
   useEffect(() => { try { localStorage.setItem("mo:market-watch", JSON.stringify(stockWatch)); } catch { /* Storage is optional. */ } }, [stockWatch]);
-  useEffect(() => { try { localStorage.setItem("mo:connectors", JSON.stringify(connectors)); } catch { /* Storage is optional. */ } }, [connectors]);\n  useEffect(() => { try { localStorage.setItem("mo:page-progress", JSON.stringify(pageProgress)); } catch { /* Storage is optional. */ } }, [pageProgress]);
+  useEffect(() => { try { localStorage.setItem("mo:connectors", JSON.stringify(connectors)); } catch { /* Storage is optional. */ } }, [connectors]);
+  useEffect(() => { try { localStorage.setItem("mo:page-progress", JSON.stringify(pageProgress)); } catch { /* Storage is optional. */ } }, [pageProgress]);
 
   const clocks = useMemo(() => clockOrder.map(city => CLOCKS.find(([name]) => name === city)).filter((x): x is (typeof CLOCKS)[number] => Boolean(x)), [clockOrder]);
   const addPick = (label: string) => {
