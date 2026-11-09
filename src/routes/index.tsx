@@ -186,7 +186,7 @@ function Dashboard() {
             </div>
           </div>
 
-          <div className="relative z-10 mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 border-t border-white/15 pt-1.5 text-[8px] text-slate-100/85">
+          <div className="profile-local-context relative z-10 mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 border-t border-white/15 pt-1.5 text-[8px] text-slate-100/85">
             <span className="inline-flex items-center gap-1"><Clock3 className="size-3 text-sky-200"/>Local <strong className="font-mono text-[9px] font-semibold text-white tabular-nums">{now ? now.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}) : "--:--"}</strong></span>
             <span className="text-slate-200/65">{now ? now.toLocaleDateString([], {weekday:"short",month:"short",day:"numeric"}) : "Local date"}</span>
             <span className="inline-flex items-center gap-1"><CloudSun className="size-3 text-sky-200"/>Weather: <strong className="font-semibold text-white">Not connected</strong></span>
