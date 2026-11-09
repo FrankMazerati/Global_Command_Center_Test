@@ -1,0 +1,42 @@
+{
+  "extract": "SLA compliance extract",
+  "period": "2026-10-01 to 2026-10-31",
+  "generatedAt": "2026-10-31T14:20:00Z",
+  "targets": {
+    "P1": "4h response / 8h resolution",
+    "P2": "8h / 24h",
+    "P3": "24h / 72h",
+    "P4": "48h / 5d"
+  },
+  "results": [
+    {
+      "priority": "P1",
+      "tickets": 34,
+      "met": 33,
+      "breached": 1,
+      "compliance": 0.971
+    },
+    {
+      "priority": "P2",
+      "tickets": 128,
+      "met": 126,
+      "breached": 2,
+      "compliance": 0.984
+    },
+    {
+      "priority": "P3",
+      "tickets": 412,
+      "met": 407,
+      "breached": 5,
+      "compliance": 0.988
+    },
+    {
+      "priority": "P4",
+      "tickets": 273,
+      "met": 271,
+      "breached": 2,
+      "compliance": 0.993
+    }
+  ],
+  "notes": "Breaches are linked to change records and reviewed weekly by the service owner."
+}

@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 
-export type BuildStatus = "Built" | "Connected" | "Tested" | "Awaiting integration" | "Awaiting configuration";
+export type BuildStatus =
+  "Built" | "Connected" | "Tested" | "Awaiting integration" | "Awaiting configuration";
 
 const styles: Record<BuildStatus, string> = {
   Built: "bg-primary/10 text-primary border-primary/30",

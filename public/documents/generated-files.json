@@ -1,0 +1,37 @@
+{
+  "generatedAt": "2026-11-04T14:20:00Z",
+  "files": [
+    {
+      "fileName": "Asset-Inventory-Q4.csv",
+      "bytes": 682
+    },
+    {
+      "fileName": "Change-Management-Policy.txt",
+      "bytes": 885
+    },
+    {
+      "fileName": "FY26-Budget-Forecast.xlsx",
+      "bytes": 6700
+    },
+    {
+      "fileName": "Floor42-Network-Topology.png",
+      "bytes": 20146
+    },
+    {
+      "fileName": "Network-Refresh-Briefing.pptx",
+      "bytes": 41027
+    },
+    {
+      "fileName": "Q4-Infrastructure-Proposal.docx",
+      "bytes": 37645
+    },
+    {
+      "fileName": "SLA-Compliance-Extract.json",
+      "bytes": 856
+    },
+    {
+      "fileName": "VPN-Connectivity-Runbook.pdf",
+      "bytes": 3338
+    }
+  ]
+}

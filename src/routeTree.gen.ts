@@ -10,8 +10,15 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CharacterStudioRouteImport } from './routes/character-studio'
+import { Route as ConnectorsRouteImport } from './routes/connectors'
+import { Route as HelpBuddyRouteImport } from './routes/help-buddy'
+import { Route as IntellisyncRouteImport } from './routes/intellisync'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as LovableDashboardRouteImport } from './routes/lovable-dashboard'
+import { Route as MissionControlRouteImport } from './routes/mission-control'
 import { Route as MSectionRouteImport } from './routes/m.$section'
+import { Route as SectionSlugRouteImport } from './routes/section.$slug'
 import { Route as MSectionGroupPageRouteImport } from './routes/m.$section.$group.$page'
 
 const IndexRoute = IndexRouteImport.update({
@@ -19,14 +26,49 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CharacterStudioRoute = CharacterStudioRouteImport.update({
+  id: '/character-studio',
+  path: '/character-studio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConnectorsRoute = ConnectorsRouteImport.update({
+  id: '/connectors',
+  path: '/connectors',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpBuddyRoute = HelpBuddyRouteImport.update({
+  id: '/help-buddy',
+  path: '/help-buddy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntellisyncRoute = IntellisyncRouteImport.update({
+  id: '/intellisync',
+  path: '/intellisync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableDashboardRoute = LovableDashboardRouteImport.update({
+  id: '/lovable-dashboard',
+  path: '/lovable-dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MissionControlRoute = MissionControlRouteImport.update({
+  id: '/mission-control',
+  path: '/mission-control',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MSectionRoute = MSectionRouteImport.update({
   id: '/m/$section',
   path: '/m/$section',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SectionSlugRoute = SectionSlugRouteImport.update({
+  id: '/section/$slug',
+  path: '/section/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MSectionGroupPageRoute = MSectionGroupPageRouteImport.update({
@@ -37,35 +79,97 @@ const MSectionGroupPageRoute = MSectionGroupPageRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/character-studio': typeof CharacterStudioRoute
+  '/connectors': typeof ConnectorsRoute
+  '/help-buddy': typeof HelpBuddyRoute
+  '/intellisync': typeof IntellisyncRoute
   '/login': typeof LoginRoute
+  '/lovable-dashboard': typeof LovableDashboardRoute
+  '/mission-control': typeof MissionControlRoute
   '/m/$section': typeof MSectionRouteWithChildren
+  '/section/$slug': typeof SectionSlugRoute
   '/m/$section/$group/$page': typeof MSectionGroupPageRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/character-studio': typeof CharacterStudioRoute
+  '/connectors': typeof ConnectorsRoute
+  '/help-buddy': typeof HelpBuddyRoute
+  '/intellisync': typeof IntellisyncRoute
   '/login': typeof LoginRoute
+  '/lovable-dashboard': typeof LovableDashboardRoute
+  '/mission-control': typeof MissionControlRoute
   '/m/$section': typeof MSectionRouteWithChildren
+  '/section/$slug': typeof SectionSlugRoute
   '/m/$section/$group/$page': typeof MSectionGroupPageRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/character-studio': typeof CharacterStudioRoute
+  '/connectors': typeof ConnectorsRoute
+  '/help-buddy': typeof HelpBuddyRoute
+  '/intellisync': typeof IntellisyncRoute
   '/login': typeof LoginRoute
+  '/lovable-dashboard': typeof LovableDashboardRoute
+  '/mission-control': typeof MissionControlRoute
   '/m/$section': typeof MSectionRouteWithChildren
+  '/section/$slug': typeof SectionSlugRoute
   '/m/$section/$group/$page': typeof MSectionGroupPageRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/m/$section' | '/m/$section/$group/$page'
+  fullPaths:
+    | '/'
+    | '/character-studio'
+    | '/connectors'
+    | '/help-buddy'
+    | '/intellisync'
+    | '/login'
+    | '/lovable-dashboard'
+    | '/mission-control'
+    | '/m/$section'
+    | '/section/$slug'
+    | '/m/$section/$group/$page'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/m/$section' | '/m/$section/$group/$page'
-  id: '__root__' | '/' | '/login' | '/m/$section' | '/m/$section/$group/$page'
+  to:
+    | '/'
+    | '/character-studio'
+    | '/connectors'
+    | '/help-buddy'
+    | '/intellisync'
+    | '/login'
+    | '/lovable-dashboard'
+    | '/mission-control'
+    | '/m/$section'
+    | '/section/$slug'
+    | '/m/$section/$group/$page'
+  id:
+    | '__root__'
+    | '/'
+    | '/character-studio'
+    | '/connectors'
+    | '/help-buddy'
+    | '/intellisync'
+    | '/login'
+    | '/lovable-dashboard'
+    | '/mission-control'
+    | '/m/$section'
+    | '/section/$slug'
+    | '/m/$section/$group/$page'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CharacterStudioRoute: typeof CharacterStudioRoute
+  ConnectorsRoute: typeof ConnectorsRoute
+  HelpBuddyRoute: typeof HelpBuddyRoute
+  IntellisyncRoute: typeof IntellisyncRoute
   LoginRoute: typeof LoginRoute
+  LovableDashboardRoute: typeof LovableDashboardRoute
+  MissionControlRoute: typeof MissionControlRoute
   MSectionRoute: typeof MSectionRouteWithChildren
+  SectionSlugRoute: typeof SectionSlugRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -77,6 +181,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/character-studio': {
+      id: '/character-studio'
+      path: '/character-studio'
+      fullPath: '/character-studio'
+      preLoaderRoute: typeof CharacterStudioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/connectors': {
+      id: '/connectors'
+      path: '/connectors'
+      fullPath: '/connectors'
+      preLoaderRoute: typeof ConnectorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help-buddy': {
+      id: '/help-buddy'
+      path: '/help-buddy'
+      fullPath: '/help-buddy'
+      preLoaderRoute: typeof HelpBuddyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/intellisync': {
+      id: '/intellisync'
+      path: '/intellisync'
+      fullPath: '/intellisync'
+      preLoaderRoute: typeof IntellisyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -84,11 +216,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable-dashboard': {
+      id: '/lovable-dashboard'
+      path: '/lovable-dashboard'
+      fullPath: '/lovable-dashboard'
+      preLoaderRoute: typeof LovableDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mission-control': {
+      id: '/mission-control'
+      path: '/mission-control'
+      fullPath: '/mission-control'
+      preLoaderRoute: typeof MissionControlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/m/$section': {
       id: '/m/$section'
       path: '/m/$section'
       fullPath: '/m/$section'
       preLoaderRoute: typeof MSectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/section/$slug': {
+      id: '/section/$slug'
+      path: '/section/$slug'
+      fullPath: '/section/$slug'
+      preLoaderRoute: typeof SectionSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/m/$section/$group/$page': {
@@ -115,8 +268,15 @@ const MSectionRouteWithChildren = MSectionRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CharacterStudioRoute: CharacterStudioRoute,
+  ConnectorsRoute: ConnectorsRoute,
+  HelpBuddyRoute: HelpBuddyRoute,
+  IntellisyncRoute: IntellisyncRoute,
   LoginRoute: LoginRoute,
+  LovableDashboardRoute: LovableDashboardRoute,
+  MissionControlRoute: MissionControlRoute,
   MSectionRoute: MSectionRouteWithChildren,
+  SectionSlugRoute: SectionSlugRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

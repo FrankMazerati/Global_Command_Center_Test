@@ -1,0 +1,9 @@
+asset_id,type,model,assigned_to,location,status,warranty_end
+LT-3217,Laptop,ThinkPad X1 Carbon,Ava Chen,Chicago / 42,Deployed,2027-04-30
+DT-2104,Desktop,OptiPlex 7010,Unassigned,Chicago / 42,In stock,2026-12-15
+MD-1486,Mobile,iPhone 15,Priya Nair,Singapore,Deployed,2027-09-01
+SV-1685,Server,PowerEdge R760,Infrastructure,Chicago / DC1,Maintenance,2029-01-31
+SW-4412,Switch,Northbridge 48P,Network Ops,Chicago / 42,End of support,2026-09-30
+SW-4413,Switch,Northbridge 48P,Network Ops,Chicago / 42,End of support,2026-09-30
+FW-0091,Firewall,EdgeGuard 3200,Security Ops,Chicago / DC1,Active,2028-06-30
+AP-7720,Access point,AirLink 6E,Workplace,Chicago / 42,Active,2028-02-28

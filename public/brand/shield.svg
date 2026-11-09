@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 136" role="img" aria-label="IntelliStack Systems shield">
+  <defs>
+    <linearGradient id="face" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3f8ad0"/>
+      <stop offset="0.55" stop-color="#1d5b93"/>
+      <stop offset="1" stop-color="#103f6b"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#bfe0ff"/>
+      <stop offset="1" stop-color="#5896cd"/>
+    </linearGradient>
+  </defs>
+  <path d="M60 3 111 18v44c0 30-21 57-51 71C30 119 9 92 9 62V18L60 3Z" fill="url(#edge)"/>
+  <path d="M60 10 104 23v39c0 26-18 49-44 62C34 111 16 88 16 62V23L60 10Z" fill="url(#face)"/>
+  <path d="M60 22 92 31v30c0 19-13 36-32 46-19-10-32-27-32-46V31l32-9Z" fill="#0d3459" opacity="0.55"/>
+  <path d="M52 34h16v46H52z" fill="#ffffff"/>
+  <path d="M52 34h16v10H52zM52 70h16v10H52z" fill="#bcdcff"/>
+  <circle cx="60" cy="108" r="4" fill="#9fd0f5" opacity="0.85"/>
+</svg>

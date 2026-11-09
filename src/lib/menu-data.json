@@ -1,0 +1,674 @@
+[
+ {
+  "title": "People & Workforce",
+  "description": "Everything related to people, employees, contractors, workforce operations, and organizational management.",
+  "groups": [
+   {
+    "name": "People Directory",
+    "items": [
+     "Global User ID",
+     "Global Company ID",
+     "IntelliDirectory",
+     "Employee Directory",
+     "Contractor Directory",
+     "Manager Directory",
+     "Tenant User Directory",
+     "External Users"
+    ]
+   },
+   {
+    "name": "Workforce Management",
+    "items": [
+     "IntelliStaff",
+     "IntelliWork",
+     "IntelliHire",
+     "Employee Management",
+     "Contractor Management",
+     "Workforce Scheduling",
+     "Workforce Assignments",
+     "Workforce Availability",
+     "Time & Attendance",
+     "Leave & Absence Management"
+    ]
+   },
+   {
+    "name": "Organization Management",
+    "items": [
+     "Company Management",
+     "Tenant Management",
+     "Organizational Units",
+     "Departments",
+     "Teams",
+     "Groups",
+     "Roles",
+     "Reporting Structure"
+    ]
+   },
+   {
+    "name": "Employee & Workforce Operations",
+    "items": [
+     "Onboarding",
+     "Offboarding",
+     "Employee Records",
+     "Contractor Records",
+     "Training & Development",
+     "Certifications & Qualifications",
+     "Performance Management"
+    ]
+   },
+   {
+    "name": "Manager Tools",
+    "items": [
+     "Team Overview",
+     "Team Assignments",
+     "Staff Availability",
+     "Approvals",
+     "Workforce Reports"
+    ]
+   }
+  ],
+  "slug": "people-workforce"
+ },
+ {
+  "title": "New Active Directory",
+  "description": "Centralized identity, directory services, authentication, and access management.",
+  "groups": [
+   {
+    "name": "Identity & Directory",
+    "items": [
+     "Global Active Directory",
+     "Global User Identity",
+     "Global Company Identity",
+     "IntelliDirectory",
+     "User Accounts",
+     "Company Accounts",
+     "Tenant Accounts",
+     "Organizational Units",
+     "Security Groups",
+     "Distribution Groups"
+    ]
+   },
+   {
+    "name": "Access & Authentication",
+    "items": [
+     "Role-Based Access Control",
+     "Identity & Access Management",
+     "Authentication",
+     "Multi-Factor Authentication",
+     "Single Sign-On",
+     "Password Management",
+     "Account Provisioning",
+     "Account Deprovisioning",
+     "Directory Synchronization",
+     "Microsoft Entra ID Integration",
+     "Active Directory Connectors",
+     "Identity Audit Logs"
+    ]
+   }
+  ],
+  "slug": "new-active-directory"
+ },
+ {
+  "title": "My Business Center",
+  "description": "The central business management workspace for companies, business owners, and authorized business administrators.",
+  "groups": [
+   {
+    "name": "Business Management",
+    "items": [
+     "Business Overview",
+     "Company Management",
+     "Tenant & Organization Management",
+     "Workforce & HR Management",
+     "Business Finance",
+     "Contracts & Legal Documents",
+     "Products & Services",
+     "Business Resources",
+     "Business Integrations",
+     "Business Planning & Reporting",
+     "Business Performance",
+     "Business Operations",
+     "Business Locations",
+     "Business Settings",
+     "Business Documents",
+     "Business Approvals",
+     "Business Activity"
+    ]
+   }
+  ],
+  "slug": "my-business-center"
+ },
+ {
+  "title": "Assets & Resources",
+  "description": "Centralized management of company-owned technology, equipment, inventory, and other resources.",
+  "groups": [
+   {
+    "name": "Asset & Inventory Management",
+    "items": [
+     "Asset Management",
+     "Device Management",
+     "Computer Inventory",
+     "Laptop Inventory",
+     "Desktop Inventory",
+     "Mobile Device Inventory",
+     "Server Inventory",
+     "Network Equipment",
+     "Printers & Peripherals",
+     "Software Inventory",
+     "Hardware Inventory"
+    ]
+   },
+   {
+    "name": "Lifecycle & Procurement",
+    "items": [
+     "Asset Assignment",
+     "Asset Transfers",
+     "Asset Lifecycle Management",
+     "Asset Maintenance",
+     "Asset Retirement",
+     "Asset History",
+     "Asset Tracking",
+     "Inventory Management",
+     "License Management",
+     "Procurement",
+     "Vendor Management",
+     "Resource Allocation",
+     "Asset Reports"
+    ]
+   }
+  ],
+  "slug": "assets-resources"
+ },
+ {
+  "title": "IntelliDesk",
+  "description": "The centralized IT service desk, ticketing, technical support, and service management system.",
+  "groups": [
+   {
+    "name": "Service Desk",
+    "items": [
+     "Service Desk Dashboard",
+     "Ticket Management",
+     "Create a Ticket",
+     "My Tickets",
+     "Assigned Tickets",
+     "Team Tickets",
+     "Ticket Queues",
+     "Incident Management",
+     "Service Requests",
+     "Change Requests",
+     "Problem Management",
+     "Escalation Management",
+     "SLA Management",
+     "Ticket Priorities",
+     "Ticket Categories",
+     "Ticket Assignment",
+     "Ticket Notes & Attachments",
+     "Ticket History"
+    ]
+   },
+   {
+    "name": "Support & Knowledge",
+    "items": [
+     "Customer Support",
+     "Technical Support",
+     "Remote Support",
+     "IntelliKnowledge",
+     "Knowledge Base",
+     "Knowledge Vault",
+     "Help Buddy",
+     "Workflow Companion",
+     "Service Reports"
+    ]
+   }
+  ],
+  "slug": "intellidesk"
+ },
+ {
+  "title": "Automation & Intelligence",
+  "description": "The AI, automation, intelligent workflow, and business-process engine powering the ecosystem.",
+  "groups": [
+   {
+    "name": "AI & Automation",
+    "items": [
+     "Automation Dashboard",
+     "Workflow Automation",
+     "AI Agents",
+     "AI Assistants",
+     "Maximus",
+     "Optimus",
+     "Trinity",
+     "Intelligent Workflows",
+     "Automated Ticket Routing",
+     "Automated User Provisioning",
+     "Automated Device Management",
+     "Automated Notifications",
+     "Automated Approvals",
+     "Scheduled Tasks",
+     "Event-Driven Automation",
+     "Business Process Automation"
+    ]
+   },
+   {
+    "name": "Intelligence & Reporting",
+    "items": [
+     "AI Messaging",
+     "AI Recommendations",
+     "AI Analytics",
+     "Predictive Intelligence",
+     "Intelligent Monitoring",
+     "AI & Business Intelligence",
+     "Automation Builder",
+     "Workflow Designer",
+     "Automation History",
+     "Automation Reports"
+    ]
+   }
+  ],
+  "slug": "automation-intelligence"
+ },
+ {
+  "title": "Communications & Collaboration",
+  "description": "Communications and Collaboration are one combined category. This is the shared communication and teamwork environment.",
+  "groups": [
+   {
+    "name": "Communication & Teamwork",
+    "items": [
+     "IntelliChat",
+     "Team Chat",
+     "Direct Messages",
+     "Group Conversations",
+     "Channels",
+     "Video Meetings",
+     "Audio Meetings",
+     "Video Conferencing",
+     "Screen Sharing",
+     "File Sharing",
+     "Team Collaboration",
+     "Workspaces",
+     "Team Boards",
+     "Project Collaboration",
+     "Shared Calendars",
+     "IntelliCalendar",
+     "Meeting Scheduling",
+     "Meeting Rooms",
+     "Breakout Rooms",
+     "Announcements",
+     "Notifications",
+     "Internal Communications",
+     "External Communications",
+     "Contact Directory",
+     "Communication History"
+    ]
+   }
+  ],
+  "slug": "communications-collaboration"
+ },
+ {
+  "title": "Business & Productivity",
+  "description": "The dedicated location for business productivity applications and tools.",
+  "groups": [
+   {
+    "name": "Productivity Applications",
+    "items": [
+     "Productivity Dashboard",
+     "Bring the Work to You",
+     "IntelliChat",
+     "IntelliCalendar",
+     "Intella Notes",
+     "Intella Sheets",
+     "IntelliDrive",
+     "IntelliForms",
+     "Work Board",
+     "Global Search"
+    ]
+   },
+   {
+    "name": "Work Tools",
+    "items": [
+     "Document Management",
+     "Document Collaboration",
+     "Task Management",
+     "Project Management",
+     "Personal Workspace",
+     "Team Workspace",
+     "File Management",
+     "File Storage",
+     "Digital Forms",
+     "Spreadsheets",
+     "Notes & Notebooks",
+     "Scheduling",
+     "To-Do Lists",
+     "Business Reporting",
+     "Productivity Analytics"
+    ]
+   }
+  ],
+  "slug": "business-productivity"
+ },
+ {
+  "title": "IntelliSphere & Business Products",
+  "description": "The broader IntelliSphere ecosystem and its business products.",
+  "groups": [
+   {
+    "name": "Product Ecosystem",
+    "items": [
+     "IntelliSphere Dashboard",
+     "IntelliSphere Applications",
+     "IntelliSphere Business Products",
+     "IntelliSphere Services",
+     "Maximus",
+     "Optimus",
+     "Trinity",
+     "IntelliConnect",
+     "IntelliBuilder",
+     "IntelliDesign Studio",
+     "IntelliStatus"
+    ]
+   },
+   {
+    "name": "Product Operations",
+    "items": [
+     "Business Applications",
+     "Product Management",
+     "Service Management",
+     "Application Management",
+     "Product Configuration",
+     "Product Deployment",
+     "Product Updates",
+     "Product Documentation",
+     "Product Analytics",
+     "Product Integrations"
+    ]
+   }
+  ],
+  "slug": "intellisphere-business-products"
+ },
+ {
+  "title": "Integrations & Connectors",
+  "description": "The central integration hub connecting internal applications, external services, systems, and platforms.",
+  "groups": [
+   {
+    "name": "Integration Hub",
+    "items": [
+     "Integration Dashboard",
+     "IntelliConnect",
+     "Application Integrations",
+     "Microsoft Integrations",
+     "Microsoft 365",
+     "Microsoft Entra ID",
+     "Azure Integrations",
+     "Google Workspace",
+     "Gmail Integration",
+     "Calendar Integrations",
+     "Active Directory Connectors"
+    ]
+   },
+   {
+    "name": "Connectivity & Monitoring",
+    "items": [
+     "API Management",
+     "API Connections",
+     "Webhooks",
+     "Third-Party Applications",
+     "Database Connections",
+     "Cloud Integrations",
+     "Identity Integrations",
+     "Communication Integrations",
+     "Payment Integrations",
+     "Integration Marketplace Connections",
+     "Connector Management",
+     "Integration Monitoring",
+     "Sync Management",
+     "Integration Logs",
+     "Integration Security"
+    ]
+   }
+  ],
+  "slug": "integrations-connectors"
+ },
+ {
+  "title": "Infrastructure & Network Operations",
+  "description": "Centralized management and monitoring of infrastructure, networks, servers, cloud resources, and technical environments.",
+  "groups": [
+   {
+    "name": "Network Operations",
+    "items": [
+     "Infrastructure Dashboard",
+     "Network Operations",
+     "IntelliNOC",
+     "Network Monitoring",
+     "Network Topology",
+     "Network Discovery",
+     "Network Inventory",
+     "Network Configuration",
+     "Network Performance",
+     "Network Diagnostics",
+     "Connectivity Monitoring",
+     "Outage Management",
+     "Bandwidth Monitoring",
+     "IP Address Management",
+     "DNS Management",
+     "DHCP Management"
+    ]
+   },
+   {
+    "name": "Infrastructure Services",
+    "items": [
+     "Server Management",
+     "Data Center Management",
+     "Cloud Infrastructure",
+     "Virtualization Management",
+     "VMware Management",
+     "Storage Infrastructure",
+     "Endpoint Infrastructure",
+     "Infrastructure Monitoring",
+     "IntelliInfrastructure",
+     "IntelliMonitor",
+     "Remote Diagnostics",
+     "Infrastructure Reports"
+    ]
+   }
+  ],
+  "slug": "infrastructure-network-operations"
+ },
+ {
+  "title": "Security Operations",
+  "description": "The centralized cybersecurity, threat detection, security monitoring, and incident response environment.",
+  "groups": [
+   {
+    "name": "Security Operations Center",
+    "items": [
+     "Security Dashboard",
+     "Security Threat Matrix",
+     "IntelliSOC",
+     "Security Monitoring",
+     "Threat Detection",
+     "Threat Intelligence",
+     "Security Incidents",
+     "Incident Response",
+     "Vulnerability Management",
+     "Endpoint Security",
+     "Network Security",
+     "Cloud Security",
+     "Identity Security",
+     "Access Monitoring",
+     "Authentication Monitoring",
+     "Privileged Access Management"
+    ]
+   },
+   {
+    "name": "Security Governance",
+    "items": [
+     "Security Policies",
+     "Security Alerts",
+     "Security Investigations",
+     "Security Event Management",
+     "Security Automation",
+     "Security Reports",
+     "Security Audit Logs",
+     "Security Risk Monitoring"
+    ]
+   }
+  ],
+  "slug": "security-operations"
+ },
+ {
+  "title": "Governance & Compliance",
+  "description": "Centralized organizational governance, compliance management, approvals, audit trails, and accountability.",
+  "groups": [
+   {
+    "name": "Governance",
+    "items": [
+     "Governance Dashboard",
+     "IntelliGovern",
+     "IntelliCompliance",
+     "IntelliAudit",
+     "Policy Management",
+     "Compliance Management",
+     "Regulatory Requirements",
+     "Risk Management",
+     "Internal Controls",
+     "Audit Management",
+     "Audit Trails",
+     "Activity History"
+    ]
+   },
+   {
+    "name": "Controls & Reporting",
+    "items": [
+     "Approval Management",
+     "Approvals",
+     "Exceptions",
+     "Signoffs",
+     "Change Governance",
+     "Access Reviews",
+     "Compliance Reporting",
+     "Governance Reporting",
+     "Risk Assessments",
+     "Evidence Management",
+     "Document Retention",
+     "Compliance Monitoring"
+    ]
+   }
+  ],
+  "slug": "governance-compliance"
+ },
+ {
+  "title": "IntelliMarketplace",
+  "description": "The dedicated marketplace for discovering, purchasing, accessing, and managing available products and services.",
+  "groups": [
+   {
+    "name": "Marketplace",
+    "items": [
+     "Marketplace Home",
+     "Featured Products",
+     "Business Products",
+     "Software & Applications",
+     "AI Products & Services",
+     "IT Services",
+     "Technology Solutions",
+     "Business Services",
+     "Professional Services",
+     "Service Providers",
+     "Vendors",
+     "Marketplace Categories",
+     "Product Listings",
+     "Service Listings"
+    ]
+   },
+   {
+    "name": "Purchases & Vendor Services",
+    "items": [
+     "Subscriptions",
+     "Plans & Pricing",
+     "Orders",
+     "Purchases",
+     "Marketplace Payments",
+     "Vendor Management",
+     "Marketplace Requests",
+     "Product Reviews",
+     "Service Reviews",
+     "Marketplace Support"
+    ]
+   }
+  ],
+  "slug": "intellimarketplace"
+ },
+ {
+  "title": "Administration, Settings & Support",
+  "description": "The platform administration and user-support area. The Global Command Center provides centralized administrative oversight for authorized administrators.",
+  "groups": [
+   {
+    "name": "Global Command Center",
+    "items": [
+     "Global Overview",
+     "Global Administrator Dashboard",
+     "IT Administrator Dashboard",
+     "Network Engineer Dashboard",
+     "Organization Overview",
+     "Tenant Overview",
+     "Global User Management",
+     "Global Role Management",
+     "Global Access Management",
+     "Global Configuration",
+     "Global Operations",
+     "Global Monitoring",
+     "Global Audit Logs",
+     "System Health",
+     "Administrative Controls"
+    ]
+   },
+   {
+    "name": "Administration & Settings",
+    "items": [
+     "User Administration",
+     "Role Administration",
+     "Permission Management",
+     "Company Settings",
+     "Tenant Settings",
+     "Organization Settings",
+     "Application Settings",
+     "System Configuration",
+     "Security Settings",
+     "Notification Settings",
+     "Integration Settings",
+     "Feature Management",
+     "System Preferences"
+    ]
+   },
+   {
+    "name": "Help & Support",
+    "items": [
+     "Help Center",
+     "Help Buddy",
+     "Support Requests",
+     "Technical Support",
+     "Knowledge Base",
+     "IntelliKnowledge",
+     "Knowledge Vault",
+     "FAQs",
+     "Documentation",
+     "System Status",
+     "Contact Support"
+    ]
+   },
+   {
+    "name": "My Profile & Preferences",
+    "items": [
+     "My Profile",
+     "Personal Information",
+     "Account Settings",
+     "My Security",
+     "Password Management",
+     "MFA Settings",
+     "My Notifications",
+     "My Preferences",
+     "My Applications",
+     "My Activity",
+     "My Sessions",
+     "Sign Out"
+    ]
+   }
+  ],
+  "slug": "administration-settings-support"
+ }
+]

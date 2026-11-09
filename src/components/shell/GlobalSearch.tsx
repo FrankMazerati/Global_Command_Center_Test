@@ -63,7 +63,11 @@ export function GlobalSearch() {
                   setSearchOpen(false);
                   navigate({
                     to: "/m/$section/$group/$page",
-                    params: { section: "command-center", group: "ticket-management", page: "active-ticket-workspace" },
+                    params: {
+                      section: "command-center",
+                      group: "ticket-management",
+                      page: "active-ticket-workspace",
+                    },
                   });
                 }}
               >

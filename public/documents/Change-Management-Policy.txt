@@ -1,0 +1,19 @@
+CHANGE MANAGEMENT POLICY
+IntelliStack Systems · Global Platform Operations · Version 4.2
+
+1. Scope
+This policy governs every change to production infrastructure, platform services and
+customer-facing integrations operated by IntelliStack Systems.
+
+2. Change classes
+Standard  Pre-approved, low risk, repeatable, documented in the change catalogue.
+Normal    Requires approval by the service owner and the change advisory board.
+Emergency Requires incident commander approval and retrospective review within 5 days.
+
+3. Required records
+Every change must record: requester, service, risk assessment, implementation plan,
+verification steps, rollback plan, maintenance window and approver.
+
+4. Approval authority
+Normal changes require a Level 2 approval. Emergency changes require a Level 3 approval
+and must be linked to an incident. Approval must be recorded before implementation.
