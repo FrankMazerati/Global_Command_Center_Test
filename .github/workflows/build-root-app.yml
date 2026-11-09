@@ -1,7 +1,7 @@
 name: Build 004 - Global Command Center
 on:
   push:
-    branches: [main]
+    branches: [main, integrate/maximus-command-center]
   workflow_dispatch:
 permissions:
   contents: read

@@ -8,7 +8,7 @@ The repository's GitHub Pages site is: <https://frankmazerati.github.io/Global_C
 
 The existing **Build 004 - Global Command Center** workflow in GitHub Actions installs dependencies, formats and lints, runs tests, builds the static site, uploads the Pages artifact, and deploys it. Open the workflow run and click the `github-pages` environment URL (or its “Deploy website” link) to open the site. GitHub Pages provides one site URL for this repository; deploying a branch updates that test site rather than creating a separate branch-specific URL.
 
-The workflow deploys pushes to `main` and can also be manually run with `workflow_dispatch` against a selected branch. The published app uses the repository subpath `/Global_Command_Center_Test/`; keep the matching Vite base path and router base path when changing deployment configuration.
+The workflow deploys pushes to `main` and `integrate/maximus-command-center`, and can also be manually run with `workflow_dispatch` against an allowed branch. The published app uses the repository subpath `/Global_Command_Center_Test/`; keep the matching Vite base path and router base path when changing deployment configuration.
 
 ## Separate login portals
 
