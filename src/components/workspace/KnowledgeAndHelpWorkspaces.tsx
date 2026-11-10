@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import {
   BookOpen, Bot, Clock3, Database, FileText,
   Library, MessageCircle, RefreshCw, Search, Send, ShieldCheck, Ticket,
@@ -35,7 +35,7 @@ type Message = {
   created_at: string;
 };
 
-function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+function Panel({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <section className={`rounded-xl border bg-card p-4 shadow-card sm:p-5 ${className}`}>{children}</section>;
 }
 
@@ -78,13 +78,21 @@ export function KnowledgeSpacesWorkspace({ title, pageSlug }: { title: string; p
   const visibleBases = useMemo(() => {
     const category = pageSlug.includes("getting-started") || pageSlug.includes("platform")
       ? ["getting_started"]
-      : pageSlug.includes("general-knowledge") || pageSlug.includes("support")
+      : pageSlug.includes("faqs") || pageSlug.includes("troubleshooting") || pageSlug.includes("support") || pageSlug.includes("account-and-access") || pageSlug.includes("intellidesk")
         ? ["help_desk"]
-        : pageSlug.includes("executive") || pageSlug.includes("global-administration")
+        : pageSlug.includes("executive") || pageSlug.includes("global-administration") || pageSlug.includes("ceo") || pageSlug.includes("cfo")
           ? ["business_stakeholders"]
-          : pageSlug.includes("development-history") || pageSlug.includes("project-intelligence")
+          : pageSlug.includes("development-history") || pageSlug.includes("project-intelligence") || pageSlug.includes("architecture") || pageSlug.includes("api-and-integration")
             ? ["idea_ledger", "platform_reference"]
-            : [];
+            : pageSlug.includes("help-buddy-knowledge")
+              ? ["helpbuddy_ai"]
+              : pageSlug.includes("maximus-knowledge")
+                ? ["maximus_ai"]
+                : pageSlug.includes("optimus-knowledge")
+                  ? ["optimus_ai"]
+                  : pageSlug.includes("trinity-knowledge")
+                    ? ["trinity_ai"]
+                    : [];
     return bases.filter((base) => (baseFilter === "all" || base.id === baseFilter) &&
       (!category.length || category.includes(base.kb_key)));
   }, [bases, baseFilter, pageSlug]);
