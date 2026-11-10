@@ -38,3 +38,12 @@
 ## Compact status manager
 - The user header includes a small status-manager pill with color-coded Available, Away, Busy, On Break, Helping a User, Offline, and related states.
 - Local time/date and weather remain compact and right-aligned in the identity header; Offline is persisted through the shared work context alongside the other availability states.
+
+## Supabase-backed directories and marketplace
+- Hamburger destinations for Users, Devices, Tenants, and Tickets read authenticated rows from Supabase, expose visible columns, support search, and provide in-page drill-down.
+- Authorized users can create users and tickets, and edit ticket title, description, priority, and status from the live directory surface.
+- The IntelliSphere Marketplace has compact searchable application tiles, categories, availability/locked states, comparison selection, access requests, five subscription levels with Level 3 highlighted, and entitlement request persistence.
+- The Marketplace includes live people, device, tenant, and ticket footprint counts with side-by-side company comparison controls.
+- The Company Environment Assessment accepts company, infrastructure, identity, security, service desk, productivity, vendor, cost, and challenge inputs; generates retain/integrate/improve/replace-oriented analysis; recommends a subscription level; and can save an assessment to Supabase or request consultation/proposal handoff.
+- Supabase-backed manager identity fields populate the command-center header when a matching user record is available, with local fallback values when the table is unavailable.
+- The availability and manager profile controls remain compact in the header.

@@ -375,6 +375,7 @@ function CommandCenterHome() {
   const [newTickerChange, setNewTickerChange] = useState("");
   const [liveItems, setLiveItems] = useState<WorkItem[]>([]);
   const [ticketSource, setTicketSource] = useState<"supabase" | "project">("project");
+  const [managerRecord, setManagerRecord] = useState<Record<string, unknown> | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [message, setMessage] = useState("");
@@ -427,8 +428,46 @@ function CommandCenterHome() {
     };
   }, []);
 
+  useEffect(() => {
+    let active = true;
+    const supabase = getSupabaseClient();
+    if (!supabase)
+      return () => {
+        active = false;
+      };
+    Promise.all([supabase.auth.getUser(), supabase.from("users").select("*").limit(100)]).then(
+      ([authResult, usersResult]) => {
+        if (!active || usersResult.error || !usersResult.data?.length) return;
+        const email = authResult.data.user?.email?.toLowerCase();
+        const rows = usersResult.data as Array<Record<string, unknown>>;
+        const match =
+          rows.find((row) => email && String(row["email"] ?? "").toLowerCase() === email) ??
+          rows.find((row) =>
+            /manager|admin|owner/i.test(String(row["role"] ?? row["title"] ?? "")),
+          ) ??
+          rows[0] ??
+          null;
+        setManagerRecord(match);
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const items = liveItems.length ? liveItems : workItems;
   const availability = work.availability;
+  const managerName = String(
+    managerRecord?.["full_name"] ?? managerRecord?.["name"] ?? "Frank Mazerati",
+  );
+  const managerEmail = String(managerRecord?.["email"] ?? "Work email");
+  const managerUserId = String(managerRecord?.["user_id"] ?? managerRecord?.["id"] ?? "001");
+  const managerCompany = String(
+    managerRecord?.["company_id"] ?? managerRecord?.["company"] ?? "INTELLISTACK",
+  );
+  const managerWorkplace = String(
+    managerRecord?.["workplace"] ?? managerRecord?.["location"] ?? "Downtown Chicago",
+  );
   const quickPickLibrary = [...availableQuickPicks, ...menuQuickPickOptions].filter(
     (pick, index, all) => all.findIndex((candidate) => candidate.label === pick.label) === index,
   );
@@ -716,17 +755,17 @@ function CommandCenterHome() {
                 onClick={() => setProfileOpen((value) => !value)}
                 aria-expanded={profileOpen}
               >
-                <img src={profilePhoto} alt="Frank Mazerati" />
+                <img src={profilePhoto} alt={managerName} />
                 <span>
-                  Frank
+                  {managerName.split(" ")[0]}
                   <br />
-                  <b>Mazerati</b>
+                  <b>{managerName.split(" ").slice(1).join(" ")}</b>
                 </span>
                 <ChevronDown size={13} />
               </button>
               {profileOpen && (
                 <div className="cc-popover">
-                  <strong>Frank Mazerati</strong>
+                  <strong>{managerName}</strong>
                   <span>{bio}</span>
                   <button className="cc-profile-option" onClick={() => setProfileEditor("status")}>
                     <Activity size={14} /> Status: {availability}
@@ -855,12 +894,12 @@ function CommandCenterHome() {
           <section className="cc-identity-panel">
             <div className="cc-identity-main">
               <div className="cc-identity-photo">
-                <img src={profilePhoto} alt="Frank Mazerati" />
+                <img src={profilePhoto} alt={managerName} />
                 <span />
               </div>
               <div>
                 <small>WELCOME TO YOUR COMMAND CENTER</small>
-                <h1>Good evening, Frank Mazerati!</h1>
+                <h1>Good evening, {managerName}!</h1>
                 <p>
                   Today is another opportunity to learn, grow and accomplish more. Your command
                   center is ready.
@@ -873,19 +912,19 @@ function CommandCenterHome() {
             <div className="cc-identity-details">
               <div>
                 <small>USER ID</small>
-                <b>001</b>
+                <b>{managerUserId}</b>
               </div>
               <div>
                 <small>COMPANY ID</small>
-                <b>INTELLISTACK</b>
+                <b>{managerCompany}</b>
               </div>
               <div>
                 <small>EMAIL</small>
-                <b>Work email</b>
+                <b>{managerEmail}</b>
               </div>
               <div>
                 <small>WORKPLACE</small>
-                <b>Downtown Chicago</b>
+                <b>{managerWorkplace}</b>
               </div>
             </div>
             <div className="cc-identity-control">
