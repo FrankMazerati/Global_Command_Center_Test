@@ -313,3 +313,25 @@ from (values
 ) as v(category_key,intent_key,title,user_examples,responses,followups,tone,audience,repeat_policy,cooldown,permission_check,escalation)
 join public.help_buddy_library_categories c on c.category_key=v.category_key
 where not exists (select 1 from public.help_buddy_response_templates r where r.intent_key=v.intent_key);
+
+drop policy if exists "users append own memory events" on public.help_buddy_memory_events;
+create policy "users append own memory events" on public.help_buddy_memory_events
+  for insert to authenticated with check (profile_id = (select auth.uid()));
+
+drop policy if exists help_buddy_unanswered_owner on public.help_buddy_unanswered_questions;
+drop policy if exists help_buddy_unanswered_read_scoped on public.help_buddy_unanswered_questions;
+create policy help_buddy_unanswered_read_scoped on public.help_buddy_unanswered_questions
+  for select to authenticated using (profile_id = (select auth.uid()) or public.kb_can_manage());
+drop policy if exists help_buddy_unanswered_insert_owner on public.help_buddy_unanswered_questions;
+create policy help_buddy_unanswered_insert_owner on public.help_buddy_unanswered_questions
+  for insert to authenticated with check (
+    profile_id = (select auth.uid())
+    and exists (select 1 from public.assistant_sessions s where s.id = help_buddy_unanswered_questions.session_id and s.profile_id = (select auth.uid()))
+  );
+drop policy if exists help_buddy_unanswered_update_scoped on public.help_buddy_unanswered_questions;
+create policy help_buddy_unanswered_update_scoped on public.help_buddy_unanswered_questions
+  for update to authenticated using (profile_id = (select auth.uid()) or public.kb_can_manage())
+  with check (profile_id = (select auth.uid()) or public.kb_can_manage());
+drop policy if exists help_buddy_unanswered_delete_scoped on public.help_buddy_unanswered_questions;
+create policy help_buddy_unanswered_delete_scoped on public.help_buddy_unanswered_questions
+  for delete to authenticated using (profile_id = (select auth.uid()) or public.kb_can_manage());
