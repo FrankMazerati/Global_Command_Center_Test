@@ -1,4 +1,4 @@
-// Single source of truth for the nine primary hamburger navigation areas.
+// Single source of truth for the eleven primary hamburger navigation areas.
 // Every item resolves to a real route: /m/$section/$group/$page.
 
 export type SectionTone =
@@ -106,7 +106,7 @@ const RAW: RawSection[] = [
     [
       ["Getting Started", ["Getting Started with Your Command Center", "System Navigation", "Dashboard Walkthrough", "Global Search Walkthrough", "Help Buddy Walkthrough", "Role-Based Getting Started"]],
       ["System User Guides", ["My Business Center Guide", "Active Directory Guide", "Command Center Guide", "IntelliDesk Guide", "Workforce Performance Guide", "Productivity Guide", "Collaboration Guide", "AI Systems Guide", "NOC Center Guide", "Security Guide", "Governance Guide"]],
-      ["Help Buddy and Bring the Work to You", ["Help Buddy Complete Guide", "Workflow Companion", "Bring the Work to You", "Personal Workflows", "Guided Tasks", "Checklists", "Attachments and Notes", "Follow-Up Management", "Progress and Learning History"]],
+      ["Help Buddy and Bring the Work to You", ["Help Buddy Complete Guide", "Help Buddy Workflow Guidance", "Bring the Work to You", "Personal Workflows", "Guided Tasks", "Checklists", "Attachments and Notes", "Follow-Up Management", "Progress and Learning History"]],
       ["Administration and Technical Reference", ["Global Administration Guide", "Tenant Administration Guide", "Role and Permission Reference", "Integration Reference", "IntelliSync Technical Reference", "Database and Backend Reference", "Security and Compliance Reference"]],
       ["Training and Learning", ["Learning Paths", "Role-Based Training", "Training Checkpoints", "Skills Development", "Certifications", "Learning Progress", "Resume Learning"]],
       ["Business and Executive Reference", ["Business Reference", "Executive Reference", "CEO and CFO Materials", "Business Procedures"]],
@@ -122,7 +122,7 @@ const RAW: RawSection[] = [
       ["Trinity", ["Trinity Overview", "Security Intelligence", "Network Intelligence", "Operational Oversight", "Business and Operational Risk", "Independent Review", "Maximus Oversight", "Optimus Oversight", "Cross-System Analysis", "Governance Intelligence", "Recommendations and Findings", "Audit History"]],
       ["Maximus", ["Maximus Overview", "Business Intelligence", "Executive Assistance", "Business Analysis", "Business Operations", "Financial and Business Insights", "Executive Reporting", "Strategic Recommendations"]],
       ["Optimus", ["Optimus Overview", "Help Desk Intelligence", "End-User Assistance", "Technical Guidance", "Ticket Support", "Workflow Assistance", "Knowledge Retrieval", "Operational Recommendations"]],
-      ["Help Buddy", ["Help Buddy Overview", "Conversation", "Attachments", "Notes", "Workflow Companion", "Checklists", "Knowledge Base", "Recognition Ledger", "My Tickets and Contributions", "Personal Work Area", "Follow-Ups", "Pending and Open Work", "Closed Work", "Transferred Work", "Manager Sign-Off"]],
+      ["Help Buddy", ["Help Buddy Overview", "Conversation", "Attachments", "Notes", "Help Buddy Workflow Guidance", "Checklists", "Knowledge Base", "Recognition Ledger", "My Tickets and Contributions", "Personal Work Area", "Follow-Ups", "Pending and Open Work", "Closed Work", "Transferred Work", "Manager Sign-Off"]],
     ],
   ],
   [
@@ -176,7 +176,6 @@ const securityGroups = rawGroups("Security", "Governance");
 const MENU: RawSection[] = [
   ["Home & Command Center", "Your personal command surface and the central place to see and act on work.", "maximus", [
     ["Command Center", ["Dashboard", "Bring the Work to You", "Global Time Zones", "News and Intelligence Feed", "Market Watch", "Command Status"]],
-    ["Help Buddy", ["Help Buddy Overview", "Conversation", "Attachments", "Notes", "Workflow Companion", "Checklists", "Knowledge Base", "Recognition Ledger", "Follow-Ups", "Pending and Open Work", "Closed Work", "Transferred Work", "Manager Sign-Off"]],
     ["Workflow Center", ["Workflow Dashboard", "Workflow Templates", "Template Builder", "Active Workflows", "My Assigned Tasks", "Approvals and Checkpoints", "Workflow History", "Automation Rules", "Workflow Analytics"]],
   ]],
   ["Business Products", "Company operations, executive workspaces, financial products and the IntelliSphere marketplace.", "primary", rawGroups("My Business Center").map(([group, pages]) => [group.replace("IntelliHire", "IntelliHire").replace("IntelliStaff", "IntelliStaff"), pages.map((page) => page.replace(/IntelliHire/g, "IntelliHire").replace(/IntelliStaff/g, "IntelliStaff"))])],
@@ -192,7 +191,7 @@ const MENU: RawSection[] = [
     ["Infrastructure and Field Operations", ["Infrastructure Overview", "Infrastructure Inventory", "Server Operations", "Network Operations", "Field Service", "Remote Support", "Remote Sessions", "War Room", "Incident Coordination", "Service Health", "Operational Runbooks"]],
   ]],
   ["Security, Risk & Governance", "Security operations, risk, compliance, policies, audit, approvals and sign-offs.", "tenant", securityGroups],
-  ["AI & Business Intelligence", "Governed intelligence experiences, analytics, insights and executive decision support.", "everything", rawGroups("AI Systems")],
+  ["AI & Business Intelligence", "Governed intelligence experiences, analytics, insights and executive decision support.", "everything", rawGroups("AI Systems").filter(([group]) => group !== "Help Buddy")],
   ["Employee & Manager Workspace", "Employee, contractor and workforce experiences with manager oversight, progression and recognition.", "optimus", [
     ["Workforce Experiences", ["IntelliStaff", "IntelliStaff Overview", "IntelliHire", "IntelliHire Overview", "IntelliWork", "IntelliWork Overview"]],
     ["People and Organization", ["Employees", "Contractors", "Workforce Directory", "Teams", "Managers", "Reporting Structure", "Availability and Shifts", "Onboarding", "Offboarding"]],
@@ -200,9 +199,22 @@ const MENU: RawSection[] = [
     ["Manager Workspace", ["Manager Dashboard", "Team Overview", "Work Assignment Overview", "Progression and XP Levels", "Stars and Recognition", "Manager Sign-Off Queue", "Performance Reviews", "Objectives and Checkpoints", "Team Reporting"]],
   ]],
   ["Account & Administration", "Personal preferences, system administration, knowledge, documentation, integrations and service status.", "primary", [
-    ...rawGroups("Knowledge & Learning"),
-    ["Knowledge Bases", ["Knowledge Base Overview", "Workflow Library", "Company Knowledge Bases", "Technical Knowledge Bases", "Troubleshooting and SOPs", "Personal and Restricted Knowledge Bases", "Knowledge Permissions", "Knowledge Review and Version History"]],
     ["Account and System Administration", ["My Account", "Profile Settings", "Preferences", "Notification Settings", "Security Settings", "System Settings", "Global Administration", "Tenant Administration", "Role and Permission Administration", "Integration Management", "Service Status", "Documentation", "Help and Support", "Sign Out"]],
+  ]],
+  ["Knowledge Spaces", "The platform's organized, permission-aware knowledge collections for company, tenant, role, operational and institutional knowledge.", "tenant", [
+    ["Knowledge Space Overview", ["All Knowledge Spaces", "Search Knowledge", "Recent Articles", "Knowledge Administration", "Knowledge Permissions", "Review and Version History"]],
+    ["Platform and Getting Started", ["Getting Started and Platform Guide", "System Navigation", "Dashboard and Global Widgets", "Platform User Guides", "Role-Based Getting Started"]],
+    ["General Knowledge and Support", ["FAQs and Common Questions", "Troubleshooting and Resolutions", "Account and Access Help", "Devices and Applications", "IntelliDesk Support"]],
+    ["Operational Knowledge Playbook", ["Help Desk Procedures", "New Active Directory Procedures", "Employee Lifecycle Procedures", "Device and Asset Procedures", "Marketplace and Licensing Procedures", "NOC and SOC Operations", "Security and Incident Response"]],
+    ["Workflow Knowledge Library", ["Workflow Library", "Workflow Template Guides", "Tasks and Checkpoints", "Approvals and Verification"]],
+    ["Executive and Global Administration", ["Executive Knowledge", "CEO and CFO Reference", "Global Administration Guide", "Tenant Governance", "Policies and Risk"]],
+    ["Role-Based Knowledge", ["CEO Knowledge", "CFO Knowledge", "CIO and CTO Knowledge", "COO and CISO Knowledge", "Sales and Business Development", "Marketing and Customer Success", "Human Resources and Finance", "Managers and Project Teams", "IT, Help Desk, NOC and SOC", "Employees and Contractors", "Tenant Administrators"]],
+    ["AI Knowledge Collections", ["AI Systems Overview", "Help Buddy Knowledge", "Maximus Knowledge", "Optimus Knowledge", "Trinity Knowledge"]],
+    ["Company, Tenant and Personal Knowledge", ["Company Knowledge Bases", "Tenant Knowledge Bases", "Department and Team Knowledge", "Personal Knowledge Bases", "Restricted Knowledge Bases"]],
+    ["Development History and Project Intelligence", ["Architecture and System Design", "Development Decisions", "Project History and Roadmap", "API and Integration Reference", "Release and Build History", "Issues and Resolutions"]],
+  ]],
+  ["Help Buddy", "The single conversational assistant and workflow-guidance experience for every authorized user.", "everything", [
+    ["Help Buddy Workspace", ["Help Buddy Overview", "Conversation Workspace", "Conversational Library", "Conversation History", "Unanswered Questions", "Response and Event Rules", "Connected Knowledge Sources", "My Work and Follow-Ups", "Checklists and Notes", "My Tickets and Contributions"]],
   ]],
 ];
 
