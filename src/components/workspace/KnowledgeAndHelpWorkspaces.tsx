@@ -229,7 +229,7 @@ async function findGroundedAnswer(question: string, userId: string) {
   }
 
   if (/(user|employee|person|where is|who is)/i.test(lower)) {
-    const name = question.replace(/^(where is|where can i find|find|look up|who is|show me)\s+/i, "").replace(/\b(user|employee|person|profile|account)\b/ig, "").trim();
+    const name = question.replace(/^(where is|where can i find|find|look up|who is|show me)\s+/i, "").replace(/\b(user|employee|person|profile|account)\b/ig, "").replace(/[?.!,]/g, "").trim();
     if (name.length > 2) {
       const { data, error } = await supabase.from("profiles").select("id,display_name,job_title,department_id,organization_id,tenant_id").limit(200);
       if (!error && data) {
@@ -256,7 +256,7 @@ async function findGroundedAnswer(question: string, userId: string) {
   }
 
   return {
-    text: "I couldn't find a verified answer in the Knowledge Spaces or records available to your account. I won't guess. I've marked this as an unanswered question for Help Buddy's knowledge review.",
+    text: "I couldn't find a verified answer in the Knowledge Spaces or records available to your account. I won't guess. I've flagged this question in your conversation history as unanswered.",
     citations: [{ type: "unanswered_question", question, created_at: new Date().toISOString() }],
     unresolved: true,
   };
@@ -372,7 +372,7 @@ export function HelpBuddyConversation({ compact = false }: { compact?: boolean }
             <p className="whitespace-pre-wrap">{message.content}</p>
             {message.citations?.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1.5">
-                {message.citations.map((citation, index) => <span key={index} className="rounded-full border border-current/20 px-2 py-0.5 text-[10px] opacity-80">{String(citation.title ?? citation.knowledge_base ?? citation.type ?? "Source")}</span>)}
+                {message.citations.map((citation, index) => typeof citation.path === "string" ? <a key={index} href={citation.path} className="rounded-full border border-current/20 px-2 py-0.5 text-[10px] font-medium underline underline-offset-2">Open {String(citation.title ?? "source")}</a> : <span key={index} className="rounded-full border border-current/20 px-2 py-0.5 text-[10px] opacity-80">{String(citation.title ?? citation.knowledge_base ?? citation.type ?? "Source")}</span>)}
               </div>
             )}
             <time className="mt-2 block text-[10px] opacity-60">{new Date(message.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</time>
@@ -417,7 +417,7 @@ export function HelpBuddyWorkspace({ title, pageSlug }: { title: string; pageSlu
     if (pageSlug === "conversation-history" || pageSlug === "unanswered-questions") {
       setLoading(true);
       supabase.auth.getUser().then(async ({ data }) => {
-        if (!data.user || !live) return;
+        if (!data.user || !live) { if (live) setLoading(false); return; }
         const { data: assistant } = await supabase.from("assistants").select("id").eq("assistant_key", "helpbuddy").maybeSingle();
         if (!assistant) { if (live) setLoading(false); return; }
         const { data: sessions } = await supabase.from("assistant_sessions").select("id,started_at,session_status").eq("assistant_id", assistant.id).eq("profile_id", data.user.id).order("started_at", { ascending: false }).limit(30);
