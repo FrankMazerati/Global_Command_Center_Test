@@ -20,6 +20,15 @@ describe("hamburger navigation", () => {
     ]);
   });
 
+  it("exposes Workflow Center and a separate Knowledge Bases group", () => {
+    const home = NAV.find((section) => section.title === "Home & Command Center");
+    const workflow = home?.groups.find((group) => group.title === "Workflow Center");
+    expect(workflow?.pages.map((page) => page.title)).toContain("Workflow Templates");
+    expect(workflow?.pages.map((page) => page.title)).toContain("Template Builder");
+    const admin = NAV.find((section) => section.title === "Account & Administration");
+    expect(admin?.groups.find((group) => group.title === "Knowledge Bases")?.pages.map((page) => page.title)).toContain("Workflow Library");
+  });
+
   it("does not include deferred Tenant Selection or Tenant Guests", () => {
     const titles = ALL_DESTINATIONS.map((d) => d.page.title);
     expect(titles).not.toContain("Tenant Selection");
