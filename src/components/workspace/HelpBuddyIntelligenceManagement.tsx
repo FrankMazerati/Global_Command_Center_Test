@@ -8,7 +8,7 @@ type Template = { id: string; category_id: string; intent_key: string; title: st
 type Memory = { id: string; memory_type: string; title: string; content: string; importance: number; confidence: number; status: string; updated_at: string };
 type CategoryDraft = { category_key: string; name: string; description: string; target_patterns: string; sort_order: string };
 type QaEntry = { id: string; knowledge_base_id: string; question: string; answer_markdown: string; intent_key: string; alternate_questions: string[]; tags: string[]; status: string; visibility: string; version: number; updated_at: string };
-type KnowledgeBaseOption = { id: string; name: string };
+type KnowledgeBaseOption = { id: string; name: string };\ntype UnansweredQuestion = { id: string; question: string; normalized_question: string; status: string; profile_id: string; created_at: string; session_id: string; linked_qa_entry_id: string | null; resolution_notes: string | null };
 
 const pageTitles: Record<string, string> = {
   "intelligence-overview": "Help Buddy Intelligence Overview",
@@ -46,7 +46,7 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
   const [categories, setCategories] = useState<Category[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [memories, setMemories] = useState<Memory[]>([]);
-  const [auditRows, setAuditRows] = useState<Array<Record<string, unknown>>>([]);
+  const [auditRows, setAuditRows] = useState<Array<Record<string, unknown>>>([]);\n  const [unansweredRows, setUnansweredRows] = useState<UnansweredQuestion[]>([]);
   const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
   const [qaCount, setQaCount] = useState(0);
   const [qaEntries, setQaEntries] = useState<QaEntry[]>([]);
@@ -83,7 +83,7 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
     if (!supabase) { setError("The secure database connection is unavailable."); setLoading(false); return; }
     setLoading(true);
     setError("");
-    const [manageResult, categoryResult, templateResult, qaResult, basesResult, articleResult, memoryResult, auditResult] = await Promise.all([
+    const [manageResult, categoryResult, templateResult, qaResult, basesResult, articleResult, memoryResult, auditResult, unansweredResult] = await Promise.all([
       supabase.rpc("kb_can_manage"),
       supabase.from("help_buddy_library_categories").select("*").order("sort_order"),
       supabase.from("help_buddy_response_templates").select("*").order("updated_at", { ascending: false }).limit(1000),
@@ -91,7 +91,7 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
       supabase.from("knowledge_bases").select("id,name").order("name"),
       supabase.from("knowledge_articles").select("id", { count: "exact", head: true }),
       supabase.from("help_buddy_memory_records").select("id,memory_type,title,content,importance,confidence,status,updated_at").eq("memory_scope", "user").order("updated_at", { ascending: false }).limit(200),
-      supabase.from("help_buddy_management_audit").select("id,entity_type,entity_id,operation,actor_profile_id,created_at,old_record,new_record").order("created_at", { ascending: false }).limit(100),
+      supabase.from("help_buddy_management_audit").select("id,entity_type,entity_id,operation,actor_profile_id,created_at,old_record,new_record").order("created_at", { ascending: false }).limit(100),\n      supabase.from("help_buddy_unanswered_questions").select("id,question,normalized_question,status,profile_id,created_at,session_id,linked_qa_entry_id,resolution_notes").order("created_at", { ascending: false }).limit(300),
     ]);
     setCanManage(manageResult.data === true);
     if (categoryResult.error) setError(categoryResult.error.message);
@@ -103,7 +103,7 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
     setKnowledgeBases((basesResult.data ?? []) as KnowledgeBaseOption[]);
     setArticleCount(articleResult.count ?? 0);
     setMemories((memoryResult.data ?? []) as Memory[]);
-    setAuditRows((auditResult.data ?? []) as Array<Record<string, unknown>>);
+    setAuditRows((auditResult.data ?? []) as Array<Record<string, unknown>>);\n    setUnansweredRows((unansweredResult.data ?? []) as UnansweredQuestion[]);
     const [responses, memoryVectors, qaVectors, articleVectors] = await Promise.all([
       supabase.from("help_buddy_response_templates").select("id", { count: "exact", head: true }).not("embedding", "is", null),
       supabase.from("help_buddy_memory_records").select("id", { count: "exact", head: true }).not("embedding", "is", null),
@@ -212,6 +212,17 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
     if (updateError) toast.error(updateError.message); else { toast.success("Scenario archived; source history retained."); await reload(); }
   };
 
+  const resolveUnanswered = async (item: UnansweredQuestion) => {
+    if (!supabase || !canManage) return;
+    const user = (await supabase.auth.getUser()).data.user;
+    const { error: updateError } = await supabase.from("help_buddy_unanswered_questions").update({
+      status: "resolved", resolution_notes: "Reviewed by an authorized knowledge administrator.",
+      resolved_by: user?.id ?? null, resolved_at: new Date().toISOString(),
+    }).eq("id", item.id);
+    if (updateError) toast.error(updateError.message);
+    else { toast.success("Question marked as reviewed."); await reload(); }
+  };
+
   const targetTotal = categories.reduce((sum, category) => sum + category.target_patterns, 0);
   const responseCount = templates.filter((item) => item.status !== "archived").length;
   const publishedCount = templates.filter((item) => item.status === "published").length;
@@ -283,7 +294,7 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
       <p className="mt-3 text-xs text-muted-foreground">Existing article-derived entries are starter records, not the completed curated 1,000-scenario suite. Draft, review and approval before publication are recommended.</p>
     </Panel>}
 
-    {viewSlug === "unanswered-question-review" && <Panel><h3 className="font-semibold">Unanswered question review</h3><p className="mt-1 text-sm text-muted-foreground">Unanswered questions are captured in the review queue. This view is a safe placeholder until the admin review workflow is connected to the queue's full resolution and approval actions.</p></Panel>}
+    {viewSlug === "unanswered-question-review" && <Panel><div className="mb-3 flex items-center justify-between"><h3 className="font-semibold">Unanswered question review queue</h3><span className="rounded-full bg-muted px-2 py-1 text-xs">{unansweredRows.filter((q) => q.status === "open").length} open</span></div><p className="mb-3 text-sm text-muted-foreground">Review questions Help Buddy could not answer confidently. Convert useful questions into approved Q&A scenarios, or mark them resolved after review.</p><div className="divide-y">{unansweredRows.map((item) => <div key={item.id} className="flex flex-wrap items-start justify-between gap-3 py-3"><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><b className="text-sm">{item.question}</b><span className="rounded-full bg-muted px-2 py-0.5 text-[10px]">{item.status}</span></div><p className="mt-1 text-xs text-muted-foreground">Submitted {new Date(item.created_at).toLocaleString()} · User {item.profile_id.slice(0, 8)}…</p>{item.resolution_notes && <p className="mt-1 text-xs text-muted-foreground">{item.resolution_notes}</p>}</div>{canManage && item.status === "open" && <button type="button" onClick={() => void resolveUnanswered(item)} className="rounded-md border px-3 py-2 text-xs hover:bg-accent">Mark reviewed</button>}</div>)}{!unansweredRows.length && <p className="py-6 text-sm text-muted-foreground">No unanswered questions are waiting for review.</p>}</div></Panel>}
     {viewSlug === "response-analytics" && <Panel><h3 className="font-semibold">Response usage analytics</h3><p className="text-sm text-muted-foreground">Response selection logging is ready in the database. Live analytics will populate once the Help Buddy runtime records selected templates and variants.</p></Panel>}
     {viewSlug === "response-audit-and-history" && <Panel><div className="mb-2 flex items-center gap-2"><ShieldCheck className="size-5 text-primary"/><h3 className="font-semibold">Version and change history</h3></div><p className="mb-3 text-sm text-muted-foreground">Append-only change snapshots for Help Buddy categories, response templates and Q&A scenarios. Access is limited to knowledge administrators.</p><div className="divide-y">{auditRows.map((row) => <div key={String(row.id)} className="py-3"><div className="flex flex-wrap items-center justify-between gap-2"><b className="text-sm">{String(row.entity_type)} · {String(row.operation)}</b><span className="text-xs text-muted-foreground">{new Date(String(row.created_at)).toLocaleString()}</span></div><p className="mt-1 text-xs text-muted-foreground">Record: {String(row.entity_id)} · Actor: {String(row.actor_profile_id ?? "System")}</p><details className="mt-2 text-xs"><summary className="cursor-pointer">View before / after snapshot</summary><pre className="mt-2 max-h-48 overflow-auto rounded bg-muted p-2">{JSON.stringify({ before: row.old_record, after: row.new_record }, null, 2)}</pre></details></div>)}{!auditRows.length && <p className="py-6 text-sm text-muted-foreground">No management changes have been recorded yet.</p>}</div></Panel>}
 
