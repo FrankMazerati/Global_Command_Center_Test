@@ -29,7 +29,7 @@ export function HelpBuddyPanel({ className }: { className?: string }) {
   return (
     <div className={cn("flex flex-col", className)}>
       <div className="flex items-center gap-3 border-b px-4 py-3">
-        <div className="grid size-10 shrink-0 place-items-center rounded-full border border-sky-300/30 bg-sky-300/10 text-sky-200"><Workflow className="size-5"/></div>
+        <img src="/assets/help-buddy.png" alt="Help Buddy character" className="size-12 shrink-0 object-contain" />
         <div className="min-w-0 flex-1">
           <div className="font-display text-sm font-bold tracking-wide">Help Buddy</div>
           <div className="truncate text-xs text-muted-foreground">
@@ -211,7 +211,7 @@ export function HelpBuddyLauncher() {
       aria-label="Open Help Buddy"
       className="fixed bottom-4 right-4 z-40 flex items-center gap-2 rounded-full border bg-card py-1.5 pl-1.5 pr-4 shadow-float transition-transform hover:scale-105"
     >
-      <span className="grid size-8 place-items-center rounded-full bg-sky-400/15 text-sky-200"><Workflow className="size-4"/></span>
+      <img src="/assets/help-buddy.png" alt="" className="size-9 shrink-0 object-contain" />
       <span className="font-display text-xs font-bold tracking-wide">Help Buddy</span>
     </button>
   );
