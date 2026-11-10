@@ -198,7 +198,7 @@ const MENU: RawSection[] = [
     [workforceGroup[0], workforceGroup[1]],
     ["Manager Workspace", ["Manager Dashboard", "Team Overview", "Work Assignment Overview", "Progression and XP Levels", "Stars and Recognition", "Manager Sign-Off Queue", "Performance Reviews", "Objectives and Checkpoints", "Team Reporting"]],
   ]],
-  ["Account & Administration", "Personal preferences, system administration, knowledge, documentation, integrations and service status.", "primary", [
+  ["Account & Administration", "Personal preferences, system administration, documentation, integrations and service status.", "primary", [
     ["Account and System Administration", ["My Account", "Profile Settings", "Preferences", "Notification Settings", "Security Settings", "System Settings", "Global Administration", "Tenant Administration", "Role and Permission Administration", "Integration Management", "Service Status", "Documentation", "Help and Support", "Sign Out"]],
   ]],
   ["Knowledge Spaces", "The platform's organized, permission-aware knowledge collections for company, tenant, role, operational and institutional knowledge.", "tenant", [
