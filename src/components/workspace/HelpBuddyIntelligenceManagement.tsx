@@ -144,11 +144,8 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
     setEditing(entry);
     setForm({
       title: entry.title, intent_key: entry.intent_key, category_id: entry.category_id,
-      examples: entry.user_examples.join("
-"), responses: entry.response_variants.join("
-"),
-      followups: entry.follow_up_variants.join("
-"), tone: entry.tone, audience: entry.audience,
+      examples: entry.user_examples.join("\n"), responses: entry.response_variants.join("\n"),
+      followups: entry.follow_up_variants.join("\n"), tone: entry.tone, audience: entry.audience,
       repeat_policy: entry.repeat_policy, cooldown_turns: String(entry.cooldown_turns),
       requires_permission_check: entry.requires_permission_check, escalation_level: entry.escalation_level ?? "",
       status: entry.status, visibility: entry.visibility,
@@ -160,12 +157,9 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
     if (!supabase || !canManage) return;
     const payload = {
       title: form.title.trim(), intent_key: form.intent_key.trim(), category_id: form.category_id,
-      user_examples: form.examples.split("
-").map((s) => s.trim()).filter(Boolean),
-      response_variants: form.responses.split("
-").map((s) => s.trim()).filter(Boolean),
-      follow_up_variants: form.followups.split("
-").map((s) => s.trim()).filter(Boolean),
+      user_examples: form.examples.split("\n").map((s) => s.trim()).filter(Boolean),
+      response_variants: form.responses.split("\n").map((s) => s.trim()).filter(Boolean),
+      follow_up_variants: form.followups.split("\n").map((s) => s.trim()).filter(Boolean),
       tone: form.tone, audience: form.audience, repeat_policy: form.repeat_policy,
       cooldown_turns: Math.max(0, Number(form.cooldown_turns) || 0),
       requires_permission_check: form.requires_permission_check,
@@ -207,14 +201,12 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
   };
 
   const openQaNew = () => { setEditingQa(null); setQaDraft({ knowledge_base_id: knowledgeBases[0]?.id ?? "", question: "", answer_markdown: "", intent_key: "platform.general", alternate_questions: "", tags: "", status: "draft", visibility: "public_internal" }); setQaEditor(true); };
-  const openQaEdit = (entry: QaEntry) => { setEditingQa(entry); setQaDraft({ knowledge_base_id: entry.knowledge_base_id, question: entry.question, answer_markdown: entry.answer_markdown, intent_key: entry.intent_key, alternate_questions: entry.alternate_questions.join("
-"), tags: entry.tags.join(", "), status: entry.status, visibility: entry.visibility }); setQaEditor(true); };
+  const openQaEdit = (entry: QaEntry) => { setEditingQa(entry); setQaDraft({ knowledge_base_id: entry.knowledge_base_id, question: entry.question, answer_markdown: entry.answer_markdown, intent_key: entry.intent_key, alternate_questions: entry.alternate_questions.join("\n"), tags: entry.tags.join(", "), status: entry.status, visibility: entry.visibility }); setQaEditor(true); };
   const saveQa = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!supabase || !canManage) return;
     const user = (await supabase.auth.getUser()).data.user;
-    const payload = { knowledge_base_id: qaDraft.knowledge_base_id, question: qaDraft.question.trim(), answer_markdown: qaDraft.answer_markdown.trim(), intent_key: qaDraft.intent_key.trim(), alternate_questions: qaDraft.alternate_questions.split("
-").map((v) => v.trim()).filter(Boolean), tags: qaDraft.tags.split(",").map((v) => v.trim()).filter(Boolean), status: qaDraft.status, visibility: qaDraft.visibility, version: editingQa ? editingQa.version + 1 : 1, updated_by: user?.id ?? null };
+    const payload = { knowledge_base_id: qaDraft.knowledge_base_id, question: qaDraft.question.trim(), answer_markdown: qaDraft.answer_markdown.trim(), intent_key: qaDraft.intent_key.trim(), alternate_questions: qaDraft.alternate_questions.split("\n").map((v) => v.trim()).filter(Boolean), tags: qaDraft.tags.split(",").map((v) => v.trim()).filter(Boolean), status: qaDraft.status, visibility: qaDraft.visibility, version: editingQa ? editingQa.version + 1 : 1, updated_by: user?.id ?? null };
     const result = editingQa ? await supabase.from("help_buddy_qa_entries").update(payload).eq("id", editingQa.id) : await supabase.from("help_buddy_qa_entries").insert({ ...payload, created_by: user?.id ?? null });
     if (result.error) toast.error(result.error.message); else { toast.success(editingQa ? "Q&A scenario updated." : "Q&A scenario created."); setQaEditor(false); await reload(); }
   };
