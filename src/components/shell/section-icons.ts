@@ -1,5 +1,6 @@
 import {
   Bot,
+  BookOpen,
   Building2,
   GraduationCap,
   Headset,
@@ -22,4 +23,6 @@ export const SECTION_ICONS: Record<string, LucideIcon> = {
   "ai-and-business-intelligence": Bot,
   "employee-and-manager-workspace": UsersRound,
   "account-and-administration": Scale,
+  "knowledge-spaces": BookOpen,
+  "help-buddy": Bot,
 };
