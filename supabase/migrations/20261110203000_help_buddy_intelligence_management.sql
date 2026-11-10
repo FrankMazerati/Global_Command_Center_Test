@@ -335,3 +335,18 @@ create policy help_buddy_unanswered_update_scoped on public.help_buddy_unanswere
 drop policy if exists help_buddy_unanswered_delete_scoped on public.help_buddy_unanswered_questions;
 create policy help_buddy_unanswered_delete_scoped on public.help_buddy_unanswered_questions
   for delete to authenticated using (profile_id = (select auth.uid()) or public.kb_can_manage());
+
+-- Personal memories are private to their owner; knowledge administrators do not get blanket access.
+drop policy if exists "users read own help buddy memories" on public.help_buddy_memory_records;
+create policy "users read own help buddy memories" on public.help_buddy_memory_records
+  for select to authenticated using (profile_id = (select auth.uid()) and memory_scope = 'user');
+drop policy if exists "users update own help buddy memories" on public.help_buddy_memory_records;
+create policy "users update own help buddy memories" on public.help_buddy_memory_records
+  for update to authenticated using (profile_id = (select auth.uid()) and memory_scope = 'user')
+  with check (profile_id = (select auth.uid()) and memory_scope = 'user');
+drop policy if exists "users delete own help buddy memories" on public.help_buddy_memory_records;
+create policy "users delete own help buddy memories" on public.help_buddy_memory_records
+  for delete to authenticated using (profile_id = (select auth.uid()) and memory_scope = 'user');
+drop policy if exists "users read own memory events" on public.help_buddy_memory_events;
+create policy "users read own memory events" on public.help_buddy_memory_events
+  for select to authenticated using (profile_id = (select auth.uid()));
