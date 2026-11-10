@@ -78,11 +78,11 @@ export function KnowledgeSpacesWorkspace({ title, pageSlug }: { title: string; p
   const visibleBases = useMemo(() => {
     const category = pageSlug.includes("getting-started") || pageSlug.includes("platform")
       ? ["getting_started"]
-      : pageSlug.includes("faqs") || pageSlug.includes("troubleshooting") || pageSlug.includes("support") || pageSlug.includes("account-and-access") || pageSlug.includes("intellidesk")
+      : pageSlug.includes("faqs") || pageSlug.includes("troubleshooting") || pageSlug.includes("support") || pageSlug.includes("account-and-access") || pageSlug.includes("intellidesk") || pageSlug.includes("help-desk-procedures")
         ? ["help_desk"]
         : pageSlug.includes("executive") || pageSlug.includes("global-administration") || pageSlug.includes("ceo") || pageSlug.includes("cfo")
           ? ["business_stakeholders"]
-          : pageSlug.includes("development-history") || pageSlug.includes("project-intelligence") || pageSlug.includes("architecture") || pageSlug.includes("api-and-integration")
+          : pageSlug.includes("development-history") || pageSlug.includes("project-intelligence") || pageSlug.includes("architecture") || pageSlug.includes("api-and-integration") || pageSlug.includes("active-directory-procedures") || pageSlug.includes("device-and-asset-procedures") || pageSlug.includes("marketplace-and-licensing") || pageSlug.includes("noc-and-soc") || pageSlug.includes("security-and-incident")
             ? ["idea_ledger", "platform_reference"]
             : pageSlug.includes("help-buddy-knowledge")
               ? ["helpbuddy_ai"]
@@ -418,7 +418,9 @@ export function HelpBuddyWorkspace({ title, pageSlug }: { title: string; pageSlu
       setLoading(true);
       supabase.auth.getUser().then(async ({ data }) => {
         if (!data.user || !live) return;
-        const { data: sessions } = await supabase.from("assistant_sessions").select("id,started_at,session_status").eq("profile_id", data.user.id).order("started_at", { ascending: false }).limit(30);
+        const { data: assistant } = await supabase.from("assistants").select("id").eq("assistant_key", "helpbuddy").maybeSingle();
+        if (!assistant) { if (live) setLoading(false); return; }
+        const { data: sessions } = await supabase.from("assistant_sessions").select("id,started_at,session_status").eq("assistant_id", assistant.id).eq("profile_id", data.user.id).order("started_at", { ascending: false }).limit(30);
         const sessionIds = (sessions ?? []).map((session) => session.id);
         if (!sessionIds.length) { if (live) setLoading(false); return; }
         const { data: rows } = await supabase.from("assistant_messages").select("id,session_id,sender_type,content,citations,created_at").in("session_id", sessionIds).order("created_at", { ascending: false }).limit(100);
