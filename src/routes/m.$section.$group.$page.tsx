@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { StatusBadge } from "@/components/shell/StatusBadge";
 import { TicketWorkspace } from "@/components/workspace/TicketWorkspace";
 import { WorkflowCenter } from "@/components/workspace/WorkflowCenter";
+import { HelpBuddyWorkspace, KnowledgeSpacesWorkspace } from "@/components/workspace/KnowledgeAndHelpWorkspaces";
 import { findPage, toneVar } from "@/lib/nav";
 import { getSupabaseClient } from "@/lib/supabase";
 import { useWork } from "@/lib/work-context";
@@ -1190,6 +1191,8 @@ function PageFoundation() {
   const directory = directoryKind(page.slug);
   const marketplace = marketplaceSlugs.includes(page.slug);
   const workflowCenter = section.slug === "home-and-command-center" && group.slug === "workflow-center";
+  const knowledgeSpaces = section.slug === "knowledge-spaces";
+  const helpBuddy = section.slug === "help-buddy";
   return (
     <div className="space-y-4">
       <nav
@@ -1220,7 +1223,7 @@ function PageFoundation() {
           </div>
           <div className="flex flex-wrap gap-2">
             <StatusBadge status="Built" />
-            {(directory || marketplace) && <StatusBadge status="Connected" />}
+            {(directory || marketplace || knowledgeSpaces) && <StatusBadge status="Connected" />}
           </div>
         </div>
       </div>
