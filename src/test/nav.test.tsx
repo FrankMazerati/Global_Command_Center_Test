@@ -6,7 +6,7 @@ import { ALL_DESTINATIONS, NAV } from "@/lib/nav";
 import { routeTree } from "@/routeTree.gen";
 
 describe("hamburger navigation", () => {
-  it("has exactly the nine approved primary areas in order", () => {
+  it("has the eleven approved primary areas in order", () => {
     expect(NAV.map((s) => s.title)).toEqual([
       "Home & Command Center",
       "Business Products",
@@ -20,7 +20,7 @@ describe("hamburger navigation", () => {
     ]);
   });
 
-  it("exposes Workflow Center and a separate Knowledge Bases group", () => {
+  it("exposes Workflow Center, Knowledge Spaces, and a dedicated Help Buddy category", () => {
     const home = NAV.find((section) => section.title === "Home & Command Center");
     const workflow = home?.groups.find((group) => group.title === "Workflow Center");
     expect(workflow?.pages.map((page) => page.title)).toContain("Workflow Templates");
