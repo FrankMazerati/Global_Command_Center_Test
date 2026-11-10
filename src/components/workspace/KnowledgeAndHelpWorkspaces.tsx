@@ -1,11 +1,10 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
-  BookOpen, Bot, CheckCircle2, CircleHelp, Clock3, Database, FileText,
+  BookOpen, Bot, Clock3, Database, FileText,
   Library, MessageCircle, RefreshCw, Search, Send, ShieldCheck, Ticket,
   Users, Workflow,
 } from "lucide-react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,12 +33,6 @@ type Message = {
   content: string;
   citations: Array<Record<string, unknown>>;
   created_at: string;
-};
-
-const knowledgeRoute = {
-  section: "knowledge-spaces",
-  group: "knowledge-space-overview",
-  page: "all-knowledge-spaces",
 };
 
 function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
@@ -83,7 +76,6 @@ export function KnowledgeSpacesWorkspace({ title, pageSlug }: { title: string; p
   }, []);
 
   const visibleBases = useMemo(() => {
-    const baseMap = new Map(bases.map((base) => [base.id, base]));
     const category = pageSlug.includes("getting-started") || pageSlug.includes("platform")
       ? ["getting_started"]
       : pageSlug.includes("general-knowledge") || pageSlug.includes("support")
