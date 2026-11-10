@@ -177,6 +177,7 @@ const MENU: RawSection[] = [
   ["Home & Command Center", "Your personal command surface and the central place to see and act on work.", "maximus", [
     ["Command Center", ["Dashboard", "Bring the Work to You", "Global Time Zones", "News and Intelligence Feed", "Market Watch", "Command Status"]],
     ["Help Buddy", ["Help Buddy Overview", "Conversation", "Attachments", "Notes", "Workflow Companion", "Checklists", "Knowledge Base", "Recognition Ledger", "Follow-Ups", "Pending and Open Work", "Closed Work", "Transferred Work", "Manager Sign-Off"]],
+    ["Workflow Center", ["Workflow Dashboard", "Workflow Templates", "Template Builder", "Active Workflows", "My Assigned Tasks", "Approvals and Checkpoints", "Workflow History", "Automation Rules", "Workflow Analytics"]],
   ]],
   ["Business Products", "Company operations, executive workspaces, financial products and the IntelliSphere marketplace.", "primary", rawGroups("My Business Center").map(([group, pages]) => [group.replace("IntelliHire", "IntelliHire").replace("IntelliStaff", "IntelliStaff"), pages.map((page) => page.replace(/IntelliHire/g, "IntelliHire").replace(/IntelliStaff/g, "IntelliStaff"))])],
   ["Identity & Access Management", "Global identity, directory services, tenants, organizations, roles and access governance.", "contractor", [
@@ -200,6 +201,7 @@ const MENU: RawSection[] = [
   ]],
   ["Account & Administration", "Personal preferences, system administration, knowledge, documentation, integrations and service status.", "primary", [
     ...rawGroups("Knowledge & Learning"),
+    ["Knowledge Bases", ["Knowledge Base Overview", "Workflow Library", "Company Knowledge Bases", "Technical Knowledge Bases", "Troubleshooting and SOPs", "Personal and Restricted Knowledge Bases", "Knowledge Permissions", "Knowledge Review and Version History"]],
     ["Account and System Administration", ["My Account", "Profile Settings", "Preferences", "Notification Settings", "Security Settings", "System Settings", "Global Administration", "Tenant Administration", "Role and Permission Administration", "Integration Management", "Service Status", "Documentation", "Help and Support", "Sign Out"]],
   ]],
 ];
