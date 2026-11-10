@@ -17,6 +17,23 @@ function normalizeQuestion(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9\\s]/g, " ").replace(/\\s+/g, " ").trim();
 }
 
+function scoreExample(question: string, example: string) {
+  const q = normalizeQuestion(question);
+  const e = normalizeQuestion(example);
+  if (!q || !e) return 0;
+  if (q === e) return 1;
+  if (q.includes(e) || e.includes(q)) return Math.min(0.96, 0.82 + Math.min(e.length, q.length) / 100);
+  const qWords = new Set(q.split(" ").filter((word) => word.length > 2));
+  const eWords = new Set(e.split(" ").filter((word) => word.length > 2));
+  if (!qWords.size || !eWords.size) return 0;
+  const overlap = [...eWords].filter((word) => qWords.has(word)).length;
+  return overlap / Math.max(qWords.size, eWords.size);
+}
+
+function isSensitiveMemory(value: string) {
+  return /\b(password|passcode|secret|api key|access token|refresh token|private key|social security|ssn|credit card|bank account|routing number)\b/i.test(value);
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -92,26 +109,116 @@ Deno.serve(async (req: Request) => {
   let intentKey = "knowledge_lookup";
   let unresolved = false;
 
-  if (/(where.*(knowledge|knowledge base|knowledge space)|find.*(knowledge|knowledge base|knowledge space)|knowledge spaces?)/i.test(question)) {
+  const rememberMatch = question.match(/^(?:please\s+)?remember(?:\s+that)?\s+(.+)$/i);
+  const asksMemory = /(what do you remember|what have you saved|show (?:me )?(?:my )?memories|remember about me)/i.test(question);
+
+  if (rememberMatch) {
+    const memoryText = rememberMatch[1].trim().slice(0, 2000);
+    if (isSensitiveMemory(memoryText)) {
+      answerText = "I can remember useful preferences and work context, but I can’t store passwords, access tokens, financial credentials, or other sensitive secrets.";
+      intentKey = "memory.sensitive_rejected";
+      confidence = 1;
+    } else {
+      const memoryType = /(prefer|like|usually|always|rather|don't like|do not like)/i.test(memoryText) ? "preference" : "fact";
+      const { data: memory, error: memoryError } = await supabase.from("help_buddy_memory_records").insert({
+        profile_id: profileId, organization_id: profile.organization_id, tenant_id: profile.tenant_id,
+        memory_scope: "user", memory_type: memoryType,
+        title: memoryType === "preference" ? "User preference" : "User-requested memory",
+        content: memoryText, source_session_id: sessionId, source_message_id: userMessage.id,
+        importance: 3, confidence: 1,
+      }).select("id,title").single();
+      if (memoryError || !memory) {
+        answerText = "I couldn't save that memory securely just now. Please try again, or add it through Help Buddy Memory Management.";
+        intentKey = "memory.save_failed";
+      } else {
+        await supabase.from("help_buddy_memory_events").insert({
+          memory_id: memory.id, profile_id: profileId, event_type: "created",
+          event_detail: "User explicitly asked Help Buddy to remember this information.",
+        });
+        answerText = "I’ve saved that to your personal Help Buddy memory. You can review, edit, or remove it anytime in Help Buddy → Intelligence Management → Persistent Memory Management.";
+        citations = [{ type: "personal_memory", id: memory.id, title: memory.title }];
+        intentKey = "memory.saved";
+        confidence = 1;
+      }
+    }
+  } else if (asksMemory) {
+    const { data: memories, error: memoryError } = await supabase.from("help_buddy_memory_records")
+      .select("id,memory_type,title,content,updated_at")
+      .eq("profile_id", profileId).eq("memory_scope", "user").eq("status", "active")
+      .order("importance", { ascending: false }).order("updated_at", { ascending: false }).limit(20);
+    if (memoryError) {
+      answerText = "I couldn't retrieve your saved memories right now. Your private memory records remain protected.";
+      intentKey = "memory.retrieve_failed";
+    } else if (memories?.length) {
+      answerText = "Here’s the useful context you’ve asked me to remember:\n" + memories.map((memory, index) => String(index + 1) + ". " + memory.title + ": " + memory.content).join("\n");
+      citations = memories.slice(0, 5).map((memory) => ({ type: "personal_memory", id: memory.id, title: memory.title }));
+      intentKey = "memory.recall";
+      confidence = 1;
+    } else {
+      answerText = "I don’t have any saved personal memories for you yet. If there’s a preference, decision, or project detail you want me to retain, tell me “Remember that…” and I can save it.";
+      intentKey = "memory.empty";
+      confidence = 1;
+    }
+  } else if (/(where.*(knowledge|knowledge base|knowledge space)|find.*(knowledge|knowledge base|knowledge space)|knowledge spaces?)/i.test(question)) {
     answerText = "You can find Knowledge Spaces in the hamburger menu under Knowledge Spaces. Open All Knowledge Spaces to browse the collections your account is authorized to access, or use Knowledge Search to find a published article.";
-    citations = [{ type: "navigation", title: "Knowledge Spaces", path: "/m/knowledge-spaces/knowledge-spaces-workspace/all-knowledge-spaces" }];
+    citations = [{ type: "navigation", title: "Knowledge Spaces", path: "/m/knowledge-spaces/knowledge-space-overview/all-knowledge-spaces" }];
     confidence = 1;
     intentKey = "navigation.knowledge_spaces";
   } else {
-    const { data: matches, error: searchError } = await supabase.rpc("help_buddy_search_qa", {
-      search_query: question, max_results: 5,
-    });
-    if (searchError) return json({ error: "The authorized knowledge search could not be completed.", detail: searchError.message }, 503);
-    const best = Array.isArray(matches) ? matches[0] : null;
-    if (best && Number(best.rank_score) >= Number(best.confidence_threshold)) {
-      answerText = best.answer_markdown;
-      confidence = Number(best.rank_score);
-      intentKey = best.intent_key || "knowledge_lookup";
-      citations = [{ type: "knowledge_article", id: best.source_article_id, title: best.question, knowledge_base_id: best.knowledge_base_id }];
+    const { data: previousUserMessages } = await supabase.from("assistant_messages")
+      .select("content").eq("session_id", sessionId).eq("sender_type", "user")
+      .neq("id", userMessage.id).order("created_at", { ascending: false }).limit(8);
+    const repeated = (previousUserMessages ?? []).some((message) =>
+      normalizeQuestion(String(message.content ?? "")) === normalizeQuestion(question));
+
+    const { data: templates } = await supabase.from("help_buddy_response_templates")
+      .select("id,intent_key,title,user_examples,response_variants,follow_up_variants,tone,repeat_policy,cooldown_turns,requires_permission_check,escalation_level")
+      .eq("status", "published").limit(300);
+
+    let bestTemplate: Record<string, unknown> | null = null;
+    let bestScore = 0;
+    for (const template of templates ?? []) {
+      const examples = Array.isArray(template.user_examples) ? template.user_examples : [];
+      const repeatTemplate = repeated && String(template.intent_key).startsWith("repeat.");
+      const score = repeatTemplate ? 1 : examples.reduce((max, example) => Math.max(max, scoreExample(question, String(example))), 0);
+      if (score > bestScore) { bestScore = score; bestTemplate = template; }
+    }
+
+    if (bestTemplate && bestScore >= 0.68 && Array.isArray(bestTemplate.response_variants) && bestTemplate.response_variants.length) {
+      const variants = bestTemplate.response_variants as string[];
+      const cooldown = Math.max(1, Math.min(Number(bestTemplate.cooldown_turns) || 3, 10));
+      const { data: recentUsage } = await supabase.from("help_buddy_response_usage")
+        .select("variant_index").eq("profile_id", profileId).eq("intent_key", String(bestTemplate.intent_key))
+        .order("used_at", { ascending: false }).limit(cooldown);
+      const recentlyUsed = new Set((recentUsage ?? []).map((row) => Number(row.variant_index)));
+      let variantIndex = variants.findIndex((_, index) => !recentlyUsed.has(index));
+      if (variantIndex < 0) variantIndex = (Number(recentUsage?.[0]?.variant_index ?? -1) + 1) % variants.length;
+      answerText = String(variants[variantIndex]);
+      const followups = Array.isArray(bestTemplate.follow_up_variants) ? bestTemplate.follow_up_variants as string[] : [];
+      if (followups.length && repeated) answerText += "\n\n" + followups[variantIndex % followups.length];
+      intentKey = String(bestTemplate.intent_key);
+      confidence = bestScore;
+      citations = [{ type: "conversational_response", id: String(bestTemplate.id), title: String(bestTemplate.title), tone: String(bestTemplate.tone ?? "friendly") }];
+      await supabase.from("help_buddy_response_usage").insert({
+        profile_id: profileId, session_id: sessionId, response_template_id: String(bestTemplate.id),
+        intent_key: intentKey, variant_index: variantIndex,
+      });
     } else {
-      unresolved = true;
-      answerText = "I couldn't find a verified answer in the Knowledge Spaces available to your account. I won't guess. I've recorded this as an unanswered question so it can be reviewed and added to the approved conversational library.";
-      citations = [{ type: "unanswered_question", question, created_at: new Date().toISOString() }];
+      const { data: matches, error: searchError } = await supabase.rpc("help_buddy_search_qa", {
+        search_query: question, max_results: 5,
+      });
+      if (searchError) return json({ error: "The authorized knowledge search could not be completed.", detail: searchError.message }, 503);
+      const best = Array.isArray(matches) ? matches[0] : null;
+      if (best && Number(best.rank_score) >= Number(best.confidence_threshold)) {
+        answerText = best.answer_markdown;
+        confidence = Number(best.rank_score);
+        intentKey = best.intent_key || "knowledge_lookup";
+        citations = [{ type: "knowledge_article", id: best.source_article_id, title: best.question, knowledge_base_id: best.knowledge_base_id }];
+      } else {
+        unresolved = true;
+        answerText = "I couldn't find a verified answer in the Knowledge Spaces available to your account. I won't guess. I've recorded this as an unanswered question so it can be reviewed and added to the approved conversational library.";
+        citations = [{ type: "unanswered_question", question, created_at: new Date().toISOString() }];
+      }
     }
   }
 
@@ -138,7 +245,7 @@ Deno.serve(async (req: Request) => {
     userMessage: { id: userMessage.id, sender_type: "user", content: question, citations: [], created_at: userMessage.created_at },
     assistantMessage: { id: assistantMessage.id, sender_type: "assistant", content: answerText, citations,
       created_at: assistantMessage.created_at, confidence_score: confidence, intent_key: intentKey, unresolved },
-    service: "knowledge-grounded",
+    service: "knowledge-conversation-memory",
     generativeModel: "not-configured",
   });
 });
