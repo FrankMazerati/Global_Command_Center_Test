@@ -33,7 +33,7 @@ const FOOTER_DESTINATIONS: Record<string, [string, string, string]> = {
   "Technology & Integration Partners": ["business-products", "business-overview", "business-integrations"],
   "About IntelliStack": ["business-products", "company-and-organization-management", "intellistack-systems"],
   "Our Ecosystem": ["business-products", "company-and-organization-management", "intellistack-systems"],
-  "Contact": ["home-and-command-center", "help-buddy", "conversation"],
+  "Contact": ["help-buddy", "help-buddy-workspace", "conversation-workspace"],
   "Bring the Work to You": ["home-and-command-center", "command-center", "bring-the-work-to-you"],
   "IntelliDesk": ["service-desk-and-enterprise-operations", "intellidesk-overview", "intellidesk-dashboard"],
   "IntelliChat": ["productivity-and-collaboration", "intellistack-collaboration-tools", "intellichat"],
@@ -48,7 +48,7 @@ const FOOTER_DESTINATIONS: Record<string, [string, string, string]> = {
   "Audit & Approvals": ["security-risk-and-governance", "audit-management", "audit-overview"],
   "Policies": ["security-risk-and-governance", "policies-and-procedures", "policies"],
   "Service Status": ["account-and-administration", "account-and-system-administration", "service-status"],
-  "Knowledge Center": ["account-and-administration", "getting-started", "getting-started-with-your-command-center"],
+  "Knowledge Center": ["knowledge-spaces", "knowledge-space-overview", "all-knowledge-spaces"],
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
