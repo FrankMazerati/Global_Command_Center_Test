@@ -124,6 +124,7 @@ function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const bare = pathname.startsWith("/login");
+  const commandHome = pathname === "/";
   const [authorized, setAuthorized] = React.useState(false);
   useEffect(() => {
     if (bare) { setAuthorized(true); return; }
@@ -144,9 +145,11 @@ function RootComponent() {
         {bare ? (
           <Outlet />
         ) : authorized ? (
-          <AppShell>
-            <Outlet />
-          </AppShell>
+          commandHome ? <Outlet /> : (
+            <AppShell>
+              <Outlet />
+            </AppShell>
+          )
         ) : (
           <div className="grid min-h-dvh place-items-center bg-transparent text-sm text-sky-100">
             <div className="flex items-center gap-3 rounded-xl border border-sky-200/20 bg-white/10 px-5 py-3 backdrop-blur-xl">
