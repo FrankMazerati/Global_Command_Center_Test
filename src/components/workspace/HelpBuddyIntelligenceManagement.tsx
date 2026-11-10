@@ -96,7 +96,7 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
     setCanManage(manageResult.data === true);
     if (categoryResult.error) setError(categoryResult.error.message);
     else setCategories((categoryResult.data ?? []) as Category[]);
-    if (templateResult.error && !error) setError(templateResult.error.message);
+    if (templateResult.error) setError(templateResult.error.message);
     else setTemplates((templateResult.data ?? []) as Template[]);
     setQaEntries((qaResult.data ?? []) as QaEntry[]);
     setQaCount(qaResult.data?.length ?? 0);
@@ -129,7 +129,7 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
           ? !["permission_denials", "admin_escalations", "personality_rules", "memory_awareness"].includes(category?.category_key ?? "")
           : true;
     return categoryMatch && pageMatch && (!search || `${item.title} ${item.intent_key} ${item.user_examples.join(" ")}`.toLowerCase().includes(search.toLowerCase()));
-  }), [templates, categories, pageSlug, categoryFilter, search]);
+  }), [templates, categories, viewSlug, categoryFilter, search]);
 
   const openNew = (categoryId = categories[0]?.id ?? "") => {
     setEditing(null);
