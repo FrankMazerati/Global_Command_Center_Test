@@ -353,7 +353,7 @@ export function HelpBuddyConversation({ compact = false }: { compact?: boolean }
   return (
     <div className={`flex min-h-[420px] flex-col ${compact ? "max-h-[560px]" : "min-h-[560px]"}`}>
       <div className="flex items-center gap-3 border-b pb-3">
-        <span className="grid size-10 place-items-center rounded-full border border-sky-300/40 bg-sky-100 text-sky-700"><Bot className="size-5" /></span>
+        <img src="/assets/help-buddy.png" alt="Help Buddy character" className="size-12 shrink-0 object-contain" />
         <div className="min-w-0 flex-1"><h3 className="font-semibold">Help Buddy Conversation</h3><p className="text-xs text-muted-foreground">{status}</p></div>
         <span className="rounded-full border px-2 py-1 text-[10px]">{unansweredCount} unanswered</span>
       </div>
@@ -449,7 +449,7 @@ export function HelpBuddyWorkspace({ title, pageSlug }: { title: string; pageSlu
   };
 
   if (pageSlug === "conversation-workspace" || pageSlug === "help-buddy-overview") {
-    return <Panel><div className="mb-4 flex items-center gap-2"><Bot className="size-5 text-primary" /><div><h2 className="text-lg font-semibold">{title}</h2><p className="text-xs text-muted-foreground">One Help Buddy experience: character, conversation, workflow guidance and user assistance.</p></div></div><HelpBuddyConversation /></Panel>;
+    return <Panel><div className="mb-4 flex items-center gap-3"><img src="/assets/help-buddy.png" alt="Help Buddy character" className="size-14 object-contain" /><div><h2 className="text-lg font-semibold">{title}</h2><p className="text-xs text-muted-foreground">One Help Buddy experience: character, conversation, workflow guidance and user assistance.</p></div></div><HelpBuddyConversation /></Panel>;
   }
 
   if (pageSlug === "conversational-library") {
