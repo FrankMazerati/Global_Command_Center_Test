@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Archive, BookOpen, Brain, CheckCircle2, Database, FilePlus2, Library, LockKeyhole, MessageSquareText, Pencil, Plus, Search, ShieldCheck, Sparkles, Trash2, Workflow } from "lucide-react";
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { Archive, BookOpen, Brain, Database, Library, LockKeyhole, Pencil, Plus, Search, ShieldCheck, Sparkles, Trash2, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { getSupabaseClient } from "@/lib/supabase";
 
 type Category = { id: string; category_key: string; name: string; description: string; target_patterns: number; sort_order: number; status: string };
 type Template = { id: string; category_id: string; intent_key: string; title: string; user_examples: string[]; response_variants: string[]; follow_up_variants: string[]; tone: string; audience: string; repeat_policy: string; cooldown_turns: number; requires_permission_check: boolean; escalation_level: string | null; status: string; visibility: string; version: number; updated_at: string };
-type Memory = { id: string; memory_type: string; title: string; content: string; importance: number; confidence: number; status: string; updated_at: string };
+type Memory = { id: string; memory_type: string; title: string; content: string; importance: number; confidence: number; status: string; updated_at: string };\ntype CategoryDraft = { category_key: string; name: string; description: string; target_patterns: string; sort_order: string };
 
 const pageTitles: Record<string, string> = {
   "intelligence-overview": "Help Buddy Intelligence Overview",
@@ -21,13 +21,13 @@ const pageTitles: Record<string, string> = {
   "response-audit-and-history": "Version and Change History",
 };
 
-const emptyForm = {
+const managementAreas: Array<{ icon: LucideIcon; title: string; description: string }> = [\n  { icon: Library, title: "Conversational Library", description: "Greetings, small talk, playful questions, humor and everyday conversation." },\n  { icon: LockKeyhole, title: "Permissions and Escalations", description: "Access denials, administrator contacts, approval requirements and security-safe responses." },\n  { icon: Sparkles, title: "Personality and Tone", description: "Variation, repetition handling, user-aware tone and conversational transitions." },\n  { icon: Brain, title: "Persistent Memory", description: "Personal context, conversation continuity, corrections and memory lifecycle." },\n  { icon: Database, title: "Semantic and Vector Search", description: "pgvector storage, embedding coverage and similarity retrieval." },\n  { icon: BookOpen, title: "Knowledge Scenarios", description: "Platform questions, workflow guidance, onboarding, offboarding and IntelliDesk." },\n];\n\nconst emptyForm = {
   title: "", intent_key: "", category_id: "", examples: "", responses: "", followups: "",
   tone: "friendly", audience: "all", repeat_policy: "rotate", cooldown_turns: "3",
   requires_permission_check: false, escalation_level: "", status: "draft", visibility: "internal",
 };
 
-const Panel = ({ children, className = "" }: { children: React.ReactNode; className?: string }) =>
+const Panel = ({ children, className = "" }: { children: ReactNode; className?: string }) =>
   <section className={`rounded-xl border bg-card p-4 shadow-sm sm:p-5 ${className}`}>{children}</section>;
 
 export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string }) {
@@ -45,7 +45,7 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
   const [editing, setEditing] = useState<Template | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [form, setForm] = useState(emptyForm);
-  const [memoryDraft, setMemoryDraft] = useState({ title: "", content: "", memory_type: "preference" });
+  const [memoryDraft, setMemoryDraft] = useState({ title: "", content: "", memory_type: "preference" });\n  const [categoryEditor, setCategoryEditor] = useState(false);\n  const [editingCategory, setEditingCategory] = useState<Category | null>(null);\n  const [categoryDraft, setCategoryDraft] = useState<CategoryDraft>({ category_key: "", name: "", description: "", target_patterns: "0", sort_order: "0" });
 
   const supabase = getSupabaseClient();
   const title = pageTitles[pageSlug] ?? "Help Buddy Intelligence Management";
@@ -180,14 +180,7 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
         {[[responseCount,"Response templates"],[publishedCount,"Published responses"],[qaCount,"Q&A scenarios"],[targetTotal.toLocaleString(),"Target patterns"]].map(([value,label]) => <Panel key={String(label)}><div className="text-2xl font-semibold tabular-nums">{loading ? "—" : value}</div><div className="text-xs text-muted-foreground">{label}</div></Panel>)}
       </div>
       <div className="grid gap-3 lg:grid-cols-2">
-        {[
-          [Library,"Conversational Library","Greetings, small talk, playful questions, humor and everyday conversation."],
-          [LockKeyhole,"Permissions and Escalations","Access denials, administrator contacts, approval requirements and security-safe responses."],
-          [Sparkles,"Personality and Tone","Variation, repetition handling, user-aware tone and conversational transitions."],
-          [Brain,"Persistent Memory","Personal context, conversation continuity, corrections and memory lifecycle."],
-          [Database,"Semantic and Vector Search","pgvector storage, embedding coverage and similarity retrieval."],
-          [BookOpen,"Knowledge Scenarios","Platform questions, workflow guidance, onboarding, offboarding and IntelliDesk."],
-        ].map(([Icon,label,description]) => <div key={String(label)} className="rounded-xl border p-4"><div className="mb-2 flex items-center gap-2"><Icon className="size-5 text-primary"/><b>{String(label)}</b></div><p className="text-sm text-muted-foreground">{String(description)}</p></div>)}
+        {managementAreas.map(({ icon: Icon, title: label, description }) => <div key={label} className="rounded-xl border p-4"><div className="mb-2 flex items-center gap-2"><Icon className="size-5 text-primary"/><b>{label}</b></div><p className="text-sm text-muted-foreground">{description}</p></div>)}
       </div>
     </>}
 
@@ -215,9 +208,9 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
     </>}
 
     {pageSlug === "response-categories" && <Panel>
-      <div className="mb-3 flex items-center gap-2"><Library className="size-5 text-primary"/><h3 className="font-semibold">Library categories and target coverage</h3></div>
-      <div className="divide-y">{categories.map((category) => <div key={category.id} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><b className="text-sm">{category.name}</b><p className="text-xs text-muted-foreground">{category.description}</p></div><div className="flex items-center gap-3"><span className="text-xs tabular-nums">{templates.filter((t) => t.category_id === category.id).length} created / {category.target_patterns.toLocaleString()} target</span><span className={`rounded-full px-2 py-1 text-[10px] ${category.status === "active" ? "bg-emerald-500/10 text-emerald-700" : "bg-muted"}`}>{category.status}</span></div></div>)}</div>
-      <p className="mt-3 text-xs text-muted-foreground">Category structure is seeded. Category editing and new subcategory creation are reserved for the next management pass; response templates can already be created, edited and archived in their dedicated sections.</p>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><Library className="size-5 text-primary"/><h3 className="font-semibold">Library categories and target coverage</h3></div>{canManage && <button type="button" onClick={() => { setEditingCategory(null); setCategoryDraft({ category_key: "", name: "", description: "", target_patterns: "0", sort_order: String(categories.length * 10 + 10) }); setCategoryEditor(true); }} className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-2 text-xs text-primary-foreground"><Plus className="size-3"/>Add category</button>}</div>
+      <div className="divide-y">{categories.map((category) => <div key={category.id} className="flex flex-wrap items-center justify-between gap-3 py-3"><div><b className="text-sm">{category.name}</b><p className="text-xs text-muted-foreground">{category.description}</p></div><div className="flex items-center gap-3"><span className="text-xs tabular-nums">{templates.filter((t) => t.category_id === category.id).length} created / {category.target_patterns.toLocaleString()} target</span><span className={`rounded-full px-2 py-1 text-[10px] ${category.status === "active" ? "bg-emerald-500/10 text-emerald-700" : "bg-muted"}`}>{category.status}</span>{canManage && <button type="button" onClick={() => { setEditingCategory(category); setCategoryDraft({ category_key: category.category_key, name: category.name, description: category.description, target_patterns: String(category.target_patterns), sort_order: String(category.sort_order) }); setCategoryEditor(true); }} className="rounded-md border p-2" title="Edit category"><Pencil className="size-3.5"/></button>}{canManage && category.status === "active" && <button type="button" onClick={async () => { const result = await supabase?.from("help_buddy_library_categories").update({ status: "archived" }).eq("id", category.id); if (result?.error) toast.error(result.error.message); else { toast.success("Category archived; existing records are retained."); await reload(); } }} className="rounded-md border p-2" title="Archive category"><Archive className="size-3.5"/></button>}</div></div>)}</div>
+      <p className="mt-3 text-xs text-muted-foreground">Archiving removes a category from active selection without deleting its response history. Target counts are planning goals, not completed records.</p>
     </Panel>}
 
     {pageSlug === "memory-management" && <>
@@ -239,6 +232,7 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
     {pageSlug === "response-analytics" && <Panel><h3 className="font-semibold">Response usage analytics</h3><p className="text-sm text-muted-foreground">Response selection logging is ready in the database. Live analytics will populate once the Help Buddy runtime records selected templates and variants.</p></Panel>}
     {pageSlug === "response-audit-and-history" && <Panel><div className="mb-2 flex items-center gap-2"><ShieldCheck className="size-5 text-primary"/><h3 className="font-semibold">Version and change history</h3></div><p className="text-sm text-muted-foreground">Templates carry version, approval and update metadata. Archiving preserves the record instead of hard-deleting it. A full immutable Audit Ledger integration remains a separate implementation step.</p></Panel>}
 
+    {categoryEditor && <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-3"><form onSubmit={async (event) => { event.preventDefault(); if (!supabase || !canManage) return; const payload = { category_key: categoryDraft.category_key.trim(), name: categoryDraft.name.trim(), description: categoryDraft.description.trim(), target_patterns: Math.max(0, Number(categoryDraft.target_patterns) || 0), sort_order: Number(categoryDraft.sort_order) || 0 }; const result = editingCategory ? await supabase.from("help_buddy_library_categories").update(payload).eq("id", editingCategory.id) : await supabase.from("help_buddy_library_categories").insert(payload); if (result.error) toast.error(result.error.message); else { toast.success(editingCategory ? "Category updated." : "Category added."); setCategoryEditor(false); await reload(); } }} className="w-full max-w-lg space-y-3 rounded-xl border bg-background p-5 shadow-2xl"><div className="flex items-center justify-between"><h3 className="font-semibold">{editingCategory ? "Edit category" : "Add category"}</h3><button type="button" onClick={() => setCategoryEditor(false)} className="rounded-md border px-3 py-1 text-xs">Close</button></div><label className="grid gap-1 text-xs">Category key<input required disabled={!!editingCategory} className="rounded-md border bg-background px-3 py-2 text-sm disabled:opacity-60" value={categoryDraft.category_key} onChange={(e) => setCategoryDraft({ ...categoryDraft, category_key: e.target.value })} placeholder="small_talk"/></label><label className="grid gap-1 text-xs">Display name<input required className="rounded-md border bg-background px-3 py-2 text-sm" value={categoryDraft.name} onChange={(e) => setCategoryDraft({ ...categoryDraft, name: e.target.value })}/></label><label className="grid gap-1 text-xs">Description<textarea className="min-h-16 rounded-md border bg-background px-3 py-2 text-sm" value={categoryDraft.description} onChange={(e) => setCategoryDraft({ ...categoryDraft, description: e.target.value })}/></label><div className="grid grid-cols-2 gap-2"><label className="grid gap-1 text-xs">Target patterns<input type="number" min="0" className="rounded-md border bg-background px-3 py-2 text-sm" value={categoryDraft.target_patterns} onChange={(e) => setCategoryDraft({ ...categoryDraft, target_patterns: e.target.value })}/></label><label className="grid gap-1 text-xs">Sort order<input type="number" className="rounded-md border bg-background px-3 py-2 text-sm" value={categoryDraft.sort_order} onChange={(e) => setCategoryDraft({ ...categoryDraft, sort_order: e.target.value })}/></label></div><div className="flex justify-end gap-2"><button type="button" onClick={() => setCategoryEditor(false)} className="rounded-md border px-3 py-2 text-sm">Cancel</button><button className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground">Save category</button></div></form></div>}
     {showEditor && <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-3" role="presentation"><form onSubmit={saveTemplate} className="max-h-[92vh] w-full max-w-3xl space-y-3 overflow-y-auto rounded-2xl border bg-background p-5 shadow-2xl" role="dialog" aria-modal="true" aria-label="Response template editor">
       <div className="flex items-center justify-between"><h3 className="text-lg font-semibold">{editing ? "Edit response template" : "Add response template"}</h3><button type="button" onClick={() => setShowEditor(false)} className="rounded-md border px-3 py-1 text-sm">Close</button></div>
       <div className="grid gap-3 sm:grid-cols-2">
