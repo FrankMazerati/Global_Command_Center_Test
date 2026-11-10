@@ -21,6 +21,7 @@ import { toast } from "sonner";
 
 import { StatusBadge } from "@/components/shell/StatusBadge";
 import { TicketWorkspace } from "@/components/workspace/TicketWorkspace";
+import { WorkflowCenter } from "@/components/workspace/WorkflowCenter";
 import { findPage, toneVar } from "@/lib/nav";
 import { getSupabaseClient } from "@/lib/supabase";
 import { useWork } from "@/lib/work-context";
@@ -1188,6 +1189,7 @@ function PageFoundation() {
   ].includes(page.slug);
   const directory = directoryKind(page.slug);
   const marketplace = marketplaceSlugs.includes(page.slug);
+  const workflowCenter = section.slug === "home-and-command-center" && group.slug === "workflow-center";
   return (
     <div className="space-y-4">
       <nav
@@ -1240,7 +1242,9 @@ function PageFoundation() {
           </Link>
         </div>
       )}
-      {ticketWorkspace ? (
+      {workflowCenter ? (
+        <WorkflowCenter title={page.title} />
+      ) : ticketWorkspace ? (
         <TicketWorkspace />
       ) : marketplace ? (
         <MarketplaceWorkspace title={page.title} />
