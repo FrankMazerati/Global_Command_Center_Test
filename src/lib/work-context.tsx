@@ -5,6 +5,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 
 export type Availability =
   | "Available"
+  | "Active"
   | "Away"
   | "Busy"
   | "Out to Lunch"
@@ -12,20 +13,21 @@ export type Availability =
   | "On Break"
   | "On a Call"
   | "Helping a User"
-  | "Offline"
-  | "Out of Office";
+  | "Do Not Disturb"
+  | "Offline";
 
 export const AVAILABILITY: Availability[] = [
   "Available",
+  "Active",
   "Away",
   "Busy",
   "Out to Lunch",
-  "In a Meeting",
   "On Break",
+  "In a Meeting",
   "On a Call",
   "Helping a User",
+  "Do Not Disturb",
   "Offline",
-  "Out of Office",
 ];
 
 export interface WorkNote {
