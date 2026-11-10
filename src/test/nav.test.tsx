@@ -17,6 +17,8 @@ describe("hamburger navigation", () => {
       "AI & Business Intelligence",
       "Employee & Manager Workspace",
       "Account & Administration",
+      "Knowledge Spaces",
+      "Help Buddy",
     ]);
   });
 
@@ -25,8 +27,11 @@ describe("hamburger navigation", () => {
     const workflow = home?.groups.find((group) => group.title === "Workflow Center");
     expect(workflow?.pages.map((page) => page.title)).toContain("Workflow Templates");
     expect(workflow?.pages.map((page) => page.title)).toContain("Template Builder");
-    const admin = NAV.find((section) => section.title === "Account & Administration");
-    expect(admin?.groups.find((group) => group.title === "Knowledge Bases")?.pages.map((page) => page.title)).toContain("Workflow Library");
+    const knowledge = NAV.find((section) => section.title === "Knowledge Spaces");
+    expect(knowledge?.groups.find((group) => group.title === "Workflow Knowledge Library")?.pages.map((page) => page.title)).toContain("Workflow Library");
+    const helpBuddy = NAV.find((section) => section.title === "Help Buddy");
+    expect(helpBuddy?.groups.find((group) => group.title === "Help Buddy Workspace")?.pages.map((page) => page.title)).toContain("Conversational Library");
+    expect(helpBuddy?.groups.flatMap((group) => group.pages.map((page) => page.title))).not.toContain("Workflow Companion");
   });
 
   it("does not include deferred Tenant Selection or Tenant Guests", () => {
