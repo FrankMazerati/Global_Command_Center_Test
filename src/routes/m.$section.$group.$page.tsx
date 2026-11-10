@@ -1245,7 +1245,11 @@ function PageFoundation() {
           </Link>
         </div>
       )}
-      {workflowCenter ? (
+      {knowledgeSpaces ? (
+        <KnowledgeSpacesWorkspace title={page.title} pageSlug={page.slug} />
+      ) : helpBuddy ? (
+        <HelpBuddyWorkspace title={page.title} pageSlug={page.slug} />
+      ) : workflowCenter ? (
         <WorkflowCenter title={page.title} />
       ) : ticketWorkspace ? (
         <TicketWorkspace />
