@@ -6,26 +6,40 @@ import {
   Bot,
   CalendarDays,
   CheckCircle2,
+  CreditCard,
   ChevronDown,
   ChevronRight,
   Clock3,
+  CloudSun,
+  FileText,
   Globe2,
+  Link2,
   LayoutGrid,
   LogOut,
+  Mail,
   Menu,
+  MessageCircle,
   MessageSquare,
+  Pencil,
+  Plus,
   Search,
   Settings2,
   ShieldCheck,
   Sparkles,
   Ticket,
+  Trash2,
+  TrendingUp,
   UserRound,
+  Upload,
   Users,
   X,
+  type LucideIcon,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { getSupabaseClient } from "@/lib/supabase";
+import { AVAILABILITY, useWork } from "@/lib/work-context";
+import { NAV } from "@/lib/nav";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -45,7 +59,9 @@ type WorkItem = {
   action: string;
 };
 
-const quickPicks = [
+type QuickPick = { label: string; detail: string; icon: LucideIcon; href: string };
+
+const quickPicks: QuickPick[] = [
   {
     label: "Tickets",
     detail: "Create & track",
@@ -76,12 +92,6 @@ const quickPicks = [
     icon: ShieldCheck,
     href: "/m/security-risk-and-governance/security-overview/security-operations-dashboard",
   },
-  {
-    label: "Integrations",
-    detail: "Connected apps",
-    icon: LayoutGrid,
-    href: "/m/account-and-administration/account-and-system-administration/system-settings",
-  },
 ];
 
 const clocks = [
@@ -90,6 +100,102 @@ const clocks = [
   ["London", "Europe/London"],
   ["Dubai", "Asia/Dubai"],
   ["Tokyo", "Asia/Tokyo"],
+] as const;
+
+const clockChoices = [
+  ["New York", "America/New_York"],
+  ["Chicago", "America/Chicago"],
+  ["London", "Europe/London"],
+  ["Dubai", "Asia/Dubai"],
+  ["Tokyo", "Asia/Tokyo"],
+  ["Los Angeles", "America/Los_Angeles"],
+  ["Sydney", "Australia/Sydney"],
+  ["Singapore", "Asia/Singapore"],
+] as const;
+
+const availableQuickPicks: QuickPick[] = [
+  {
+    label: "Missions",
+    detail: "Run the queue",
+    icon: Activity,
+    href: "/m/home-and-command-center/command-center/bring-the-work-to-you",
+  },
+  {
+    label: "Email",
+    detail: "Open inbox",
+    icon: Mail,
+    href: "/m/productivity-and-collaboration/intellistack-collaboration-tools/email",
+  },
+  {
+    label: "Help Buddy",
+    detail: "Ask for help",
+    icon: Bot,
+    href: "/m/ai-business-intelligence/help-buddy/help-buddy-overview",
+  },
+  {
+    label: "NOC",
+    detail: "View operations",
+    icon: Globe2,
+    href: "/m/service-desk-and-enterprise-operations/noc-center/network-operations-dashboard",
+  },
+  {
+    label: "Payments",
+    detail: "Manage billing",
+    icon: CreditCard,
+    href: "/m/business-products/financial-center/financial-overview",
+  },
+  {
+    label: "Integrations",
+    detail: "Connected apps",
+    icon: LayoutGrid,
+    href: "/m/account-and-administration/account-and-system-administration/system-settings",
+  },
+];
+
+const menuQuickPickOptions: QuickPick[] = NAV.flatMap((section) =>
+  section.groups.flatMap((group) =>
+    group.pages.map((page) => ({
+      label: page.title,
+      detail: group.title,
+      icon: LayoutGrid,
+      href: `/m/${section.slug}/${group.slug}/${page.slug}`,
+    })),
+  ),
+);
+
+const connectorChoices = [
+  "Microsoft 365",
+  "Microsoft Entra ID",
+  "AWS",
+  "GitHub",
+  "Google Workspace",
+  "Slack",
+  "Zoom",
+  "Salesforce",
+  "GitLab",
+  "ServiceNow",
+];
+type ProfileEditor = "photo" | "background" | "bio" | "linkedin" | "payment" | "status" | null;
+
+const defaultNewsFeeds = [
+  ["AI Brief", "Maximus and Optimus systems are operating normally."],
+  ["Security", "No critical threat activity is open for review."],
+  ["Network", "Global infrastructure health remains within target."],
+  ["Product", "IntelliStack connector review is scheduled today."],
+  ["Company", "Quarterly planning materials are ready in Knowledge Vault."],
+  ["People", "Two access requests are waiting for approval."],
+  ["Learning", "New Command Center training content is available."],
+  ["Operations", "Service desk workload is tracking to plan."],
+  ["Governance", "Compliance checklist review is due this week."],
+  ["Build", "Project completion review remains the active focus."],
+] as const;
+
+const defaultTickers = [
+  ["NASDAQ", "+0.87%"],
+  ["S&P 500", "+0.42%"],
+  ["DOW", "+0.19%"],
+  ["BTC", "-0.18%"],
+  ["ETH", "+1.12%"],
 ] as const;
 
 const workItems: WorkItem[] = [
@@ -176,76 +282,6 @@ const workItems: WorkItem[] = [
   },
 ];
 
-const hamburgerDestinations = [
-  ["Command Center", LayoutGrid, "/m/home-and-command-center/command-center/dashboard"],
-  [
-    "Global ID",
-    UserRound,
-    "/m/identity-and-access-management/global-identity-and-access-management/global-user-id",
-  ],
-  [
-    "Organizations",
-    Users,
-    "/m/identity-and-access-management/global-identity-and-access-management/organizations",
-  ],
-  [
-    "IntelliConnect",
-    Globe2,
-    "/m/productivity-and-collaboration/connected-productivity-tools/connected-application-directory",
-  ],
-  [
-    "IntelliSync",
-    Activity,
-    "/m/productivity-and-collaboration/intellistack-collaboration-tools/intellisync",
-  ],
-  [
-    "Connect & Build",
-    Sparkles,
-    "/m/productivity-and-collaboration/connected-productivity-tools/connector-settings",
-  ],
-  [
-    "IntelliAccess",
-    ShieldCheck,
-    "/m/productivity-and-collaboration/intellistack-collaboration-tools/intelliaccess",
-  ],
-  [
-    "IntelliChat",
-    MessageSquare,
-    "/m/productivity-and-collaboration/intellistack-collaboration-tools/intellichat",
-  ],
-  [
-    "IntelliCalendar",
-    CalendarDays,
-    "/m/productivity-and-collaboration/intellistack-collaboration-tools/intellicalendar",
-  ],
-  [
-    "IntelliDrive",
-    LayoutGrid,
-    "/m/productivity-and-collaboration/intellistack-collaboration-tools/intellidrive",
-  ],
-  [
-    "IntelliSearch",
-    Search,
-    "/m/productivity-and-collaboration/intellistack-collaboration-tools/intellisearch",
-  ],
-  [
-    "Business Center",
-    BriefcaseIcon,
-    "/m/business-products/business-overview/business-overview-dashboard",
-  ],
-  [
-    "Workspaces",
-    Users,
-    "/m/productivity-and-collaboration/intellistack-collaboration-tools/shared-workspaces",
-  ],
-  ["Help Buddy", Bot, "/m/ai-business-intelligence/help-buddy/help-buddy-overview"],
-  [
-    "Settings",
-    Settings2,
-    "/m/account-and-administration/account-and-system-administration/system-settings",
-  ],
-] as const;
-
 const toneStyles = {
   urgent: "border-rose-400/40 bg-rose-500/10 text-rose-200",
   high: "border-amber-300/40 bg-amber-400/10 text-amber-100",
@@ -261,15 +297,86 @@ function timeFor(zone: string, now: Date) {
   }).format(now);
 }
 
+function dateFor(zone: string, now: Date) {
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: zone,
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  }).format(now);
+}
+
+function shortClockName(city: string) {
+  return (
+    (
+      {
+        "New York": "NYC",
+        Chicago: "CHI",
+        London: "LON",
+        Dubai: "DXB",
+        Tokyo: "TOK",
+        "Los Angeles": "LAX",
+        Sydney: "SYD",
+        Singapore: "SIN",
+      } as Record<string, string>
+    )[city] ?? city.slice(0, 3).toUpperCase()
+  );
+}
+
+function statusSlug(status: string) {
+  return status.toLowerCase().replace(/\s+/g, "-");
+}
+
 function CommandCenterHome() {
   const navigate = useNavigate();
+  const work = useWork();
   const [now, setNow] = useState(() => new Date());
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [availability, setAvailability] = useState("Available");
+  const [quickChatOpen, setQuickChatOpen] = useState(false);
+  const [profileEditor, setProfileEditor] = useState<ProfileEditor>(null);
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState("Main Workflow");
-  const items = workItems;
+  const [activeBuddyTab, setActiveBuddyTab] = useState("Workflow");
+  const [clockEntries, setClockEntries] = useState<ReadonlyArray<readonly [string, string]>>([
+    ...clocks,
+  ]);
+  const [clockToAdd, setClockToAdd] = useState("");
+  const [clockMoreOpen, setClockMoreOpen] = useState(false);
+  const [newsOpen, setNewsOpen] = useState(false);
+  const [marketOpen, setMarketOpen] = useState(false);
+  const [announcementsOpen, setAnnouncementsOpen] = useState(false);
+  const [quickPickEditorOpen, setQuickPickEditorOpen] = useState(false);
+  const [quickPickItems, setQuickPickItems] = useState([...quickPicks]);
+  const [draggedQuickPick, setDraggedQuickPick] = useState<string | null>(null);
+  const [connectedConnectors, setConnectedConnectors] = useState([
+    "Microsoft 365",
+    "Microsoft Entra ID",
+    "AWS",
+    "GitHub",
+    "Google Workspace",
+  ]);
+  const [profilePhoto, setProfilePhoto] = useState("/assets/frank-mazerati.png");
+  const [backgroundPhoto, setBackgroundPhoto] = useState<string | null>(null);
+  const [bio, setBio] = useState("Founder and Global Administrator");
+  const [linkedin, setLinkedin] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [statusNote, setStatusNote] = useState("Available for focused work");
+  const [newsItems, setNewsItems] = useState<Array<readonly [string, string]>>([
+    ...defaultNewsFeeds,
+  ]);
+  const [tickers, setTickers] = useState<Array<readonly [string, string]>>([...defaultTickers]);
+  const [newsManagerOpen, setNewsManagerOpen] = useState(false);
+  const [tickerManagerOpen, setTickerManagerOpen] = useState(false);
+  const [expandedFeed, setExpandedFeed] = useState<string | null>(null);
+  const [newNewsLabel, setNewNewsLabel] = useState("");
+  const [newNewsText, setNewNewsText] = useState("");
+  const [newTickerSymbol, setNewTickerSymbol] = useState("");
+  const [newTickerChange, setNewTickerChange] = useState("");
+  const [liveItems, setLiveItems] = useState<WorkItem[]>([]);
+  const [ticketSource, setTicketSource] = useState<"supabase" | "project">("project");
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [message, setMessage] = useState("");
   const [conversation, setConversation] = useState<string[]>([]);
 
@@ -277,6 +384,54 @@ function CommandCenterHome() {
     const timer = window.setInterval(() => setNow(new Date()), 15000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    const supabase = getSupabaseClient();
+    if (!supabase)
+      return () => {
+        active = false;
+      };
+    supabase
+      .from("tickets")
+      .select("*")
+      .order("updated_at", { ascending: false })
+      .limit(20)
+      .then(({ data, error }) => {
+        if (!active || error || !data?.length) return;
+        const mapped = data.map((raw) => {
+          const row = raw as Record<string, unknown>;
+          const priority = String(row["priority"] ?? row["severity"] ?? "medium").toLowerCase();
+          const tone: WorkItem["tone"] =
+            priority.includes("urgent") || priority.includes("critical")
+              ? "urgent"
+              : priority.includes("high")
+                ? "high"
+                : priority.includes("low")
+                  ? "low"
+                  : "medium";
+          const id = String(row["ticket_id"] ?? row["id"] ?? "TICKET");
+          return {
+            id,
+            title: String(row["title"] ?? row["subject"] ?? `Ticket ${id}`),
+            detail: String(row["description"] ?? row["summary"] ?? row["status"] ?? "Open ticket"),
+            tone,
+            action: String(row["action"] ?? "Open"),
+          } satisfies WorkItem;
+        });
+        setLiveItems(mapped);
+        setTicketSource("supabase");
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const items = liveItems.length ? liveItems : workItems;
+  const availability = work.availability;
+  const quickPickLibrary = [...availableQuickPicks, ...menuQuickPickOptions].filter(
+    (pick, index, all) => all.findIndex((candidate) => candidate.label === pick.label) === index,
+  );
 
   const visibleItems = useMemo(
     () =>
@@ -307,13 +462,120 @@ function CommandCenterHome() {
     setMessage("");
   };
 
+  const readImage = (file: File | undefined, setter: (value: string) => void) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+      if (typeof reader.result === "string") setter(reader.result);
+    });
+    reader.readAsDataURL(file);
+  };
+
+  const addClock = () => {
+    const choice = clockChoices.find(([city]) => city === clockToAdd);
+    if (!choice || clockEntries.some(([city]) => city === choice[0])) return;
+    setClockEntries((current) => [...current, choice]);
+    setClockToAdd("");
+  };
+
+  const removeClock = (city: string) => {
+    if (clockEntries.length <= 1) return;
+    setClockEntries((current) => current.filter(([entryCity]) => entryCity !== city));
+  };
+
+  const updateClock = (previousCity: string, nextCity: string) => {
+    const choice = clockChoices.find(([city]) => city === nextCity);
+    if (!choice) return;
+    setClockEntries((current) =>
+      current.map((entry) => (entry[0] === previousCity ? choice : entry)),
+    );
+  };
+
+  const toggleConnector = (connector: string) => {
+    setConnectedConnectors((current) =>
+      current.includes(connector)
+        ? current.filter((entry) => entry !== connector)
+        : [...current, connector],
+    );
+    toast.success(
+      connectedConnectors.includes(connector)
+        ? `${connector} disconnected.`
+        : `${connector} connected for this workspace.`,
+    );
+  };
+
+  const addConnector = () => {
+    const next = connectorChoices.find((connector) => !connectedConnectors.includes(connector));
+    if (!next) {
+      toast.info("All available connectors are already listed.");
+      return;
+    }
+    setConnectedConnectors((current) => [...current, next]);
+    toast.success(`${next} added to connectors.`);
+  };
+
+  const addQuickPick = (pick: QuickPick) => {
+    if (quickPickItems.some((item) => item.label === pick.label)) return;
+    if (quickPickItems.length >= 10) {
+      toast.info("Quick Picks are limited to five rows of five: remove one before adding another.");
+      return;
+    }
+    setQuickPickItems((current) => [...current, pick]);
+  };
+
+  const removeQuickPick = (label: string) => {
+    setQuickPickItems((current) => current.filter((pick) => pick.label !== label));
+  };
+
+  const reorderQuickPick = (targetLabel: string) => {
+    if (!draggedQuickPick || draggedQuickPick === targetLabel) return;
+    setQuickPickItems((current) => {
+      const source = current.find((pick) => pick.label === draggedQuickPick);
+      if (!source) return current;
+      const withoutSource = current.filter((pick) => pick.label !== draggedQuickPick);
+      const targetIndex = withoutSource.findIndex((pick) => pick.label === targetLabel);
+      withoutSource.splice(targetIndex < 0 ? withoutSource.length : targetIndex, 0, source);
+      return withoutSource;
+    });
+    setDraggedQuickPick(null);
+  };
+
+  const addNewsFeed = () => {
+    if (!newNewsLabel.trim() || !newNewsText.trim()) return;
+    setNewsItems((current) => [...current, [newNewsLabel.trim(), newNewsText.trim()]]);
+    setNewNewsLabel("");
+    setNewNewsText("");
+  };
+
+  const addTicker = () => {
+    if (!newTickerSymbol.trim() || !newTickerChange.trim()) return;
+    setTickers((current) => [
+      ...current,
+      [newTickerSymbol.trim().toUpperCase(), newTickerChange.trim()],
+    ]);
+    setNewTickerSymbol("");
+    setNewTickerChange("");
+  };
+
   return (
-    <div className="command-center-home">
+    <div
+      className="command-center-home"
+      style={
+        backgroundPhoto
+          ? {
+              backgroundImage: `linear-gradient(135deg, rgba(2,10,24,.86), rgba(3,15,34,.72)), url(${backgroundPhoto})`,
+            }
+          : undefined
+      }
+    >
       <div
         className={`cc-drawer-backdrop ${drawerOpen ? "is-open" : ""}`}
         onClick={() => setDrawerOpen(false)}
       />
-      <aside className={`cc-sidebar ${drawerOpen ? "is-open" : ""}`}>
+      <aside
+        className={`cc-sidebar ${drawerOpen ? "is-open" : ""}`}
+        aria-label="Command navigation"
+      >
         <div className="cc-sidebar-brand">
           <img src="/assets/intellistack-shield.jpg" alt="IntelliStack Systems" />
           <span>
@@ -323,17 +585,67 @@ function CommandCenterHome() {
           </span>
         </div>
         <nav aria-label="Command navigation" className="cc-nav">
-          {hamburgerDestinations.map(([label, Icon, href], index) => (
-            <a
-              key={label}
-              href={href}
-              className={`cc-nav-item ${index === 0 ? "active" : ""}`}
-              onClick={() => setDrawerOpen(false)}
-            >
-              <Icon size={15} />
-              <span>{label}</span>
-            </a>
-          ))}
+          {NAV.map((section) => {
+            const sectionOpen = expandedSections[section.slug] ?? section.number === "01";
+            const sectionLabel =
+              section.title === "Business Products" ? "My Business Center" : section.title;
+            return (
+              <div className="cc-nav-section" key={section.slug}>
+                <button
+                  type="button"
+                  className={`cc-nav-section-toggle ${sectionOpen ? "is-open" : ""}`}
+                  onClick={() =>
+                    setExpandedSections((current) => ({ ...current, [section.slug]: !sectionOpen }))
+                  }
+                  aria-expanded={sectionOpen}
+                >
+                  <span className="cc-nav-number">{section.number}</span>
+                  <span>{sectionLabel}</span>
+                  <ChevronDown size={12} />
+                </button>
+                {sectionOpen && (
+                  <div className="cc-nav-groups">
+                    {section.groups.map((group) => {
+                      const groupKey = `${section.slug}:${group.slug}`;
+                      const groupOpen = expandedGroups[groupKey] ?? group.pages.length <= 6;
+                      return (
+                        <div className="cc-nav-group" key={groupKey}>
+                          <button
+                            type="button"
+                            className="cc-nav-group-toggle"
+                            onClick={() =>
+                              setExpandedGroups((current) => ({
+                                ...current,
+                                [groupKey]: !groupOpen,
+                              }))
+                            }
+                            aria-expanded={groupOpen}
+                          >
+                            <span>{group.title}</span>
+                            <ChevronRight size={11} className={groupOpen ? "rotate-90" : ""} />
+                          </button>
+                          {groupOpen && (
+                            <div className="cc-nav-pages">
+                              {group.pages.map((page) => (
+                                <a
+                                  key={page.slug}
+                                  className="cc-nav-page"
+                                  href={`/m/${section.slug}/${group.slug}/${page.slug}`}
+                                  onClick={() => setDrawerOpen(false)}
+                                >
+                                  {page.title}
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
         <div className="cc-sidebar-status">
           <span className="cc-online-dot" />
@@ -347,10 +659,11 @@ function CommandCenterHome() {
             <button
               type="button"
               className="cc-icon-button"
-              aria-label="Open navigation"
-              onClick={() => setDrawerOpen(true)}
+              aria-label={drawerOpen ? "Close navigation" : "Open navigation"}
+              aria-expanded={drawerOpen}
+              onClick={() => setDrawerOpen((value) => !value)}
             >
-              <Menu size={19} />
+              {drawerOpen ? <X size={19} /> : <Menu size={19} />}
             </button>
             <div className="cc-secured">
               <ShieldCheck size={16} />
@@ -368,12 +681,34 @@ function CommandCenterHome() {
             <small>GLOBAL COMMAND CENTER</small>
           </div>
           <div className="cc-topbar-actions">
+            <button
+              className="cc-icon-button"
+              aria-label="Email"
+              onClick={() => toast.info("Email workspace opened.")}
+            >
+              <Mail size={17} />
+            </button>
             <button className="cc-icon-button" aria-label="Notifications">
               <Bell size={17} />
               <i />
             </button>
-            <button className="cc-icon-button" aria-label="Messages">
-              <MessageSquare size={17} />
+            <button
+              className="cc-icon-button"
+              aria-label="Quick chat"
+              onClick={() => setQuickChatOpen((value) => !value)}
+            >
+              <MessageCircle size={17} />
+            </button>
+            <button
+              type="button"
+              className={`cc-status-pill cc-status-${statusSlug(availability)}`}
+              aria-label="Open status manager"
+              onClick={() => {
+                setProfileOpen(true);
+                setProfileEditor("status");
+              }}
+            >
+              <i /> {availability} <ChevronDown size={10} />
             </button>
             <div className="cc-profile-wrap">
               <button
@@ -381,7 +716,7 @@ function CommandCenterHome() {
                 onClick={() => setProfileOpen((value) => !value)}
                 aria-expanded={profileOpen}
               >
-                <img src="/assets/frank-mazerati.png" alt="Frank Mazerati" />
+                <img src={profilePhoto} alt="Frank Mazerati" />
                 <span>
                   Frank
                   <br />
@@ -392,7 +727,88 @@ function CommandCenterHome() {
               {profileOpen && (
                 <div className="cc-popover">
                   <strong>Frank Mazerati</strong>
-                  <span>Founder · Global Admin</span>
+                  <span>{bio}</span>
+                  <button className="cc-profile-option" onClick={() => setProfileEditor("status")}>
+                    <Activity size={14} /> Status: {availability}
+                  </button>
+                  <label className="cc-profile-option">
+                    <Upload size={14} /> Upload profile photo
+                    <input
+                      className="cc-hidden-file"
+                      type="file"
+                      accept="image/*"
+                      onChange={(event) => readImage(event.target.files?.[0], setProfilePhoto)}
+                    />
+                  </label>
+                  <label className="cc-profile-option">
+                    <Upload size={14} /> Upload background photo
+                    <input
+                      className="cc-hidden-file"
+                      type="file"
+                      accept="image/*"
+                      onChange={(event) => readImage(event.target.files?.[0], setBackgroundPhoto)}
+                    />
+                  </label>
+                  <button className="cc-profile-option" onClick={() => setProfileEditor("payment")}>
+                    <CreditCard size={14} /> Add payment method
+                  </button>
+                  <button className="cc-profile-option" onClick={() => setProfileEditor("bio")}>
+                    <FileText size={14} /> Edit bio
+                  </button>
+                  <button
+                    className="cc-profile-option"
+                    onClick={() => setProfileEditor("linkedin")}
+                  >
+                    <Link2 size={14} /> Add LinkedIn
+                  </button>
+                  {profileEditor && profileEditor !== "photo" && profileEditor !== "background" && (
+                    <div className="cc-profile-editor">
+                      {profileEditor === "bio" && (
+                        <label>
+                          Bio
+                          <textarea value={bio} onChange={(event) => setBio(event.target.value)} />
+                        </label>
+                      )}
+                      {profileEditor === "linkedin" && (
+                        <label>
+                          LinkedIn URL
+                          <input
+                            value={linkedin}
+                            onChange={(event) => setLinkedin(event.target.value)}
+                            placeholder="https://linkedin.com/in/…"
+                          />
+                        </label>
+                      )}
+                      {profileEditor === "payment" && (
+                        <label>
+                          Payment method
+                          <input
+                            value={paymentMethod}
+                            onChange={(event) => setPaymentMethod(event.target.value)}
+                            placeholder="Card ending in 4242"
+                          />
+                        </label>
+                      )}
+                      {profileEditor === "status" && (
+                        <label>
+                          Status note
+                          <input
+                            value={statusNote}
+                            onChange={(event) => setStatusNote(event.target.value)}
+                          />
+                        </label>
+                      )}
+                      <button
+                        className="cc-profile-save"
+                        onClick={() => {
+                          setProfileEditor(null);
+                          toast.success("Profile settings saved for this workspace.");
+                        }}
+                      >
+                        <Pencil size={13} /> Save changes
+                      </button>
+                    </div>
+                  )}
                   <button onClick={() => void signOut()}>
                     <LogOut size={14} /> Sign out
                   </button>
@@ -402,11 +818,44 @@ function CommandCenterHome() {
           </div>
         </header>
 
+        {quickChatOpen && (
+          <section className="cc-quick-chat-popover" aria-label="Quick chat">
+            <div className="cc-panel-heading">
+              <div>
+                <MessageCircle size={15} />
+                <h2>QUICK CHAT</h2>
+                <p>Fast internal conversation</p>
+              </div>
+              <button
+                type="button"
+                className="cc-mini-button"
+                onClick={() => setQuickChatOpen(false)}
+              >
+                <X size={13} />
+              </button>
+            </div>
+            <p className="cc-quick-chat-copy">
+              Send a note to Help Buddy or open IntelliChat when you need a full conversation
+              workspace.
+            </p>
+            <button
+              type="button"
+              className="cc-quick-chat-action"
+              onClick={() => {
+                setMessage("Open IntelliChat");
+                setQuickChatOpen(false);
+              }}
+            >
+              Open IntelliChat <ChevronRight size={13} />
+            </button>
+          </section>
+        )}
+
         <main className="cc-content">
           <section className="cc-identity-panel">
             <div className="cc-identity-main">
               <div className="cc-identity-photo">
-                <img src="/assets/frank-mazerati.png" alt="Frank Mazerati" />
+                <img src={profilePhoto} alt="Frank Mazerati" />
                 <span />
               </div>
               <div>
@@ -444,35 +893,285 @@ function CommandCenterHome() {
                 STATUS
                 <select
                   value={availability}
-                  onChange={(event) => setAvailability(event.target.value)}
+                  onChange={(event) =>
+                    work.setAvailability(event.target.value as typeof availability)
+                  }
                 >
-                  <option>Available</option>
-                  <option>Busy</option>
-                  <option>In a Meeting</option>
-                  <option>Away</option>
+                  {AVAILABILITY.map((status) => (
+                    <option key={status}>{status}</option>
+                  ))}
                 </select>
               </label>
               <div className="cc-local-time">
                 <Clock3 size={13} />
                 <b>{timeFor("America/Chicago", now)}</b>
-                <span>Tuesday · Nov 10</span>
+                <span>{dateFor("America/Chicago", now)}</span>
+              </div>
+              <div className="cc-local-weather">
+                <CloudSun size={14} />
+                <b>72°F</b>
+                <span>Mostly sunny</span>
               </div>
             </div>
           </section>
 
-          <section className="cc-info-strip">
-            <div className="cc-strip-heading">
-              <Globe2 size={14} /> GLOBAL CLOCKS
+          <section className="cc-micro-toolbar cc-global-clocks">
+            <div className="cc-micro-label">WORLD CLOCK</div>
+            <div className="cc-micro-items">
+              {clockEntries.slice(0, 5).map(([city, zone]) => (
+                <button
+                  type="button"
+                  className="cc-clock-micro"
+                  key={city}
+                  onClick={() => setClockMoreOpen(true)}
+                >
+                  <b>{shortClockName(city)}</b>
+                  <span>{timeFor(zone, now)}</span>
+                </button>
+              ))}
             </div>
-            {clocks.map(([city, zone]) => (
-              <div className="cc-clock" key={city}>
-                <span>{city}</span>
-                <b>{timeFor(zone, now)}</b>
+            <button
+              type="button"
+              className="cc-micro-more"
+              onClick={() => setClockMoreOpen((value) => !value)}
+            >
+              + More <ChevronDown size={10} />
+            </button>
+            {clockMoreOpen && (
+              <div className="cc-micro-more-panel">
+                {clockEntries.map(([city, zone]) => (
+                  <div className="cc-micro-edit-row" key={city}>
+                    <select
+                      value={city}
+                      onChange={(event) => updateClock(city, event.target.value)}
+                      aria-label={`Change ${city} clock`}
+                    >
+                      {clockChoices.map(([choiceCity]) => (
+                        <option key={choiceCity}>{choiceCity}</option>
+                      ))}
+                    </select>
+                    <span>{timeFor(zone, now)}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeClock(city)}
+                      aria-label={`Remove ${city} clock`}
+                    >
+                      <X size={10} />
+                    </button>
+                  </div>
+                ))}
+                <div className="cc-micro-add-row">
+                  <select
+                    value={clockToAdd}
+                    onChange={(event) => setClockToAdd(event.target.value)}
+                    aria-label="Add global clock"
+                  >
+                    <option value="">Add clock…</option>
+                    {clockChoices
+                      .filter(([city]) => !clockEntries.some(([entryCity]) => entryCity === city))
+                      .map(([city]) => (
+                        <option key={city}>{city}</option>
+                      ))}
+                  </select>
+                  <button type="button" onClick={addClock}>
+                    <Plus size={10} /> Add
+                  </button>
+                </div>
               </div>
-            ))}
-            <button className="cc-strip-link">WORLD CLOCK +</button>
+            )}
           </section>
-          <section className="cc-utility-strip">
+
+          <section className="cc-micro-toolbar cc-news-strip">
+            <div className="cc-micro-label">NEWS</div>
+            <div className="cc-micro-items">
+              {newsItems.slice(0, 5).map(([label, text], index) => (
+                <div
+                  className={`cc-feed-item cc-news-micro ${expandedFeed === label ? "is-open" : ""}`}
+                  key={`${label}-${index}`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setExpandedFeed(expandedFeed === label ? null : label)}
+                  >
+                    <b>{label}</b>
+                    <span>{text}</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="cc-micro-more"
+              onClick={() => setNewsOpen((value) => !value)}
+            >
+              + More <ChevronDown size={10} />
+            </button>
+            {newsOpen && (
+              <div className="cc-micro-more-panel">
+                {expandedFeed && (
+                  <div className="cc-feed-detail">
+                    {newsItems.find(([label]) => label === expandedFeed)?.[1]}
+                  </div>
+                )}
+                <div className="cc-micro-overflow-list">
+                  {newsItems.slice(5).map(([label, text], index) => (
+                    <div className="cc-micro-edit-row" key={`${label}-${index}`}>
+                      <button type="button" onClick={() => setExpandedFeed(label)}>
+                        <b>{label}</b>
+                        <span>{text}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setNewsItems((current) =>
+                            current.filter((_, itemIndex) => itemIndex !== index + 5),
+                          )
+                        }
+                      >
+                        <X size={10} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="cc-micro-manage"
+                  onClick={() => setNewsManagerOpen((value) => !value)}
+                >
+                  <Plus size={10} /> Add / Remove feeds
+                </button>
+                {newsManagerOpen && (
+                  <form
+                    className="cc-feed-manager"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      addNewsFeed();
+                    }}
+                  >
+                    <input
+                      value={newNewsLabel}
+                      onChange={(event) => setNewNewsLabel(event.target.value)}
+                      placeholder="Feed name"
+                      aria-label="New news feed name"
+                    />
+                    <input
+                      value={newNewsText}
+                      onChange={(event) => setNewNewsText(event.target.value)}
+                      placeholder="Feed headline"
+                      aria-label="New news feed headline"
+                    />
+                    <button type="submit">
+                      <Plus size={12} /> Add feed
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
+          </section>
+          <section className="cc-micro-toolbar cc-market-strip">
+            <div className="cc-micro-label">STOCKS</div>
+            <div className="cc-micro-items">
+              {tickers.slice(0, 5).map(([symbol, change], index) => (
+                <div className="cc-ticker-item cc-stock-micro" key={`${symbol}-${index}`}>
+                  <button type="button" onClick={() => setExpandedFeed(symbol)}>
+                    <b>{symbol}</b>
+                    <span className={change.startsWith("-") ? "cc-negative" : "cc-positive"}>
+                      {change}
+                    </span>
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="cc-micro-more"
+              onClick={() => setMarketOpen((value) => !value)}
+            >
+              + More <ChevronDown size={10} />
+            </button>
+            {marketOpen && (
+              <div className="cc-micro-more-panel">
+                {expandedFeed && (
+                  <div className="cc-feed-detail">
+                    {expandedFeed} is open in Market Watch. Select a finance page from the hamburger
+                    menu for the connected market workspace.
+                  </div>
+                )}
+                <div className="cc-micro-overflow-list">
+                  {tickers.slice(5).map(([symbol, change], index) => (
+                    <div className="cc-micro-edit-row" key={`${symbol}-${index}`}>
+                      <button type="button" onClick={() => setExpandedFeed(symbol)}>
+                        <b>{symbol}</b>
+                        <span className={change.startsWith("-") ? "cc-negative" : "cc-positive"}>
+                          {change}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setTickers((current) =>
+                            current.filter((_, itemIndex) => itemIndex !== index + 5),
+                          )
+                        }
+                      >
+                        <X size={10} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="cc-micro-manage"
+                  onClick={() => setTickerManagerOpen((value) => !value)}
+                >
+                  <Plus size={10} /> Add / Remove stocks
+                </button>
+                {tickerManagerOpen && (
+                  <form
+                    className="cc-feed-manager"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      addTicker();
+                    }}
+                  >
+                    <input
+                      value={newTickerSymbol}
+                      onChange={(event) => setNewTickerSymbol(event.target.value)}
+                      placeholder="Ticker"
+                      aria-label="New stock ticker"
+                    />
+                    <input
+                      value={newTickerChange}
+                      onChange={(event) => setNewTickerChange(event.target.value)}
+                      placeholder="Change e.g. +1.20%"
+                      aria-label="New stock ticker change"
+                    />
+                    <button type="submit">
+                      <Plus size={12} /> Add ticker
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
+          </section>
+          <section className="cc-micro-toolbar cc-announcement-toolbar">
+            <div className="cc-strip-heading">
+              <Bell size={14} /> COMPANY ANNOUNCEMENTS
+            </div>
+            <span>
+              Quarterly planning · New knowledge vault update · Platform build review today
+            </span>
+            <button type="button" onClick={() => setAnnouncementsOpen((value) => !value)}>
+              {announcementsOpen ? "Hide updates" : "View updates"} <ChevronDown size={12} />
+            </button>
+            {announcementsOpen && (
+              <div className="cc-feed-detail">
+                Your current focus is completing the full Global Command Center project and
+                verifying every page-to-page workflow.
+              </div>
+            )}
+          </section>
+          <section className="cc-utility-strip cc-search-strip">
             <div className="cc-utility-search">
               <Search size={15} />
               <input
@@ -482,38 +1181,53 @@ function CommandCenterHome() {
                 aria-label="Search command center"
               />
             </div>
-            <div className="cc-utility-links">
-              <button>
-                NEWS <span>AI · Network · Security</span>
-              </button>
-              <button>
-                MARKETS <span>NASDAQ +0.87%</span>
-              </button>
-              <button>
-                ANNOUNCEMENTS{" "}
-                <span>
-                  View updates <ChevronRight size={12} />
-                </span>
-              </button>
-            </div>
+            <span className="cc-search-caption">Search people, work, systems and knowledge</span>
           </section>
 
-          <section className="cc-quick-picks">
-            <div className="cc-section-heading">
-              <div>
-                <Sparkles size={15} /> MY QUICK PICKS
-              </div>
-              <span>Drag to reorder · Click to open</span>
-            </div>
-            <div className="cc-quick-grid">
-              {quickPicks.map(({ label, detail, icon: Icon, href }) => (
-                <a href={href} className="cc-quick-card" key={label}>
-                  <Icon size={19} />
-                  <b>{label}</b>
-                  <span>{detail}</span>
+          <section className="cc-micro-toolbar cc-quick-picks">
+            <div className="cc-micro-label">QUICK PICKS</div>
+            <div className="cc-micro-items cc-quick-micro-items">
+              {quickPickItems.slice(0, 5).map(({ label, icon: Icon, href }) => (
+                <a href={href} className="cc-quick-micro" key={label}>
+                  <Icon size={13} />
+                  <span>{label}</span>
                 </a>
               ))}
             </div>
+            <button
+              type="button"
+              className="cc-micro-more"
+              onClick={() => setQuickPickEditorOpen((value) => !value)}
+            >
+              + More <ChevronDown size={10} />
+            </button>
+            {quickPickEditorOpen && (
+              <div className="cc-micro-more-panel">
+                <div className="cc-micro-overflow-list">
+                  {quickPickItems.slice(5).map(({ label, icon: Icon, href }) => (
+                    <div className="cc-micro-edit-row" key={label}>
+                      <a href={href}>
+                        <Icon size={12} />
+                        <b>{label}</b>
+                      </a>
+                      <button type="button" onClick={() => removeQuickPick(label)}>
+                        <X size={10} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <strong className="cc-micro-library-title">ADD FROM HAMBURGER MENU</strong>
+                <div className="cc-micro-library">
+                  {quickPickLibrary
+                    .filter((pick) => !quickPickItems.some((item) => item.label === pick.label))
+                    .map((pick) => (
+                      <button type="button" key={pick.label} onClick={() => addQuickPick(pick)}>
+                        <Plus size={10} /> {pick.label}
+                      </button>
+                    ))}
+                </div>
+              </div>
+            )}
           </section>
 
           <div className="cc-work-layout">
@@ -521,8 +1235,8 @@ function CommandCenterHome() {
               <div className="cc-panel-heading">
                 <div>
                   <Activity size={16} />
-                  <h2>MAIN WORKFLOW SECTION</h2>
-                  <p>Bring the work to you · Your priority center</p>
+                  <h2>BRING THE WORK TO YOU</h2>
+                  <p>Your work. Your priorities. Your operational view.</p>
                 </div>
                 <div className="cc-panel-tools">
                   <div className="cc-tabs">
@@ -546,28 +1260,31 @@ function CommandCenterHome() {
                   </div>
                 </div>
               </div>
-              <div className="cc-metrics">
+              <div className="cc-metrics cc-work-statuses">
                 <div>
-                  <span>Total Tasks</span>
-                  <b>{items.length + 18}</b>
-                  <small>+6 new today</small>
+                  <span>Assigned</span>
+                  <b>{items.length}</b>
+                  <small>Open work</small>
                 </div>
                 <div>
-                  <span>High Priority</span>
-                  <b>
-                    {items.filter((item) => item.tone === "high" || item.tone === "urgent").length}
-                  </b>
-                  <small className="warning">Requires attention</small>
+                  <span>Active</span>
+                  <b>3</b>
+                  <small>In progress</small>
                 </div>
                 <div>
-                  <span>In Progress</span>
-                  <b>6</b>
-                  <small>On track</small>
+                  <span>Pending</span>
+                  <b>{items.filter((item) => item.tone === "medium").length}</b>
+                  <small>Awaiting action</small>
                 </div>
                 <div>
-                  <span>Completed</span>
-                  <b>11</b>
-                  <small className="success">Today</small>
+                  <span>Review</span>
+                  <b>{items.filter((item) => item.tone === "high").length}</b>
+                  <small className="warning">Needs review</small>
+                </div>
+                <div>
+                  <span>Overdue</span>
+                  <b>{items.filter((item) => item.tone === "urgent").length}</b>
+                  <small className="warning">Priority</small>
                 </div>
               </div>
               <div className="cc-queue-heading">
@@ -642,6 +1359,28 @@ function CommandCenterHome() {
                     <span>Ask. Find. Connect. Get it done.</span>
                   </div>
                 </div>
+                <div className="cc-buddy-tabs" role="tablist" aria-label="Help Buddy views">
+                  {(
+                    [
+                      ["Assist", Bot],
+                      ["Workflow", Activity],
+                      ["Tickets", Ticket],
+                      ["Alerts", Bell],
+                    ] as Array<[string, LucideIcon]>
+                  ).map(([label, Icon]) => (
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={activeBuddyTab === label}
+                      className={activeBuddyTab === label ? "active" : ""}
+                      key={label}
+                      onClick={() => setActiveBuddyTab(label)}
+                    >
+                      <Icon size={13} />
+                      <span>{label}</span>
+                    </button>
+                  ))}
+                </div>
                 <div className="cc-buddy-actions">
                   <button onClick={() => setMessage("Create a ticket for me")}>
                     Create a Ticket
@@ -674,6 +1413,37 @@ function CommandCenterHome() {
                     <ChevronRight size={15} />
                   </button>
                 </form>
+              </section>
+              <section className="cc-connector-panel">
+                <div className="cc-panel-heading">
+                  <div>
+                    <Link2 size={15} />
+                    <h2>CONNECTORS</h2>
+                    <p>Connected applications and identity services</p>
+                  </div>
+                  <span className="cc-connector-count">
+                    {connectedConnectors.length}/{connectorChoices.length}
+                  </span>
+                  <button type="button" className="cc-connector-add" onClick={addConnector}>
+                    <Plus size={12} />
+                  </button>
+                </div>
+                <div className="cc-connector-list">
+                  {connectorChoices.map((connector) => {
+                    const connected = connectedConnectors.includes(connector);
+                    return (
+                      <div className="cc-connector-row" key={connector}>
+                        <span>
+                          <i className={connected ? "connected" : ""} />
+                          {connector}
+                        </span>
+                        <button type="button" onClick={() => toggleConnector(connector)}>
+                          {connected ? "Remove" : "Add"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
               </section>
               <section className="cc-side-panel">
                 <div className="cc-panel-heading">

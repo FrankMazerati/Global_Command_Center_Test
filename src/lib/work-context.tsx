@@ -12,6 +12,7 @@ export type Availability =
   | "On Break"
   | "On a Call"
   | "Helping a User"
+  | "Offline"
   | "Out of Office";
 
 export const AVAILABILITY: Availability[] = [
@@ -23,6 +24,7 @@ export const AVAILABILITY: Availability[] = [
   "On Break",
   "On a Call",
   "Helping a User",
+  "Offline",
   "Out of Office",
 ];
 
@@ -63,7 +65,12 @@ interface WorkContextValue extends WorkState {
 }
 
 const STORAGE_KEY = "mo-work-context-v1";
-const initial: WorkState = { activeTicketId: null, availability: "Available", notes: [], checklist: [] };
+const initial: WorkState = {
+  activeTicketId: null,
+  availability: "Available",
+  notes: [],
+  checklist: [],
+};
 const Ctx = createContext<WorkContextValue | null>(null);
 const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -106,7 +113,13 @@ export function WorkContextProvider({ children }: { children: ReactNode }) {
         setState((s) => ({
           ...s,
           notes: [
-            { id: uid(), text, scope, ticketId: scope === "ticket" ? s.activeTicketId : null, createdAt: new Date().toISOString() },
+            {
+              id: uid(),
+              text,
+              scope,
+              ticketId: scope === "ticket" ? s.activeTicketId : null,
+              createdAt: new Date().toISOString(),
+            },
             ...s.notes,
           ],
         })),
