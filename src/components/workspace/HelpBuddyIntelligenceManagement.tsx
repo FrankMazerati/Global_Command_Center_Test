@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { Archive, BookOpen, Brain, Database, Library, LockKeyhole, Pencil, Plus, Search, ShieldCheck, Sparkles, Trash2, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 import { getSupabaseClient } from "@/lib/supabase";
 
 type Category = { id: string; category_key: string; name: string; description: string; target_patterns: number; sort_order: number; status: string };
 type Template = { id: string; category_id: string; intent_key: string; title: string; user_examples: string[]; response_variants: string[]; follow_up_variants: string[]; tone: string; audience: string; repeat_policy: string; cooldown_turns: number; requires_permission_check: boolean; escalation_level: string | null; status: string; visibility: string; version: number; updated_at: string };
-type Memory = { id: string; memory_type: string; title: string; content: string; importance: number; confidence: number; status: string; updated_at: string };\ntype CategoryDraft = { category_key: string; name: string; description: string; target_patterns: string; sort_order: string };\ntype QaEntry = { id: string; knowledge_base_id: string; question: string; answer_markdown: string; intent_key: string; alternate_questions: string[]; tags: string[]; status: string; visibility: string; version: number; updated_at: string };\ntype KnowledgeBaseOption = { id: string; name: string };
+type Memory = { id: string; memory_type: string; title: string; content: string; importance: number; confidence: number; status: string; updated_at: string };
+type CategoryDraft = { category_key: string; name: string; description: string; target_patterns: string; sort_order: string };
+type QaEntry = { id: string; knowledge_base_id: string; question: string; answer_markdown: string; intent_key: string; alternate_questions: string[]; tags: string[]; status: string; visibility: string; version: number; updated_at: string };
+type KnowledgeBaseOption = { id: string; name: string };
 
 const pageTitles: Record<string, string> = {
   "intelligence-overview": "Help Buddy Intelligence Overview",
@@ -21,7 +24,16 @@ const pageTitles: Record<string, string> = {
   "response-audit-and-history": "Version and Change History",
 };
 
-const managementAreas: Array<{ icon: LucideIcon; title: string; description: string }> = [\n  { icon: Library, title: "Conversational Library", description: "Greetings, small talk, playful questions, humor and everyday conversation." },\n  { icon: LockKeyhole, title: "Permissions and Escalations", description: "Access denials, administrator contacts, approval requirements and security-safe responses." },\n  { icon: Sparkles, title: "Personality and Tone", description: "Variation, repetition handling, user-aware tone and conversational transitions." },\n  { icon: Brain, title: "Persistent Memory", description: "Personal context, conversation continuity, corrections and memory lifecycle." },\n  { icon: Database, title: "Semantic and Vector Search", description: "pgvector storage, embedding coverage and similarity retrieval." },\n  { icon: BookOpen, title: "Knowledge Scenarios", description: "Platform questions, workflow guidance, onboarding, offboarding and IntelliDesk." },\n];\n\nconst emptyForm = {
+const managementAreas: Array<{ icon: LucideIcon; title: string; description: string }> = [
+  { icon: Library, title: "Conversational Library", description: "Greetings, small talk, playful questions, humor and everyday conversation." },
+  { icon: LockKeyhole, title: "Permissions and Escalations", description: "Access denials, administrator contacts, approval requirements and security-safe responses." },
+  { icon: Sparkles, title: "Personality and Tone", description: "Variation, repetition handling, user-aware tone and conversational transitions." },
+  { icon: Brain, title: "Persistent Memory", description: "Personal context, conversation continuity, corrections and memory lifecycle." },
+  { icon: Database, title: "Semantic and Vector Search", description: "pgvector storage, embedding coverage and similarity retrieval." },
+  { icon: BookOpen, title: "Knowledge Scenarios", description: "Platform questions, workflow guidance, onboarding, offboarding and IntelliDesk." },
+];
+
+const emptyForm = {
   title: "", intent_key: "", category_id: "", examples: "", responses: "", followups: "",
   tone: "friendly", audience: "all", repeat_policy: "rotate", cooldown_turns: "3",
   requires_permission_check: false, escalation_level: "", status: "draft", visibility: "internal",
@@ -33,8 +45,15 @@ const Panel = ({ children, className = "" }: { children: ReactNode; className?: 
 export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [memories, setMemories] = useState<Memory[]>([]);\n  const [auditRows, setAuditRows] = useState<Array<Record<string, unknown>>>([]);\n  const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
-  const [qaCount, setQaCount] = useState(0);\n  const [qaEntries, setQaEntries] = useState<QaEntry[]>([]);\n  const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBaseOption[]>([]);\n  const [qaEditor, setQaEditor] = useState(false);\n  const [editingQa, setEditingQa] = useState<QaEntry | null>(null);\n  const [qaDraft, setQaDraft] = useState({ knowledge_base_id: "", question: "", answer_markdown: "", intent_key: "platform.general", alternate_questions: "", tags: "", status: "draft", visibility: "public_internal" });
+  const [memories, setMemories] = useState<Memory[]>([]);
+  const [auditRows, setAuditRows] = useState<Array<Record<string, unknown>>>([]);
+  const [editingMemory, setEditingMemory] = useState<Memory | null>(null);
+  const [qaCount, setQaCount] = useState(0);
+  const [qaEntries, setQaEntries] = useState<QaEntry[]>([]);
+  const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBaseOption[]>([]);
+  const [qaEditor, setQaEditor] = useState(false);
+  const [editingQa, setEditingQa] = useState<QaEntry | null>(null);
+  const [qaDraft, setQaDraft] = useState({ knowledge_base_id: "", question: "", answer_markdown: "", intent_key: "platform.general", alternate_questions: "", tags: "", status: "draft", visibility: "public_internal" });
   const [articleCount, setArticleCount] = useState(0);
   const [vectorCounts, setVectorCounts] = useState({ responses: 0, memories: 0, qa: 0, articles: 0 });
   const [canManage, setCanManage] = useState(false);
@@ -45,7 +64,10 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
   const [editing, setEditing] = useState<Template | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [form, setForm] = useState(emptyForm);
-  const [memoryDraft, setMemoryDraft] = useState({ title: "", content: "", memory_type: "preference" });\n  const [categoryEditor, setCategoryEditor] = useState(false);\n  const [editingCategory, setEditingCategory] = useState<Category | null>(null);\n  const [categoryDraft, setCategoryDraft] = useState<CategoryDraft>({ category_key: "", name: "", description: "", target_patterns: "0", sort_order: "0" });
+  const [memoryDraft, setMemoryDraft] = useState({ title: "", content: "", memory_type: "preference" });
+  const [categoryEditor, setCategoryEditor] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [categoryDraft, setCategoryDraft] = useState<CategoryDraft>({ category_key: "", name: "", description: "", target_patterns: "0", sort_order: "0" });
 
   const supabase = getSupabaseClient();
   const viewSlug = ({
@@ -57,7 +79,7 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
   } as Record<string, string>)[pageSlug] ?? pageSlug;
   const title = pageTitles[viewSlug] ?? "Help Buddy Intelligence Management";
 
-  const reload = async () => {
+  const reload = useCallback(async () => {
     if (!supabase) { setError("The secure database connection is unavailable."); setLoading(false); return; }
     setLoading(true);
     setError("");
@@ -65,18 +87,23 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
       supabase.rpc("kb_can_manage"),
       supabase.from("help_buddy_library_categories").select("*").order("sort_order"),
       supabase.from("help_buddy_response_templates").select("*").order("updated_at", { ascending: false }).limit(1000),
-      supabase.from("help_buddy_qa_entries").select("id,knowledge_base_id,question,answer_markdown,intent_key,alternate_questions,tags,status,visibility,version,updated_at").order("updated_at", { ascending: false }).limit(1000),\n      supabase.from("knowledge_bases").select("id,name").order("name"),
+      supabase.from("help_buddy_qa_entries").select("id,knowledge_base_id,question,answer_markdown,intent_key,alternate_questions,tags,status,visibility,version,updated_at").order("updated_at", { ascending: false }).limit(1000),
+      supabase.from("knowledge_bases").select("id,name").order("name"),
       supabase.from("knowledge_articles").select("id", { count: "exact", head: true }),
-      supabase.from("help_buddy_memory_records").select("id,memory_type,title,content,importance,confidence,status,updated_at").eq("memory_scope", "user").order("updated_at", { ascending: false }).limit(200),\n      supabase.from("help_buddy_management_audit").select("id,entity_type,entity_id,operation,actor_profile_id,created_at,old_record,new_record").order("created_at", { ascending: false }).limit(100),
+      supabase.from("help_buddy_memory_records").select("id,memory_type,title,content,importance,confidence,status,updated_at").eq("memory_scope", "user").order("updated_at", { ascending: false }).limit(200),
+      supabase.from("help_buddy_management_audit").select("id,entity_type,entity_id,operation,actor_profile_id,created_at,old_record,new_record").order("created_at", { ascending: false }).limit(100),
     ]);
     setCanManage(manageResult.data === true);
     if (categoryResult.error) setError(categoryResult.error.message);
     else setCategories((categoryResult.data ?? []) as Category[]);
     if (templateResult.error && !error) setError(templateResult.error.message);
     else setTemplates((templateResult.data ?? []) as Template[]);
-    setQaEntries((qaResult.data ?? []) as QaEntry[]);\n    setQaCount(qaResult.data?.length ?? 0);\n    setKnowledgeBases((basesResult.data ?? []) as KnowledgeBaseOption[]);
+    setQaEntries((qaResult.data ?? []) as QaEntry[]);
+    setQaCount(qaResult.data?.length ?? 0);
+    setKnowledgeBases((basesResult.data ?? []) as KnowledgeBaseOption[]);
     setArticleCount(articleResult.count ?? 0);
-    setMemories((memoryResult.data ?? []) as Memory[]);\n    setAuditRows((auditResult.data ?? []) as Array<Record<string, unknown>>);
+    setMemories((memoryResult.data ?? []) as Memory[]);
+    setAuditRows((auditResult.data ?? []) as Array<Record<string, unknown>>);
     const [responses, memoryVectors, qaVectors, articleVectors] = await Promise.all([
       supabase.from("help_buddy_response_templates").select("id", { count: "exact", head: true }).not("embedding", "is", null),
       supabase.from("help_buddy_memory_records").select("id", { count: "exact", head: true }).not("embedding", "is", null),
@@ -85,9 +112,9 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
     ]);
     setVectorCounts({ responses: responses.count ?? 0, memories: memoryVectors.count ?? 0, qa: qaVectors.count ?? 0, articles: articleVectors.count ?? 0 });
     setLoading(false);
-  };
+  }, [supabase]);
 
-  useEffect(() => { void reload(); }, [pageSlug]);
+  useEffect(() => { void reload(); }, [pageSlug, reload]);
 
   const filteredTemplates = useMemo(() => templates.filter((item) => {
     const category = categories.find((entry) => entry.id === item.category_id);
@@ -113,8 +140,8 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
     setEditing(entry);
     setForm({
       title: entry.title, intent_key: entry.intent_key, category_id: entry.category_id,
-      examples: entry.user_examples.join("\\n"), responses: entry.response_variants.join("\\n"),
-      followups: entry.follow_up_variants.join("\\n"), tone: entry.tone, audience: entry.audience,
+      examples: entry.user_examples.join("\n"), responses: entry.response_variants.join("\n"),
+      followups: entry.follow_up_variants.join("\n"), tone: entry.tone, audience: entry.audience,
       repeat_policy: entry.repeat_policy, cooldown_turns: String(entry.cooldown_turns),
       requires_permission_check: entry.requires_permission_check, escalation_level: entry.escalation_level ?? "",
       status: entry.status, visibility: entry.visibility,
@@ -126,9 +153,9 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
     if (!supabase || !canManage) return;
     const payload = {
       title: form.title.trim(), intent_key: form.intent_key.trim(), category_id: form.category_id,
-      user_examples: form.examples.split("\\n").map((s) => s.trim()).filter(Boolean),
-      response_variants: form.responses.split("\\n").map((s) => s.trim()).filter(Boolean),
-      follow_up_variants: form.followups.split("\\n").map((s) => s.trim()).filter(Boolean),
+      user_examples: form.examples.split("\n").map((s) => s.trim()).filter(Boolean),
+      response_variants: form.responses.split("\n").map((s) => s.trim()).filter(Boolean),
+      follow_up_variants: form.followups.split("\n").map((s) => s.trim()).filter(Boolean),
       tone: form.tone, audience: form.audience, repeat_policy: form.repeat_policy,
       cooldown_turns: Math.max(0, Number(form.cooldown_turns) || 0),
       requires_permission_check: form.requires_permission_check,
@@ -170,12 +197,12 @@ export function HelpBuddyIntelligenceManagement({ pageSlug }: { pageSlug: string
   };
 
   const openQaNew = () => { setEditingQa(null); setQaDraft({ knowledge_base_id: knowledgeBases[0]?.id ?? "", question: "", answer_markdown: "", intent_key: "platform.general", alternate_questions: "", tags: "", status: "draft", visibility: "public_internal" }); setQaEditor(true); };
-  const openQaEdit = (entry: QaEntry) => { setEditingQa(entry); setQaDraft({ knowledge_base_id: entry.knowledge_base_id, question: entry.question, answer_markdown: entry.answer_markdown, intent_key: entry.intent_key, alternate_questions: entry.alternate_questions.join("\\n"), tags: entry.tags.join(", "), status: entry.status, visibility: entry.visibility }); setQaEditor(true); };
+  const openQaEdit = (entry: QaEntry) => { setEditingQa(entry); setQaDraft({ knowledge_base_id: entry.knowledge_base_id, question: entry.question, answer_markdown: entry.answer_markdown, intent_key: entry.intent_key, alternate_questions: entry.alternate_questions.join("\n"), tags: entry.tags.join(", "), status: entry.status, visibility: entry.visibility }); setQaEditor(true); };
   const saveQa = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!supabase || !canManage) return;
     const user = (await supabase.auth.getUser()).data.user;
-    const payload = { knowledge_base_id: qaDraft.knowledge_base_id, question: qaDraft.question.trim(), answer_markdown: qaDraft.answer_markdown.trim(), intent_key: qaDraft.intent_key.trim(), alternate_questions: qaDraft.alternate_questions.split("\\n").map((v) => v.trim()).filter(Boolean), tags: qaDraft.tags.split(",").map((v) => v.trim()).filter(Boolean), status: qaDraft.status, visibility: qaDraft.visibility, version: editingQa ? editingQa.version + 1 : 1, updated_by: user?.id ?? null };
+    const payload = { knowledge_base_id: qaDraft.knowledge_base_id, question: qaDraft.question.trim(), answer_markdown: qaDraft.answer_markdown.trim(), intent_key: qaDraft.intent_key.trim(), alternate_questions: qaDraft.alternate_questions.split("\n").map((v) => v.trim()).filter(Boolean), tags: qaDraft.tags.split(",").map((v) => v.trim()).filter(Boolean), status: qaDraft.status, visibility: qaDraft.visibility, version: editingQa ? editingQa.version + 1 : 1, updated_by: user?.id ?? null };
     const result = editingQa ? await supabase.from("help_buddy_qa_entries").update(payload).eq("id", editingQa.id) : await supabase.from("help_buddy_qa_entries").insert({ ...payload, created_by: user?.id ?? null });
     if (result.error) toast.error(result.error.message); else { toast.success(editingQa ? "Q&A scenario updated." : "Q&A scenario created."); setQaEditor(false); await reload(); }
   };
