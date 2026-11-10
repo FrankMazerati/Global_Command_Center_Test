@@ -9,10 +9,11 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { ALL_DESTINATIONS } from "@/lib/nav";
+import { HelpBuddyConversation } from "@/components/workspace/KnowledgeAndHelpWorkspaces";
 import { useWork } from "@/lib/work-context";
 import { cn } from "@/lib/utils";
 
-const KNOWLEDGE = ALL_DESTINATIONS.filter((d) => d.section.slug === "knowledge-and-learning");
+const KNOWLEDGE = ALL_DESTINATIONS.filter((d) => d.section.slug === "knowledge-spaces");
 const WORK_VIEWS = ["Open work", "Pending work", "Closed work", "Transferred work", "Follow-ups", "Manager sign-off"];
 
 export function HelpBuddyPanel({ className }: { className?: string }) {
@@ -197,7 +198,7 @@ export function HelpBuddySheet() {
       <SheetContent side="right" className="w-[92vw] max-w-md overflow-y-auto p-0">
         <SheetHeader className="sr-only">
           <SheetTitle>Help Buddy</SheetTitle>
-          <SheetDescription>Your workflow companion</SheetDescription>
+          <SheetDescription>Your conversational work assistant</SheetDescription>
         </SheetHeader>
         <HelpBuddyPanel />
       </SheetContent>
