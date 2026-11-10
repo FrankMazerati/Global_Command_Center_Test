@@ -391,6 +391,8 @@ export function HelpBuddyConversation({ compact = false }: { compact?: boolean }
 
 export function HelpBuddyWorkspace({ title, pageSlug }: { title: string; pageSlug: string }) {
   const [vocabulary, setVocabulary] = useState<Array<Record<string, unknown>>>([]);
+  const [knowledgeBaseCount, setKnowledgeBaseCount] = useState(0);
+  const [articleCount, setArticleCount] = useState(0);
   const [syncStatus, setSyncStatus] = useState("Not checked");
   const [syncDetail, setSyncDetail] = useState("");
   const [history, setHistory] = useState<Array<Record<string, unknown>>>([]);
@@ -401,7 +403,16 @@ export function HelpBuddyWorkspace({ title, pageSlug }: { title: string; pageSlu
     const supabase = getSupabaseClient();
     if (!supabase) return () => { live = false; };
     if (pageSlug === "conversational-library") {
-      supabase.from("assistant_vocabulary_entries").select("category,intent_key,phrase,canonical_meaning,suggested_response_style,tags").eq("assistant_key", "helpbuddy").eq("status", "active").order("category").then(({ data }) => { if (live) setVocabulary((data ?? []) as Array<Record<string, unknown>>); });
+      Promise.all([
+        supabase.from("assistant_vocabulary_entries").select("category,intent_key,phrase,canonical_meaning,suggested_response_style,tags").eq("assistant_key", "helpbuddy").eq("status", "active").order("category"),
+        supabase.from("knowledge_bases").select("id", { count: "exact", head: true }).eq("status", "active"),
+        supabase.from("knowledge_articles").select("id", { count: "exact", head: true }).eq("status", "published"),
+      ]).then(([vocabularyResult, baseResult, articleResult]) => {
+        if (!live) return;
+        setVocabulary((vocabularyResult.data ?? []) as Array<Record<string, unknown>>);
+        setKnowledgeBaseCount(baseResult.count ?? 0);
+        setArticleCount(articleResult.count ?? 0);
+      });
     }
     if (pageSlug === "conversation-history" || pageSlug === "unanswered-questions") {
       setLoading(true);
@@ -440,7 +451,7 @@ export function HelpBuddyWorkspace({ title, pageSlug }: { title: string; pageSlu
   }
 
   if (pageSlug === "conversational-library") {
-    return <div className="space-y-4"><Panel><div className="flex items-center gap-3"><Library className="size-6 text-primary" /><div><h2 className="text-lg font-semibold">Help Buddy Conversational Library</h2><p className="text-sm text-muted-foreground">Intent vocabulary, response patterns and approved conversational guidance.</p></div></div><div className="mt-4 grid gap-3 sm:grid-cols-3"><div className="rounded-lg bg-muted/50 p-3"><b className="text-2xl">{vocabulary.length}</b><p className="text-xs text-muted-foreground">Active vocabulary entries</p></div><div className="rounded-lg bg-muted/50 p-3"><b className="text-2xl">9</b><p className="text-xs text-muted-foreground">Knowledge Spaces in the platform</p></div><div className="rounded-lg bg-muted/50 p-3"><b className="text-2xl">100</b><p className="text-xs text-muted-foreground">Published knowledge articles currently catalogued</p></div></div></Panel><Panel><h3 className="mb-3 font-semibold">Conversational intents</h3><div className="divide-y">{vocabulary.map((entry,index) => <div key={index} className="py-3"><div className="flex flex-wrap items-center justify-between gap-2"><b className="text-sm">{String(entry.phrase)}</b><span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] text-primary">{String(entry.category)}</span></div><p className="mt-1 text-xs text-muted-foreground">{String(entry.canonical_meaning)}</p></div>)}{!vocabulary.length && <p className="text-sm text-muted-foreground">No active Help Buddy vocabulary entries are available to this account.</p>}</div></Panel><Panel className="text-xs text-muted-foreground">The HelpBuddy Private Knowledge Base is protected as assistant-private content. Its contents must be retrieved by the authorized assistant runtime, not exposed directly to a user's browser session.</Panel></div>;
+    return <div className="space-y-4"><Panel><div className="flex items-center gap-3"><Library className="size-6 text-primary" /><div><h2 className="text-lg font-semibold">Help Buddy Conversational Library</h2><p className="text-sm text-muted-foreground">Intent vocabulary, response patterns and approved conversational guidance.</p></div></div><div className="mt-4 grid gap-3 sm:grid-cols-3"><div className="rounded-lg bg-muted/50 p-3"><b className="text-2xl">{vocabulary.length}</b><p className="text-xs text-muted-foreground">Active vocabulary entries</p></div><div className="rounded-lg bg-muted/50 p-3"><b className="text-2xl">{knowledgeBaseCount}</b><p className="text-xs text-muted-foreground">Accessible Knowledge Spaces</p></div><div className="rounded-lg bg-muted/50 p-3"><b className="text-2xl">{articleCount}</b><p className="text-xs text-muted-foreground">Accessible published articles</p></div></div></Panel><Panel><h3 className="mb-3 font-semibold">Conversational intents</h3><div className="divide-y">{vocabulary.map((entry,index) => <div key={index} className="py-3"><div className="flex flex-wrap items-center justify-between gap-2"><b className="text-sm">{String(entry.phrase)}</b><span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] text-primary">{String(entry.category)}</span></div><p className="mt-1 text-xs text-muted-foreground">{String(entry.canonical_meaning)}</p></div>)}{!vocabulary.length && <p className="text-sm text-muted-foreground">No active Help Buddy vocabulary entries are available to this account.</p>}</div></Panel><Panel className="text-xs text-muted-foreground">The HelpBuddy Private Knowledge Base is protected as assistant-private content. Its contents must be retrieved by the authorized assistant runtime, not exposed directly to a user's browser session.</Panel></div>;
   }
 
   if (pageSlug === "conversation-history" || pageSlug === "unanswered-questions") {
