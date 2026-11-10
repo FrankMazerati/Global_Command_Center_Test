@@ -313,44 +313,32 @@ export function HelpBuddyConversation({ compact = false }: { compact?: boolean }
     if (!question || sending) return;
     setDraft("");
     setSending(true);
-    const tempUser: Message = { id: crypto.randomUUID(), sender_type: "user", content: question, citations: [], created_at: new Date().toISOString() };
-    setMessages((current) => [...current, tempUser]);
     try {
       const supabase = getSupabaseClient();
-      if (!supabase || !profileId || !assistantId) throw new Error("Help Buddy's conversation store is not ready.");
-      let activeSessionId = sessionId;
-      if (!activeSessionId && sessionContext) {
-        const { data: created, error: createError } = await supabase.from("assistant_sessions").insert({
-          assistant_id: assistantId, profile_id: profileId, organization_id: sessionContext.organization_id,
-          tenant_id: sessionContext.tenant_id, session_status: "active", context_metadata: { origin: "help-buddy-workspace" },
-        }).select("id").single();
-        if (createError) throw createError;
-        activeSessionId = created.id;
-        setSessionId(created.id);
+      if (!supabase) throw new Error("The secure conversation service is unavailable.");
+      const { data, error } = await supabase.functions.invoke("help-buddy-chat", {
+        body: { question, sessionId },
+      });
+      if (error) throw error;
+      if (!data?.ok || !data?.assistantMessage || !data?.userMessage) {
+        throw new Error(data?.error ?? "Help Buddy could not complete that response.");
       }
-      if (activeSessionId) {
-        await supabase.from("assistant_messages").insert({ session_id: activeSessionId, sender_type: "user", content: question, sensitivity: "internal", citations: [] });
-      }
-      const answer = await findGroundedAnswer(question, profileId);
-      const assistantMessage: Message = { id: crypto.randomUUID(), sender_type: "assistant", content: answer.text, citations: answer.citations, created_at: new Date().toISOString() };
-      setMessages((current) => [...current, assistantMessage]);
-      if (answer.unresolved) setUnansweredCount((count) => count + 1);
-      if (activeSessionId) {
-        const { error: saveError } = await supabase.from("assistant_messages").insert({
-          session_id: activeSessionId, sender_type: "assistant", content: answer.text, sensitivity: "internal", citations: answer.citations,
-        });
-        if (saveError) setStatus("Answer generated; conversation history could not be saved under current permissions.");
-      }
+      setSessionId(data.sessionId);
+      setMessages((current) => [...current, data.userMessage as Message, data.assistantMessage as Message]);
+      if (data.assistantMessage.unresolved) setUnansweredCount((count) => count + 1);
+      setStatus(data.generativeModel === "not-configured"
+        ? "Knowledge service active · source-grounded answers · generative AI provider pending"
+        : "Help Buddy connected · role-aware conversation active");
     } catch (reason) {
       const message = reason instanceof Error ? reason.message : "The request could not be completed.";
-      setMessages((current) => [...current, { id: crypto.randomUUID(), sender_type: "assistant", content: message, citations: [], created_at: new Date().toISOString() }]);
-      setStatus("Conversation storage is unavailable; the current exchange remains on screen.");
+      setMessages((current) => [...current, {
+        id: crypto.randomUUID(), sender_type: "assistant", content: message, citations: [], created_at: new Date().toISOString(),
+      }]);
+      setStatus("The secure conversation service could not complete this request.");
     } finally {
       setSending(false);
     }
-  };
-
-  return (
+  };  return (
     <div className={`flex min-h-[420px] flex-col ${compact ? "max-h-[560px]" : "min-h-[560px]"}`}>
       <div className="flex items-center gap-3 border-b pb-3">
         <img src="/assets/help-buddy.png" alt="Help Buddy character" className="size-12 shrink-0 object-contain" />
@@ -391,6 +379,7 @@ export function HelpBuddyConversation({ compact = false }: { compact?: boolean }
 
 export function HelpBuddyWorkspace({ title, pageSlug }: { title: string; pageSlug: string }) {
   const [vocabulary, setVocabulary] = useState<Array<Record<string, unknown>>>([]);
+  const [qaEntries, setQaEntries] = useState<Array<Record<string, unknown>>>([]);
   const [knowledgeBaseCount, setKnowledgeBaseCount] = useState(0);
   const [articleCount, setArticleCount] = useState(0);
   const [syncStatus, setSyncStatus] = useState("Not checked");
@@ -407,11 +396,13 @@ export function HelpBuddyWorkspace({ title, pageSlug }: { title: string; pageSlu
         supabase.from("assistant_vocabulary_entries").select("category,intent_key,phrase,canonical_meaning,suggested_response_style,tags").eq("assistant_key", "helpbuddy").eq("status", "active").order("category"),
         supabase.from("knowledge_bases").select("id", { count: "exact", head: true }).eq("status", "active"),
         supabase.from("knowledge_articles").select("id", { count: "exact", head: true }).eq("status", "published"),
-      ]).then(([vocabularyResult, baseResult, articleResult]) => {
+        supabase.from("help_buddy_qa_entries").select("id,question,answer_markdown,intent_key,source_article_id,updated_at").eq("status", "published").order("updated_at", { ascending: false }).limit(200),
+      ]).then(([vocabularyResult, baseResult, articleResult, qaResult]) => {
         if (!live) return;
         setVocabulary((vocabularyResult.data ?? []) as Array<Record<string, unknown>>);
         setKnowledgeBaseCount(baseResult.count ?? 0);
         setArticleCount(articleResult.count ?? 0);
+        setQaEntries((qaResult.data ?? []) as Array<Record<string, unknown>>);
       });
     }
     if (pageSlug === "conversation-history" || pageSlug === "unanswered-questions") {
@@ -453,7 +444,7 @@ export function HelpBuddyWorkspace({ title, pageSlug }: { title: string; pageSlu
   }
 
   if (pageSlug === "conversational-library") {
-    return <div className="space-y-4"><Panel><div className="flex items-center gap-3"><Library className="size-6 text-primary" /><div><h2 className="text-lg font-semibold">Help Buddy Conversational Library</h2><p className="text-sm text-muted-foreground">Intent vocabulary, response patterns and approved conversational guidance.</p></div></div><div className="mt-4 grid gap-3 sm:grid-cols-3"><div className="rounded-lg bg-muted/50 p-3"><b className="text-2xl">{vocabulary.length}</b><p className="text-xs text-muted-foreground">Active vocabulary entries</p></div><div className="rounded-lg bg-muted/50 p-3"><b className="text-2xl">{knowledgeBaseCount}</b><p className="text-xs text-muted-foreground">Accessible Knowledge Spaces</p></div><div className="rounded-lg bg-muted/50 p-3"><b className="text-2xl">{articleCount}</b><p className="text-xs text-muted-foreground">Accessible published articles</p></div></div></Panel><Panel><h3 className="mb-3 font-semibold">Conversational intents</h3><div className="divide-y">{vocabulary.map((entry,index) => <div key={index} className="py-3"><div className="flex flex-wrap items-center justify-between gap-2"><b className="text-sm">{String(entry.phrase)}</b><span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] text-primary">{String(entry.category)}</span></div><p className="mt-1 text-xs text-muted-foreground">{String(entry.canonical_meaning)}</p></div>)}{!vocabulary.length && <p className="text-sm text-muted-foreground">No active Help Buddy vocabulary entries are available to this account.</p>}</div></Panel><Panel className="text-xs text-muted-foreground">The HelpBuddy Private Knowledge Base is protected as assistant-private content. Its contents must be retrieved by the authorized assistant runtime, not exposed directly to a user's browser session.</Panel></div>;
+    return <div className="space-y-4"><Panel><div className="flex items-center gap-3"><Library className="size-6 text-primary" /><div><h2 className="text-lg font-semibold">Help Buddy Conversational Library</h2><p className="text-sm text-muted-foreground">Intent vocabulary, response patterns and approved conversational guidance.</p></div></div><div className="mt-4 grid gap-3 sm:grid-cols-4"><div className="rounded-lg bg-muted/50 p-3"><b className="text-2xl">{vocabulary.length}</b><p className="text-xs text-muted-foreground">Active vocabulary entries</p></div><div className="rounded-lg bg-muted/50 p-3"><b className="text-2xl">{qaEntries.length}</b><p className="text-xs text-muted-foreground">Accessible approved Q&A entries</p></div><div className="rounded-lg bg-muted/50 p-3"><b className="text-2xl">{knowledgeBaseCount}</b><p className="text-xs text-muted-foreground">Accessible Knowledge Spaces</p></div><div className="rounded-lg bg-muted/50 p-3"><b className="text-2xl">{articleCount}</b><p className="text-xs text-muted-foreground">Accessible published articles</p></div></div></Panel><Panel><h3 className="mb-3 font-semibold">Conversational intents</h3><div className="divide-y">{vocabulary.map((entry,index) => <div key={index} className="py-3"><div className="flex flex-wrap items-center justify-between gap-2"><b className="text-sm">{String(entry.phrase)}</b><span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] text-primary">{String(entry.category)}</span></div><p className="mt-1 text-xs text-muted-foreground">{String(entry.canonical_meaning)}</p></div>)}{!vocabulary.length && <p className="text-sm text-muted-foreground">No active Help Buddy vocabulary entries are available to this account.</p>}</div></Panel><Panel><h3 className="mb-3 font-semibold">Approved question-and-answer library</h3><div className="divide-y">{qaEntries.map((entry) => <details key={String(entry.id)} className="py-3"><summary className="cursor-pointer text-sm font-medium">{String(entry.question)}</summary><p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{String(entry.answer_markdown ?? "").slice(0, 1400)}{String(entry.answer_markdown ?? "").length > 1400 ? "…" : ""}</p><p className="mt-2 text-[11px] text-muted-foreground">Intent: {String(entry.intent_key ?? "knowledge_lookup")} · Source-linked knowledge answer</p></details>)}{!qaEntries.length && <p className="text-sm text-muted-foreground">No approved Q&A entries are accessible to this account.</p>}</div></Panel><Panel className="text-xs text-muted-foreground">The HelpBuddy Private Knowledge Base is protected as assistant-private content. Its contents must be retrieved by the authorized assistant runtime, not exposed directly to a user's browser session.</Panel></div>;
   }
 
   if (pageSlug === "conversation-history" || pageSlug === "unanswered-questions") {
