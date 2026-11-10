@@ -23,6 +23,7 @@ import { StatusBadge } from "@/components/shell/StatusBadge";
 import { TicketWorkspace } from "@/components/workspace/TicketWorkspace";
 import { WorkflowCenter } from "@/components/workspace/WorkflowCenter";
 import { HelpBuddyWorkspace, KnowledgeSpacesWorkspace } from "@/components/workspace/KnowledgeAndHelpWorkspaces";
+import { HelpBuddyIntelligenceManagement } from "@/components/workspace/HelpBuddyIntelligenceManagement";
 import { findPage, toneVar } from "@/lib/nav";
 import { getSupabaseClient } from "@/lib/supabase";
 import { useWork } from "@/lib/work-context";
@@ -1193,6 +1194,7 @@ function PageFoundation() {
   const workflowCenter = section.slug === "home-and-command-center" && group.slug === "workflow-center";
   const knowledgeSpaces = section.slug === "knowledge-spaces";
   const helpBuddy = section.slug === "help-buddy";
+  const helpBuddyManagement = helpBuddy && group.slug === "intelligence-management";
   return (
     <div className="space-y-4">
       <nav
@@ -1247,6 +1249,8 @@ function PageFoundation() {
       )}
       {knowledgeSpaces ? (
         <KnowledgeSpacesWorkspace title={page.title} pageSlug={page.slug} />
+      ) : helpBuddyManagement ? (
+        <HelpBuddyIntelligenceManagement pageSlug={page.slug} />
       ) : helpBuddy ? (
         <HelpBuddyWorkspace title={page.title} pageSlug={page.slug} />
       ) : workflowCenter ? (
