@@ -180,12 +180,7 @@ export function HelpBuddyPanel({ className }: { className?: string }) {
           ))}
         </TabsContent>
 
-        <TabsContent value="chat" className="p-4">
-          <div className="rounded-lg border border-dashed bg-muted/50 p-4 text-sm text-muted-foreground">
-            Conversation with Help Buddy turns on in the next phase, once the backend and AI service are connected.
-            Notes, checklists and your active ticket already work.
-          </div>
-        </TabsContent>
+        <TabsContent value="chat" className="p-4"><HelpBuddyConversation compact /></TabsContent>
       </Tabs>
     </div>
   );
