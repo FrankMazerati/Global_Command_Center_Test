@@ -215,6 +215,7 @@ const MENU: RawSection[] = [
   ]],
   ["Help Buddy", "The single conversational assistant and workflow-guidance experience for every authorized user.", "everything", [
     ["Help Buddy Workspace", ["Help Buddy Overview", "Conversation Workspace", "Conversational Library", "Conversation History", "Unanswered Questions", "Response and Event Rules", "Connected Knowledge Sources", "My Work and Follow-Ups", "Checklists and Notes", "My Tickets and Contributions"]],
+    ["Intelligence Management", ["Intelligence Overview", "Conversational Responses", "Permissions and Escalation Responses", "Personality and Tone Rules", "Persistent Memory Management", "Semantic and Vector Search", "Knowledge Scenario Library", "Response Categories and Subcategories", "Unanswered Question Review", "Response Analytics", "Version and Change History"]],
   ]],
 ];
 
