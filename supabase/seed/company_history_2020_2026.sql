@@ -9,13 +9,13 @@ select
   o.id,
   'intellistack-company-history-2020-2026-v1',
   date '2020-02-10',
-  current_date,
+  (now() at time zone 'America/Chicago')::date,
   'running',
   'Founding-to-current company history: marketplace, finance, hiring, staffing, and employment.'
 from public.organizations o
 where o.slug = 'intellistack-managed-services'
 on conflict (batch_key) do update
-set status='running', through_date=current_date;
+set status='running', through_date=(now() at time zone 'America/Chicago')::date;
 
 -- 1,000 customer companies and customer accounts.
 with src as (
@@ -125,7 +125,7 @@ sale_base as (
     (((g*37-1)%1000)+1) customer_n,
     least(
       date '2020-02-10' + ((((g*37-1)%1000)+1)*17 % 2200) + (g%365),
-      current_date
+      (now() at time zone 'America/Chicago')::date
     ) sale_date,
     (400 + (g%31)*125)::numeric(14,2) subtotal,
     case when g%10=0 then (400 + (g%31)*125)*0.05 else 0 end::numeric(14,2) discount_total,
@@ -226,7 +226,7 @@ select
   'level-'||(((s.n-1)%5)+1),
   case when s.n%3=0 then 'annual' else 'monthly' end,
   round(s.total_amount / case when s.n%3=0 then 12 else 1 end,2),
-  case when s.sale_date > current_date-180 then 'active'
+  case when s.sale_date > (now() at time zone 'America/Chicago')::date-180 then 'active'
        when s.n%17=0 then 'past_due'
        when s.n%11=0 then 'paused'
        when s.n%7=0 then 'cancelled'
@@ -234,10 +234,10 @@ select
   s.sale_date,
   s.sale_date,
   case when s.n%3=0 then (s.sale_date + interval '1 year')::date else (s.sale_date + interval '1 month')::date end,
-  case when s.sale_date > current_date-180 then
+  case when s.sale_date > (now() at time zone 'America/Chicago')::date-180 then
     case when s.n%3=0 then (s.sale_date + interval '1 year')::date else (s.sale_date + interval '1 month')::date end
     else null end,
-  case when s.sale_date <= current_date-180 and (s.n%7=0 or s.n%11=0) then least(current_date,s.sale_date+interval '18 months')::date else null end,
+  case when s.sale_date <= (now() at time zone 'America/Chicago')::date-180 and (s.n%7=0 or s.n%11=0) then least((now() at time zone 'America/Chicago')::date,s.sale_date+interval '18 months')::date else null end,
   jsonb_build_object('record_lineage','company_history_seed_v1','source_sale_number',s.sale_number),
   (select id from public.company_history_batches where batch_key='intellistack-company-history-2020-2026-v1'),
   s.sale_date::timestamptz,
@@ -262,15 +262,15 @@ insert into public.marketplace_customer_subscription_events
 select
   md5('history-sub-event-'||s.subscription_number||'-renewal')::uuid,
   s.organization_id,s.id,'renewed',
-  least(current_date,s.starts_at + interval '1 year')::timestamptz,
+  least((now() at time zone 'America/Chicago')::date,s.starts_at + interval '1 year')::timestamptz,
   'Subscription renewal recorded in account history.',
   jsonb_build_object('status','active'),
   jsonb_build_object('renewal_cycle',case when s.billing_cycle='annual' then 'annual' else 'monthly' end),
   s.history_batch_id,
-  least(current_date,s.starts_at + interval '1 year')::timestamptz
+  least((now() at time zone 'America/Chicago')::date,s.starts_at + interval '1 year')::timestamptz
 from public.marketplace_customer_subscriptions s
 where s.history_batch_id=(select id from public.company_history_batches where batch_key='intellistack-company-history-2020-2026-v1')
-  and s.starts_at < current_date-interval '1 year'
+  and s.starts_at < (now() at time zone 'America/Chicago')::date-interval '1 year'
 on conflict (id) do nothing;
 
 -- One invoice per sale; balances reconcile exactly to amount paid.
@@ -295,7 +295,7 @@ select
   case when s.payment_status='paid' or s.payment_status='refunded' then 0
        when s.payment_status='partial' then s.total_amount-round(s.total_amount*0.5,2)
        else s.total_amount end,
-  case when s.payment_status in ('paid','refunded') then least(current_date,s.sale_date+20) else null end,
+  case when s.payment_status in ('paid','refunded') then least((now() at time zone 'America/Chicago')::date,s.sale_date+20) else null end,
   jsonb_build_object('record_lineage','company_history_seed_v1'),
   s.history_batch_id,s.sale_date::timestamptz
 from public.marketplace_sales s
@@ -380,7 +380,7 @@ insert into public.workforce_employment_events
 select
   md5('history-employment-promotion-'||p.employee_id)::uuid,
   p.organization_id,p.id,'IS-EMP-EVT-PROMO-'||p.employee_id,'promotion',
-  least(current_date,date '2020-02-10' + (((p.n*97)%2400)::int) + interval '18 months')::date,
+  least((now() at time zone 'America/Chicago')::date,date '2020-02-10' + (((p.n*97)%2400)::int) + interval '18 months')::date,
   p.job_title,
   case when p.job_level in ('Senior','Manager','Director','Executive') then p.job_title
        else 'Senior '||p.job_title end,
@@ -388,7 +388,7 @@ select
   'Career progression and role-level review.',
   jsonb_build_object('record_lineage','company_history_seed_v1'),
   (select id from public.company_history_batches where batch_key='intellistack-company-history-2020-2026-v1'),
-  least(current_date,date '2020-02-10' + (((p.n*97)%2400)::int) + interval '18 months')::timestamptz
+  least((now() at time zone 'America/Chicago')::date,date '2020-02-10' + (((p.n*97)%2400)::int) + interval '18 months')::timestamptz
 from people p
 where p.n%3=0
 on conflict (id) do nothing;
@@ -416,11 +416,11 @@ select
   (array['Enterprise rollout','Identity modernization','Cloud migration','Security operations','Network transformation','Service desk optimization','Workforce platform deployment','Data governance program'])[((g*3-1)%8)+1],
   case when g%9=0 then 'contractor' when g%7=0 then 'consultant' else 'employee' end,
   case when g%29=0 then 'cancelled'
-       when date '2020-02-10'+((g*19)%2200) > current_date-180 then 'active'
+       when date '2020-02-10'+((g*19)%2200) > (now() at time zone 'America/Chicago')::date-180 then 'active'
        else 'completed' end,
   date '2020-02-10'+((g*19)%2200),
-  case when g%29=0 or date '2020-02-10'+((g*19)%2200) <= current_date-180
-       then least(current_date,date '2020-02-10'+((g*19)%2200)+90+(g%270)) else null end,
+  case when g%29=0 or date '2020-02-10'+((g*19)%2200) <= (now() at time zone 'America/Chicago')::date-180
+       then least((now() at time zone 'America/Chicago')::date,date '2020-02-10'+((g*19)%2200)+90+(g%270)) else null end,
   35+(g%50),75+(g%90),'USD',
   (select id from public.workforce_people where job_title='Chief Operating Officer' order by employee_id limit 1),
   'Customer-facing workforce assignment with recorded delivery and closeout history.',
@@ -463,7 +463,7 @@ select
        when g%100<92 then 'open' when g%100<97 then 'on_hold' else 'cancelled' end,
   date '2020-02-10'+((g*23)%2300),
   case when g%100<82 or g%100>=97
-       then least(current_date,date '2020-02-10'+((g*23)%2300)+30+(g%180))
+       then least((now() at time zone 'America/Chicago')::date,date '2020-02-10'+((g*23)%2300)+30+(g%180))
        else null end,
   jsonb_build_object('record_lineage','company_history_seed_v1'),
   b.id,
@@ -556,7 +556,7 @@ select
   r.ids[((a.n-1)%cardinality(r.ids))+1],
   case when a.n%100<12 then (select hired_workforce_person_id from public.intellihire_candidates where id=md5('history-candidate-'||a.candidate_n)::uuid) else null end,
   greatest(c.created_at::date,date '2020-02-10'+((a.n*41)%2300)),
-  least(current_date,greatest(c.created_at::date,date '2020-02-10'+((a.n*41)%2300))+ (a.n%45)),
+  least((now() at time zone 'America/Chicago')::date,greatest(c.created_at::date,date '2020-02-10'+((a.n*41)%2300))+ (a.n%45)),
   'Application history includes screening, evaluation, and hiring-stage decisions.',
   jsonb_build_object('record_lineage','company_history_seed_v1'),
   b.id,
@@ -685,13 +685,13 @@ execs as (
 annual as (
   select y.yr,
     case when y.yr=2020 then date '2020-02-10' else make_date(y.yr,1,1) end period_start,
-    case when y.yr=2026 then current_date else make_date(y.yr,12,31) end period_end,
+    case when y.yr=2026 then (now() at time zone 'America/Chicago')::date else make_date(y.yr,12,31) end period_end,
     coalesce(sum(s.total_amount),0) revenue,
     count(s.id) sales_count
   from years y
   left join public.marketplace_sales s
     on s.sale_date >= case when y.yr=2020 then date '2020-02-10' else make_date(y.yr,1,1) end
-   and s.sale_date <= case when y.yr=2026 then current_date else make_date(y.yr,12,31) end
+   and s.sale_date <= case when y.yr=2026 then (now() at time zone 'America/Chicago')::date else make_date(y.yr,12,31) end
    and s.status in ('closed_won','active')
   group by y.yr
 )
