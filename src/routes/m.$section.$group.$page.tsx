@@ -31,6 +31,7 @@ import { IntelliOfficeWorkspace } from "@/components/workspace/IntelliOfficeWork
 import { IntelliSphereToolsWorkspace } from "@/components/workspace/IntelliSphereToolsWorkspace";
 import { EmployeeProfileWorkspace } from "@/components/workspace/EmployeeProfileWorkspace";
 import { GroupMembershipWorkspace } from "@/components/workspace/GroupMembershipWorkspace";
+import { PublicSiteManagementWorkspace } from "@/components/workspace/PublicSiteManagementWorkspace";
 import { findPage, toneVar } from "@/lib/nav";
 import { getSupabaseClient } from "@/lib/supabase";
 import { useWork } from "@/lib/work-context";
@@ -1248,6 +1249,7 @@ function PageFoundation() {
   const suiteTools = ["intellinotes", "intellidrive", "intelliforms", "intellistudio", "intellitext"].includes(page.slug);
   const helpBuddy = section.slug === "help-buddy";
   const helpBuddyManagement = helpBuddy && group.slug === "intelligence-management";
+  const publicSiteView = page.slug === "website-content-management" ? "pages" : page.slug === "social-media-management" ? "social" : page.slug === "public-contact-inquiries" ? "inquiries" : null;
   return (
     <div className="space-y-4">
       <nav
@@ -1307,7 +1309,9 @@ function PageFoundation() {
           </Link>
         </div>
       )}
-      {officeTool ? (
+      {publicSiteView ? (
+        <PublicSiteManagementWorkspace view={publicSiteView}/>
+      ) : officeTool ? (
         <IntelliOfficeWorkspace pageSlug={page.slug} />
       ) : suiteTools ? (
         <IntelliSphereToolsWorkspace pageSlug={page.slug} />
