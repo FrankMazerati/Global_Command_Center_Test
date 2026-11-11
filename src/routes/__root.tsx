@@ -124,10 +124,11 @@ function RootComponent() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
   const bare = pathname.startsWith("/login");
+  const publicSite = pathname.startsWith("/p/");
   const commandHome = pathname === "/";
   const [authorized, setAuthorized] = React.useState(false);
   useEffect(() => {
-    if (bare) { setAuthorized(true); return; }
+    if (bare || publicSite) { setAuthorized(true); return; }
     let active = true;
     const supabase = getSupabaseClient();
     if (!supabase) { navigate({ to: "/login", replace: true }); return; }
@@ -137,12 +138,12 @@ function RootComponent() {
       else setAuthorized(true);
     }).catch(() => navigate({ to: "/login", replace: true }));
     return () => { active = false; };
-  }, [bare, navigate, pathname]);
+  }, [bare, publicSite, navigate, pathname]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <WorkContextProvider>
-        {bare ? (
+        {bare || publicSite ? (
           <Outlet />
         ) : authorized ? (
           commandHome ? <Outlet /> : (
