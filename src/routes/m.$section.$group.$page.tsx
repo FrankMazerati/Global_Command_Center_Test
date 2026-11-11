@@ -54,7 +54,7 @@ export const Route = createFileRoute("/m/$section/$group/$page")({
 });
 
 type Row = Record<string, unknown>;
-type DirectoryKind = "users" | "devices" | "tenants" | "tickets";
+type DirectoryKind = "users" | "devices" | "tenants" | "tickets" | "groups" | "group_memberships";
 const directorySlugs: Record<DirectoryKind, string[]> = {
   users: [
     "global-directory",
@@ -86,6 +86,8 @@ const directorySlugs: Record<DirectoryKind, string[]> = {
     "infrastructure-inventory",
   ],
   tenants: ["tenants", "tenant-business-records", "tenant-membership", "tenant-administration"],
+  groups: ["groups", "security-groups", "group-objects"],
+  group_memberships: ["group-membership"],
   tickets: [
     "command-queue",
     "create-ticket",
@@ -143,7 +145,7 @@ function SupabaseDirectory({ kind, title }: { kind: DirectoryKind; title: string
       kind === "users"
         ? supabase
             .from("profiles")
-            .select("id,organization_id,tenant_id,department_id,display_name,job_title")
+            .select("id,organization_id,tenant_id,department_id,organizational_unit_id,employee_global_id,company_global_id,first_name,last_name,display_name,work_email,work_phone,job_title,manager_profile_id,member_status,location_city,location_region,country_code,timezone,avatar_url,created_at,updated_at")
             .limit(500)
         : supabase.from(kind).select("*").limit(500);
     directoryQuery.then(({ data, error: queryError }) => {
@@ -160,12 +162,16 @@ function SupabaseDirectory({ kind, title }: { kind: DirectoryKind; title: string
   const columns = useMemo(() => {
     const preferred =
       kind === "users"
-        ? ["display_name", "job_title", "department_id", "organization_id", "tenant_id"]
+        ? ["display_name", "work_email", "job_title", "employee_global_id", "member_status", "department_id", "organization_id", "tenant_id"]
         : kind === "devices"
           ? ["name", "device_name", "serial_number", "type", "assigned_to", "status"]
           : kind === "tenants"
             ? ["name", "tenant_name", "company_id", "owner", "status"]
-            : ["ticket_id", "title", "summary", "priority", "status", "assignee"];
+            : kind === "groups"
+              ? ["name", "group_key", "group_type", "description", "is_privileged", "organization_id", "tenant_id"]
+              : kind === "group_memberships"
+                ? ["group_id", "profile_id", "added_by", "expires_at", "created_at"]
+                : ["ticket_id", "title", "summary", "priority", "status", "assignee"];
     const keys = new Set(rows.flatMap((row) => Object.keys(row)));
     return [
       ...preferred.filter((key) => keys.has(key)),
@@ -271,7 +277,7 @@ function SupabaseDirectory({ kind, title }: { kind: DirectoryKind; title: string
           </div>
           <h2 className="text-xl font-semibold">{title}</h2>
           <p className="text-sm text-muted-foreground">
-            {kind === "users" ? "Directory identity fields from the profiles table; account provisioning is handled separately." : "Authenticated records from the selected table."}
+            {kind === "users" ? "Employee identity and organization fields from the canonical profiles table; account provisioning is handled separately." : kind === "groups" ? "Organization-scoped directory groups. Membership changes require the approved access workflow." : kind === "group_memberships" ? "Membership records from the canonical group_memberships relation. This view is read-only." : "Authenticated records from the selected table."}
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
