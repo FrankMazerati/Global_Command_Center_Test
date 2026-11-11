@@ -200,6 +200,7 @@ const MENU: RawSection[] = [
   ]],
   ["Account & Administration", "Personal preferences, system administration, documentation, integrations and service status.", "primary", [
     ["Account and System Administration", ["My Account", "Profile Settings", "Preferences", "Notification Settings", "Security Settings", "System Settings", "Global Administration", "Tenant Administration", "Role and Permission Administration", "Integration Management", "Service Status", "Documentation", "Help and Support", "Sign Out"]],
+    ["Public Website and Communications", ["Website Content Management", "Social Media Management", "Public Contact Inquiries"]],
   ]],
   ["Knowledge Spaces", "The platform's organized, permission-aware knowledge collections for company, tenant, role, operational and institutional knowledge.", "tenant", [
     ["Knowledge Space Overview", ["All Knowledge Spaces", "Search Knowledge", "Recent Articles", "Knowledge Administration", "Knowledge Permissions", "Review and Version History"]],
