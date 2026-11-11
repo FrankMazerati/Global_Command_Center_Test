@@ -1229,6 +1229,7 @@ function PageFoundation() {
   const workflowCenter = section.slug === "home-and-command-center" && group.slug === "workflow-center";
   const knowledgeSpaces = section.slug === "knowledge-spaces";
   const officeTool = ["intelliword", "intellisheets", "intellislides", "intellichat"].includes(page.slug);
+  const suitePlanned = ["intellinotes", "intellidrive", "intelliforms", "intellistudio", "intellitext"].includes(page.slug);
   const helpBuddy = section.slug === "help-buddy";
   const helpBuddyManagement = helpBuddy && group.slug === "intelligence-management";
   return (
@@ -1285,6 +1286,21 @@ function PageFoundation() {
       )}
       {officeTool ? (
         <IntelliOfficeWorkspace pageSlug={page.slug} />
+      ) : suitePlanned ? (
+        <section className="rounded-xl border bg-card p-5 shadow-card">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-600">
+            Foundation queued · not enabled
+          </div>
+          <h2 className="text-xl font-semibold">{page.title}</h2>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            This IntelliSphere product is listed in the suite navigation, but its working module is not implemented yet.
+            No sample records, simulated activity, or pretend integrations are shown here.
+          </p>
+          <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
+            It will use the shared IntelliStack identity, organization and tenant permissions, document storage, search,
+            and audit foundation as its implementation is completed.
+          </p>
+        </section>
       ) : knowledgeSpaces ? (
         <KnowledgeSpacesWorkspace title={page.title} pageSlug={page.slug} />
       ) : helpBuddyManagement ? (
