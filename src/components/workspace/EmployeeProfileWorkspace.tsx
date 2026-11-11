@@ -12,6 +12,8 @@ export function EmployeeProfileWorkspace() {
   const [stars, setStars] = useState(0);
   const [xp, setXp] = useState(0);
   const [groups, setGroups] = useState<RecordRow[]>([]);
+  const [relationships, setRelationships] = useState<RecordRow>({});
+  const [roles, setRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
@@ -32,11 +34,17 @@ export function EmployeeProfileWorkspace() {
       const p = profileResult.data as RecordRow;
       setProfile(p);
       setEditForm({ display_name: String(p.display_name ?? ""), work_phone: String(p.work_phone ?? ""), location_city: String(p.location_city ?? ""), location_region: String(p.location_region ?? ""), country_code: String(p.country_code ?? ""), timezone: String(p.timezone ?? ""), avatar_url: String(p.avatar_url ?? "") });
-      const [badgeResult, starResult, xpResult, groupResult] = await Promise.all([
+      const [badgeResult, starResult, xpResult, groupResult, managerResult, departmentResult, unitResult, organizationResult, tenantResult, roleResult] = await Promise.all([
         supabase.from("employee_badge_progress").select("id,badge_id,current_level,progress_value,level_started_at,last_awarded_at").eq("profile_id", auth.user.id),
         supabase.from("employee_star_transactions").select("stars_delta").eq("profile_id", auth.user.id),
         supabase.from("employee_xp_transactions").select("xp_delta").eq("profile_id", auth.user.id),
         supabase.from("group_memberships").select("group_id,expires_at,created_at,groups(id,name,group_key,group_type,description)").eq("profile_id", auth.user.id),
+        p.manager_profile_id ? supabase.from("profiles").select("display_name,first_name,last_name,job_title,work_email").eq("id", p.manager_profile_id).maybeSingle() : Promise.resolve({data:null,error:null}),
+        p.department_id ? supabase.from("departments").select("name,code").eq("id",p.department_id).maybeSingle() : Promise.resolve({data:null,error:null}),
+        p.organizational_unit_id ? supabase.from("organizational_units").select("name,distinguished_path").eq("id",p.organizational_unit_id).maybeSingle() : Promise.resolve({data:null,error:null}),
+        p.organization_id ? supabase.from("organizations").select("name,legal_name,organization_code,organization_type").eq("id",p.organization_id).maybeSingle() : Promise.resolve({data:null,error:null}),
+        p.tenant_id ? supabase.from("tenants").select("name,tenant_code").eq("id",p.tenant_id).maybeSingle() : Promise.resolve({data:null,error:null}),
+        supabase.from("profile_roles").select("roles(name,role_key),starts_at,expires_at,is_active").eq("profile_id",auth.user.id).eq("is_active",true),
       ]);
       if (!active) return;
       if (!badgeResult.error && badgeResult.data?.length) {
@@ -47,6 +55,8 @@ export function EmployeeProfileWorkspace() {
       if (!starResult.error) setStars((starResult.data ?? []).reduce((sum, row) => sum + Number(row.stars_delta ?? 0), 0));
       if (!xpResult.error) setXp((xpResult.data ?? []).reduce((sum, row) => sum + Number(row.xp_delta ?? 0), 0));
       if (!groupResult.error) setGroups((groupResult.data ?? []) as unknown as RecordRow[]);
+      setRelationships({ manager: managerResult.data, department: departmentResult.data, organizationalUnit: unitResult.data, organization: organizationResult.data, tenant: tenantResult.data });
+      if (!roleResult.error) setRoles((roleResult.data ?? []).filter((r) => (!r.starts_at || new Date(r.starts_at).getTime() <= Date.now()) && (!r.expires_at || new Date(r.expires_at).getTime() > Date.now())).map((r) => (r.roles as unknown as {name?:string;role_key?:string} | null)?.name ?? (r.roles as unknown as {role_key?:string} | null)?.role_key ?? "").filter(Boolean));
       setLoading(false);
     }
     void load();
@@ -79,10 +89,11 @@ export function EmployeeProfileWorkspace() {
     ["Employee Global ID", profile.employee_global_id], ["Company Global ID", profile.company_global_id],
     ["Work email", profile.work_email], ["Work phone", profile.work_phone], ["Job title", profile.job_title],
     ["Department ID", profile.department_id], ["Organizational unit ID", profile.organizational_unit_id],
-    ["Manager profile ID", profile.manager_profile_id], ["Employment status", profile.member_status],
+    ["Manager", (relationships.manager as RecordRow | null)?.display_name || [(relationships.manager as RecordRow | null)?.first_name,(relationships.manager as RecordRow | null)?.last_name].filter(Boolean).join(" ") || profile.manager_profile_id], ["Department", (relationships.department as RecordRow | null)?.name || profile.department_id], ["Organizational unit", (relationships.organizationalUnit as RecordRow | null)?.name || profile.organizational_unit_id], ["Organization", (relationships.organization as RecordRow | null)?.name || profile.organization_id], ["Tenant", (relationships.tenant as RecordRow | null)?.name || profile.tenant_id], ["Employment status", profile.member_status],
     ["City", profile.location_city], ["Region", profile.location_region], ["Country", profile.country_code],
     ["Time zone", profile.timezone], ["Organization ID", profile.organization_id], ["Tenant ID", profile.tenant_id],
-  ] as [string, unknown][] : [], [profile]);
+    ["Organization type", (relationships.organization as RecordRow | null)?.organization_type], ["Tenant code", (relationships.tenant as RecordRow | null)?.tenant_code],
+  ] as [string, unknown][] : [], [profile, relationships]);
 
   if (loading) return <section className="rounded-xl border border-sky-300/20 bg-slate-950/70 p-6 text-sky-100">Loading your secure employee profile…</section>;
   if (error) return <section role="alert" className="rounded-xl border border-amber-400/30 bg-amber-950/20 p-5 text-amber-100"><h2 className="font-semibold">Profile unavailable</h2><p className="mt-2 text-sm">{error}</p></section>;
@@ -116,6 +127,7 @@ export function EmployeeProfileWorkspace() {
     <section className="grid gap-4 lg:grid-cols-[1.4fr_.8fr_.8fr]">
       <div className="rounded-xl border bg-card p-5">
         <h2 className="mb-4 flex items-center gap-2 font-semibold"><BriefcaseBusiness className="size-5 text-primary"/>Identity and employment</h2>
+        <div className="mb-4 rounded-lg border bg-background/60 p-3"><div className="text-xs text-muted-foreground">Active role assignments</div><div className="mt-1 flex flex-wrap gap-2">{roles.length ? roles.map((role) => <span key={role} className="rounded-full border border-sky-500/30 bg-sky-500/10 px-3 py-1 text-xs">{role}</span>) : <span className="text-sm text-muted-foreground">No active role assignments visible</span>}</div></div>
         <dl className="grid gap-3 sm:grid-cols-2">{fields.map(([label, field]) => <div key={label} className="min-w-0 rounded-lg border bg-background/60 p-3"><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-1 break-words text-sm font-medium">{value(field)}</dd></div>)}</dl>
       </div>
       <div className="space-y-4">
