@@ -111,7 +111,7 @@ const RAW: RawSection[] = [
       ["Training and Learning", ["Learning Paths", "Role-Based Training", "Training Checkpoints", "Skills Development", "Certifications", "Learning Progress", "Resume Learning"]],
       ["Business and Executive Reference", ["Business Reference", "Executive Reference", "CEO and CFO Materials", "Business Procedures"]],
       ["Future Development and Historical Archive", ["Future Development Plans", "Expansion Roadmap", "Product Concepts", "Development Decisions", "Historical Archive", "Version History", "Completed Development Phases", "Superseded Designs and Decisions"]],
-      ["Personal and Restricted Knowledge", ["Personal Knowledge Bases", "Restricted Knowledge Bases", "Access Permissions", "Locked and Unlocked Content"]],
+      ["Personal and Restricted Knowledge", ["Personal Knowledge Bases", "Founder’s Papers", "Restricted Knowledge Bases", "Access Permissions", "Locked and Unlocked Content"]],
     ],
   ],
   [
