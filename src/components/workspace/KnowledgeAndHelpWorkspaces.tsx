@@ -76,8 +76,10 @@ export function KnowledgeSpacesWorkspace({ title, pageSlug }: { title: string; p
   }, []);
 
   const visibleBases = useMemo(() => {
-    const category = pageSlug.includes("getting-started") || pageSlug.includes("platform")
-      ? ["getting_started"]
+    const category = pageSlug.includes("founder-papers")
+      ? ["founder_papers"]
+      : pageSlug.includes("getting-started") || pageSlug.includes("platform")
+        ? ["getting_started"]
       : pageSlug.includes("faqs") || pageSlug.includes("troubleshooting") || pageSlug.includes("support") || pageSlug.includes("account-and-access") || pageSlug.includes("intellidesk") || pageSlug.includes("help-desk-procedures")
         ? ["help_desk"]
         : pageSlug.includes("executive") || pageSlug.includes("global-administration") || pageSlug.includes("ceo") || pageSlug.includes("cfo") || pageSlug.includes("sales") || pageSlug.includes("marketing") || pageSlug.includes("business-development") || pageSlug.includes("competitive-intelligence")
