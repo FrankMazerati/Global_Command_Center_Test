@@ -1325,7 +1325,7 @@ function PageFoundation() {
         <MarketplaceWorkspace title={page.title} pageSlug={page.slug} />
       ) : workforceHistory ? (
         <WorkforceHistoryWorkspace title={page.title} pageSlug={page.slug} />
-      ) : page.slug === "user-profiles" ? (
+      ) : ["user-profiles", "badges-and-achievements", "stars-and-recognition"].includes(page.slug) ? (
         <EmployeeProfileWorkspace />
       ) : page.slug === "group-membership" ? (
         <GroupMembershipWorkspace />
