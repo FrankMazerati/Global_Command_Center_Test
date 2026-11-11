@@ -40,12 +40,24 @@ describe("hamburger navigation", () => {
     expect(titles).not.toContain("Tenant Guests");
   });
 
-  it("exposes the four native IntelliStack productivity products", () => {
+  it("exposes the IntelliSphere productivity suite and collaboration products", () => {
     const productivity = NAV.find((section) => section.title === "Productivity & Collaboration");
     const titles = productivity?.groups.flatMap((group) => group.pages.map((page) => page.title)) ?? [];
     expect(titles).toEqual(
-      expect.arrayContaining(["IntelliWord", "IntelliSheets", "IntelliSlides", "IntelliChat"]),
+      expect.arrayContaining([
+        "IntelliWord",
+        "IntelliSheets",
+        "IntelliSlides",
+        "IntelliNotes",
+        "IntelliDrive",
+        "IntelliForms",
+        "IntelliStudio",
+        "IntelliText",
+        "IntelliChat",
+      ]),
     );
+    expect(titles).not.toContain("IntelliPay");
+    expect(titles).not.toContain("IntelliTax");
   });
 
   it("lists IntelliDrive only once", () => {
