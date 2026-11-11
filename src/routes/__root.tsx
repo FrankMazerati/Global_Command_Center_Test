@@ -51,7 +51,9 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">This page didn't load</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          This page didn't load
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Something went wrong on our end. You can try refreshing or head back home.
         </p>
@@ -83,7 +85,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "Maximus Optimus Global Command Center" },
-      { name: "description", content: "IntelliStack Systems presents Maximus Optimus Global Command Center." },
+      {
+        name: "description",
+        content: "IntelliStack Systems presents Maximus Optimus Global Command Center.",
+      },
       { name: "author", content: "IntelliStack Systems" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -128,16 +133,27 @@ function RootComponent() {
   const commandHome = pathname === "/";
   const [authorized, setAuthorized] = React.useState(false);
   useEffect(() => {
-    if (bare || publicSite) { setAuthorized(true); return; }
+    if (bare || publicSite) {
+      setAuthorized(true);
+      return;
+    }
     let active = true;
     const supabase = getSupabaseClient();
-    if (!supabase) { navigate({ to: "/login", replace: true }); return; }
-    supabase.auth.getSession().then(({ data }) => {
-      if (!active) return;
-      if (!data.session) navigate({ to: "/login", replace: true });
-      else setAuthorized(true);
-    }).catch(() => navigate({ to: "/login", replace: true }));
-    return () => { active = false; };
+    if (!supabase) {
+      navigate({ to: "/login", replace: true });
+      return;
+    }
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!active) return;
+        if (!data.session) navigate({ to: "/login", replace: true });
+        else setAuthorized(true);
+      })
+      .catch(() => navigate({ to: "/login", replace: true }));
+    return () => {
+      active = false;
+    };
   }, [bare, publicSite, navigate, pathname]);
 
   return (
@@ -146,7 +162,9 @@ function RootComponent() {
         {bare || publicSite ? (
           <Outlet />
         ) : authorized ? (
-          commandHome ? <Outlet /> : (
+          commandHome ? (
+            <Outlet />
+          ) : (
             <AppShell>
               <Outlet />
             </AppShell>
