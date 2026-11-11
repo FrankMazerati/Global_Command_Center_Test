@@ -65,5 +65,5 @@ jobs:
             echo ""
             echo "[Open this exact GitHub Actions workflow run](https://github.com/${REPOSITORY}/actions/runs/${RUN_ID})"
             echo ""
-            echo "**Commit:** `${COMMIT_SHA}`"
+            echo "**Commit:** \`${COMMIT_SHA}\`"
           } >> "$GITHUB_STEP_SUMMARY"
