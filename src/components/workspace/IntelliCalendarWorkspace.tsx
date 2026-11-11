@@ -188,7 +188,7 @@ export function IntelliCalendarWorkspace() {
             ["MY CALENDAR", "Personal schedule", CalendarDays],
             ["SMART SCHEDULING", "Plan with context", Sparkles],
             ["TEAM COORDINATION", "Shared work ahead", Users],
-            ["GLOBAL TIME", "Time-zone aware", Clock3],
+            ["LOCAL TIME", "Device time zone", Clock3],
           ].map(([label, sub, Icon]) => { const FeatureIcon = Icon as LucideIcon; return <div key={String(label)} className="rounded-xl border border-white/10 bg-white/[.045] p-3 backdrop-blur"><FeatureIcon className="mb-2 size-4 text-sky-300" /><div className="text-[9px] font-bold tracking-[.16em] text-sky-200">{String(label)}</div><div className="mt-1 text-xs text-slate-400">{String(sub)}</div></div>; })}
         </div>
       </section>
