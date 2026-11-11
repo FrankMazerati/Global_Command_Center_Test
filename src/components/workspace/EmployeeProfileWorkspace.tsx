@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Award, BriefcaseBusiness, Building2, CalendarDays, Clock3, Mail, MapPin, Phone, ShieldCheck, Sparkles, Star, Users } from "lucide-react";
+import { Award, BriefcaseBusiness, Sparkles, Star, Users } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabase";
 
 type RecordRow = Record<string, unknown>;
