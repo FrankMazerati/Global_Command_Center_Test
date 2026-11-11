@@ -1,1 +1,1 @@
-{"routes":[{"path":"/","title":"Global Command Center"},{"path":"/login","title":"Secure sign in"}]}
+{"routes":[{"path":"/","title":"Global Command Center"},{"path":"/login","title":"Secure sign in"},{"path":"/m/:section","title":"Command Center section"},{"path":"/m/:section/:group/:page","title":"Command Center module workspace"}]}

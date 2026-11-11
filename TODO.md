@@ -12,7 +12,7 @@
 
 ## Asset and route support
 - Supplied repository images are reused from local public assets rather than remote-only URLs.
-- `GET /manus-routes.json` declares `/` and `/login`.
+- `GET /manus-routes.json` declares `/`, `/login`, `/m/:section`, and `/m/:section/:group/:page`.
 
 ## Permanent hosted test website
 - The tested repository is transferred into a separate managed Webdev project and remains isolated from production.
@@ -47,3 +47,11 @@
 - The Company Environment Assessment accepts company, infrastructure, identity, security, service desk, productivity, vendor, cost, and challenge inputs; generates retain/integrate/improve/replace-oriented analysis; recommends a subscription level; and can save an assessment to Supabase or request consultation/proposal handoff.
 - Supabase-backed manager identity fields populate the command-center header when a matching user record is available, with local fallback values when the table is unavailable.
 - The availability and manager profile controls remain compact in the header.
+
+## Ticket lifecycle continuity: create → work → conversation → audit
+- [x] Ticket catalog pages use a dedicated, RLS-backed queue with truthful loading/empty/error states, search, per-page requester/assignee/team/history/active filters, and a clearly bounded latest-200 accessible-record result.
+- [x] Ticket creation derives requester, organization, and tenant from the signed-in profile in `create_portal_ticket`; the browser cannot choose a different company or tenant. Ticket details can be edited through a validated server RPC while open, with the existing database audit trigger recording changed field names but not title/description content.
+- [x] Status transitions, assignment to a profile in the same organization and tenant, priority, requester-wait accounting, and resolve/close/cancel/reopen/escalation actions are validated in both client and database. Consequential status actions ask for confirmation; reason-required actions reject short reasons.
+- [x] Ticket conversation uses the existing role/RLS rules for public replies and internal notes. The ticket detail view shows ticket status, source data, SLA deadlines, progress when stored, authorized messages, and database audit events; audit events exclude ticket descriptions and conversation-body content.
+- [x] The additive migration does not widen table grants or RLS policies. Ticket RPCs are SECURITY INVOKER; audit trigger functions are trigger-only and have a fixed search path.
+- [ ] Apply `supabase/migrations/20261111110000_ticket_workflow_rpcs.sql` only after verifying the test Supabase database already has the required ticket tables, types, permissions, RLS policies, SLA triggers, and prior audit trigger. Then run authenticated smoke tests as requester, technician, manager, and a different-tenant user. No live database migration was applied by this source change.

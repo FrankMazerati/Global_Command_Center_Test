@@ -20,6 +20,7 @@ import {
 import { toast } from "sonner";
 
 import { StatusBadge } from "@/components/shell/StatusBadge";
+import { TicketManagementWorkspace } from "@/components/workspace/TicketManagementWorkspace";
 import { TicketWorkspace } from "@/components/workspace/TicketWorkspace";
 import { WorkflowCenter } from "@/components/workspace/WorkflowCenter";
 import { HelpBuddyWorkspace, KnowledgeSpacesWorkspace } from "@/components/workspace/KnowledgeAndHelpWorkspaces";
@@ -85,6 +86,7 @@ const directorySlugs: Record<DirectoryKind, string[]> = {
   tenants: ["tenants", "tenant-business-records", "tenant-membership", "tenant-administration"],
   tickets: [
     "command-queue",
+    "create-ticket",
     "my-tickets",
     "my-assigned-tickets",
     "other-users-tickets",
@@ -1257,7 +1259,7 @@ function PageFoundation() {
           </div>
           <div className="flex flex-wrap gap-2">
             <StatusBadge status="Built" />
-            {(directory || marketplace || knowledgeSpaces) && <StatusBadge status="Connected" />}
+            {((directory && directory !== "tickets") || marketplace || knowledgeSpaces) && <StatusBadge status="Connected" />}
           </div>
         </div>
       </div>
@@ -1293,6 +1295,8 @@ function PageFoundation() {
         <MarketplaceWorkspace title={page.title} pageSlug={page.slug} />
       ) : workforceHistory ? (
         <WorkforceHistoryWorkspace title={page.title} pageSlug={page.slug} />
+      ) : directory === "tickets" ? (
+        <TicketManagementWorkspace title={page.title} pageSlug={page.slug} />
       ) : directory ? (
         <SupabaseDirectory kind={directory} title={page.title} />
       ) : (
