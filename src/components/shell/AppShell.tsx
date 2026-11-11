@@ -104,9 +104,10 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           <Link to="/" aria-label="Return to command center" className="min-w-0 flex-1 px-1 text-center">
             <span className="block truncate font-display text-[13px] font-black uppercase tracking-[.12em] text-white drop-shadow-[0_2px_12px_rgba(56,189,248,.32)] sm:text-lg sm:tracking-[.18em]">
-              Welcome to Your <span className="text-sky-300">Command Center</span>
+              INTELLISTACK SYSTEMS
             </span>
-            <span className="mt-1 hidden font-display text-[8px] font-semibold uppercase tracking-[.24em] text-slate-300/80 sm:block">ONE WORLD · ONE SYSTEM · ONE INTELLIGENT NETWORK</span>
+            <span className="mt-1 block truncate font-display text-[9px] font-bold uppercase tracking-[.16em] text-sky-300 sm:text-[11px]">MAXIMUS OPTIMUS COMMAND CENTER</span>
+            <span className="mt-1 hidden font-display text-[8px] font-semibold uppercase tracking-[.24em] text-slate-300/80 sm:block">SEE EVERYTHING · CONNECT EVERYTHING · WORK SMARTER</span>
           </Link>
 
           <nav aria-label="Quick actions" className="flex shrink-0 items-center justify-end gap-1">
