@@ -375,7 +375,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuItem
                   onSelect={() =>
                     go(
-                      "command-center",
+                      "employee-and-manager-workspace",
                       "workforce-performance-and-recognition",
                       "badges-and-achievements",
                     )
@@ -387,7 +387,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuItem
                   onSelect={() =>
                     go(
-                      "command-center",
+                      "employee-and-manager-workspace",
                       "workforce-performance-and-recognition",
                       "stars-and-recognition",
                     )
