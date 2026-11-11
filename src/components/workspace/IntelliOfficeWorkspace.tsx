@@ -7,9 +7,9 @@ const STORE_PREFIX = "intellistack.office.v1.";
 
 const products: Record<OfficeKind, { name: string; tagline: string; accent: string; icon: typeof FileText }> = {
   intelliword: { name: "IntelliWord", tagline: "Documents that move business forward.", accent: "#00CFFF", icon: FileText },
-  intellisheets: { name: "IntelliSheets", tagline: "Turn business data into decisions.", accent: "#AEB8C4", icon: Table2 },
+  intellisheets: { name: "IntelliSheets", tagline: "Turn business data into decisions.", accent: "#1677FF", icon: Table2 },
   intellislides: { name: "IntelliSlides", tagline: "Build the story behind the strategy.", accent: "#FF00A8", icon: Presentation },
-  intellichat: { name: "IntelliChat", tagline: "A connected communication workspace.", accent: "#6D28D9", icon: MessageSquare },
+  intellichat: { name: "IntelliChat", tagline: "A connected communication workspace.", accent: "#4B1D73", icon: MessageSquare },
 };
 
 function useLocalDocument<T>(kind: OfficeKind, initial: T) {
@@ -284,8 +284,8 @@ function SheetsWorkspace() {
   const visibleRows = value.cells.filter(row=>!search || row.join(" ").toLowerCase().includes(search.toLowerCase()));
   return <div className="space-y-3">
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-3">
-      <div className="flex items-center gap-2"><span className="grid size-9 place-items-center rounded-lg bg-slate-500/10 text-slate-300"><Table2 className="size-5"/></span><div><b>Workbook editor</b><p className="text-xs text-muted-foreground">Edit cells, calculate simple SUM ranges, import and export CSV.</p></div></div>
-      <div className="flex flex-wrap gap-2"><label className="cursor-pointer rounded-lg border px-3 py-2 text-sm hover:bg-muted">Import CSV<input type="file" accept=".csv,text/csv" className="hidden" onChange={importCsv}/></label><button type="button" onClick={exportCsv} className="inline-flex items-center gap-2 rounded-lg bg-slate-600 px-3 py-2 text-sm font-medium text-white"><Download className="size-4"/> Export CSV</button></div>
+      <div className="flex items-center gap-2"><span className="grid size-9 place-items-center rounded-lg bg-blue-500/10 text-blue-300"><Table2 className="size-5"/></span><div><b>Workbook editor</b><p className="text-xs text-muted-foreground">Edit cells, calculate simple SUM ranges, import and export CSV.</p></div></div>
+      <div className="flex flex-wrap gap-2"><label className="cursor-pointer rounded-lg border px-3 py-2 text-sm hover:bg-muted">Import CSV<input type="file" accept=".csv,text/csv" className="hidden" onChange={importCsv}/></label><button type="button" onClick={exportCsv} className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white"><Download className="size-4"/> Export CSV</button></div>
     </div>
     <section className="overflow-hidden rounded-xl border bg-card">
       <div className="flex flex-wrap items-center gap-3 border-b p-3"><input aria-label="Workbook title" value={value.title} onChange={e=>setValue(v=>({...v,title:e.target.value}))} className="min-w-0 flex-1 border-0 bg-transparent font-semibold outline-none"/><span className="text-xs text-muted-foreground">{savedAt ? `Saved locally ${savedAt}` : "Local save unavailable"}</span></div>
