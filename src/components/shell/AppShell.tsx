@@ -128,6 +128,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuItem onSelect={() => go("identity-and-access-management","groups-and-organization","group-membership")}><Users className="mr-2 size-4"/>My group memberships</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => go("command-center","workforce-performance-and-recognition","badges-and-achievements")}><Award className="mr-2 size-4"/>Badges and achievements</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => go("command-center","workforce-performance-and-recognition","stars-and-recognition")}><Star className="mr-2 size-4"/>Stars and recognition</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => go("account-and-administration","account-and-system-administration","security-settings")}><ShieldCheck className="mr-2 size-4"/>Security settings</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => go("account-and-administration","account-and-system-administration","notification-settings")}><Bell className="mr-2 size-4"/>Notification settings</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => go("account-and-administration","account-and-system-administration","preferences")}><Settings2 className="mr-2 size-4"/>Preferences</DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-slate-700"/>
                 <DropdownMenuItem onSelect={() => { void signOut(); }}><LogOut className="mr-2 size-4"/>Sign out</DropdownMenuItem>
