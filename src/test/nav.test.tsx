@@ -40,7 +40,7 @@ describe("hamburger navigation", () => {
     expect(titles).not.toContain("Tenant Guests");
   });
 
-  it("lists IntelliDrive only once", () => {
+  it("exposes the four native IntelliStack productivity products", () => {\n    const productivity = NAV.find((section) => section.title === "Productivity & Collaboration");\n    const titles = productivity?.groups.flatMap((group) => group.pages.map((page) => page.title)) ?? [];\n    expect(titles).toEqual(expect.arrayContaining(["IntelliWord", "IntelliSheets", "IntelliSlides", "IntelliChat"]));\n  });\n\n  it("lists IntelliDrive only once", () => {
     expect(ALL_DESTINATIONS.filter((d) => d.page.title === "IntelliDrive")).toHaveLength(1);
   });
 
