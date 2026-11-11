@@ -80,6 +80,13 @@ export function MarketplaceHistoryWorkspace({ title, pageSlug }: { title: string
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [customerCount, setCustomerCount] = useState(0);
+  const [salesCount, setSalesCount] = useState(0);
+  const [contactCount, setContactCount] = useState(0);
+  const [subscriptionCount, setSubscriptionCount] = useState(0);
+  const [activeSubscriptionCount, setActiveSubscriptionCount] = useState(0);
+  const [overdueInvoiceCount, setOverdueInvoiceCount] = useState(0);
+
   useEffect(() => {
     let active = true;
     const supabase = getSupabaseClient();
@@ -92,48 +99,90 @@ export function MarketplaceHistoryWorkspace({ title, pageSlug }: { title: string
     const load = async () => {
       setLoading(true);
       setError(null);
-      const [accountResult, companyResult, contactResult, saleResult, invoiceResult, subscriptionResult] =
-        await Promise.all([
-          supabase.from("marketplace_customer_accounts")
-            .select("id,account_number,customer_company_id,customer_since,account_status,industry,company_size")
-            .order("customer_since", { ascending: false }).limit(1500),
-          supabase.from("marketplace_companies")
-            .select("id,display_name,legal_name,headquarters_city,headquarters_region").limit(1500),
-          supabase.from("marketplace_customer_contacts")
-            .select("id,customer_account_id,first_name,last_name,contact_email,job_title,department,contact_role")
-            .limit(5000),
+      const revenuePages = await Promise.all(
+        Array.from({ length: 5 }, (_, page) =>
           supabase.from("marketplace_sales")
             .select("id,sale_number,customer_account_id,sale_date,status,payment_status,total_amount,currency")
-            .order("sale_date", { ascending: false }).limit(5000),
-          supabase.from("company_invoices")
-            .select("id,invoice_number,customer_account_id,issued_at,due_at,invoice_status,total,amount_paid,balance_due")
-            .order("issued_at", { ascending: false }).limit(500),
-          supabase.from("marketplace_customer_subscriptions")
-            .select("id,subscription_number,customer_account_id,plan_key,billing_cycle,monthly_amount,status,starts_at,next_billing_at")
-            .order("starts_at", { ascending: false }).limit(5000),
-        ]);
+            .order("sale_date", { ascending: false })
+            .range(page * 1000, page * 1000 + 999)
+        )
+      );
+      const [accountResult, companyResult, saleRecentResult, invoiceResult, subscriptionResult,
+        accountCountResult, salesCountResult, contactCountResult, subscriptionCountResult,
+        activeSubscriptionResult, overdueInvoiceResult] = await Promise.all([
+        supabase.from("marketplace_customer_accounts")
+          .select("id,account_number,customer_company_id,customer_since,account_status,industry,company_size")
+          .order("customer_since", { ascending: false }).limit(1000),
+        supabase.from("marketplace_companies")
+          .select("id,display_name,legal_name,headquarters_city,headquarters_region").limit(1000),
+        supabase.from("marketplace_sales")
+          .select("id,sale_number,customer_account_id,sale_date,status,payment_status,total_amount,currency")
+          .order("sale_date", { ascending: false }).limit(150),
+        supabase.from("company_invoices")
+          .select("id,invoice_number,customer_account_id,issued_at,due_at,invoice_status,total,amount_paid,balance_due")
+          .order("issued_at", { ascending: false }).limit(500),
+        supabase.from("marketplace_customer_subscriptions")
+          .select("id,subscription_number,customer_account_id,plan_key,billing_cycle,monthly_amount,status,starts_at,next_billing_at")
+          .order("starts_at", { ascending: false }).limit(200),
+        supabase.from("marketplace_customer_accounts").select("id", { count: "exact", head: true }),
+        supabase.from("marketplace_sales").select("id", { count: "exact", head: true }),
+        supabase.from("marketplace_customer_contacts").select("id", { count: "exact", head: true }),
+        supabase.from("marketplace_customer_subscriptions").select("id", { count: "exact", head: true }),
+        supabase.from("marketplace_customer_subscriptions").select("id", { count: "exact", head: true }).eq("status", "active"),
+        supabase.from("company_invoices").select("id", { count: "exact", head: true }).eq("invoice_status", "overdue"),
+      ]);
       if (!active) return;
-      const firstError = [accountResult, companyResult, contactResult, saleResult, invoiceResult, subscriptionResult]
-        .find((result) => result.error)?.error;
+      const firstError = [
+        ...revenuePages, accountResult, companyResult, saleRecentResult, invoiceResult,
+        subscriptionResult, accountCountResult, salesCountResult, contactCountResult,
+        subscriptionCountResult, activeSubscriptionResult, overdueInvoiceResult,
+      ].find((result) => result.error)?.error;
       if (firstError) {
         setError(firstError.message);
         setLoading(false);
         return;
       }
+      const revenueRows = revenuePages.flatMap((result) => result.data ?? []) as Sale[];
       setAccounts((accountResult.data ?? []) as Account[]);
       setCompanies((companyResult.data ?? []) as Company[]);
-      setContacts((contactResult.data ?? []) as Contact[]);
-      const saleRows = (saleResult.data ?? []) as Sale[];
-      setAllSales(saleRows);
-      setSales(saleRows.slice(0, 150));
+      setAllSales(revenueRows);
+      setSales((saleRecentResult.data ?? []) as Sale[]);
       setInvoices((invoiceResult.data ?? []) as Invoice[]);
       setSubscriptions((subscriptionResult.data ?? []) as Subscription[]);
+      setCustomerCount(accountCountResult.count ?? 0);
+      setSalesCount(salesCountResult.count ?? 0);
+      setContactCount(contactCountResult.count ?? 0);
+      setSubscriptionCount(subscriptionCountResult.count ?? 0);
+      setActiveSubscriptionCount(activeSubscriptionResult.count ?? 0);
+      setOverdueInvoiceCount(overdueInvoiceResult.count ?? 0);
       setLoading(false);
     };
 
     void load();
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    const supabase = getSupabaseClient();
+    if (!supabase || !selectedAccountId) {
+      setContacts([]);
+      return () => { active = false; };
+    }
+    void supabase.from("marketplace_customer_contacts")
+      .select("id,customer_account_id,first_name,last_name,contact_email,job_title,department,contact_role")
+      .eq("customer_account_id", selectedAccountId)
+      .order("is_primary", { ascending: false })
+      .then(({ data, error: contactError }) => {
+        if (!active) return;
+        if (contactError) {
+          setError(contactError.message);
+          return;
+        }
+        setContacts((data ?? []) as Contact[]);
+      });
+    return () => { active = false; };
+  }, [selectedAccountId]);
 
   const companyById = useMemo(() => new Map(companies.map((company) => [company.id, company])), [companies]);
   const accountById = useMemo(() => new Map(accounts.map((account) => [account.id, account])), [accounts]);
@@ -143,8 +192,8 @@ export function MarketplaceHistoryWorkspace({ title, pageSlug }: { title: string
   const totalRevenue = allSales
     .filter((sale) => sale.status === "closed_won" || sale.status === "active")
     .reduce((total, sale) => total + Number(sale.total_amount || 0), 0);
-  const activeSubscriptions = subscriptions.filter((subscription) => subscription.status === "active").length;
-  const overdueInvoices = invoices.filter((invoice) => invoice.invoice_status === "overdue").length;
+  const activeSubscriptions = activeSubscriptionCount;
+  const overdueInvoices = overdueInvoiceCount;
 
   const filteredSales = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -192,8 +241,8 @@ export function MarketplaceHistoryWorkspace({ title, pageSlug }: { title: string
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: "Customer accounts", value: accounts.length.toLocaleString(), icon: Building2 },
-          { label: "Recorded purchases", value: allSales.length.toLocaleString(), icon: CreditCard },
+          { label: "Customer accounts", value: customerCount.toLocaleString(), icon: Building2 },
+          { label: "Recorded purchases", value: salesCount.toLocaleString(), icon: CreditCard },
           { label: "Marketplace revenue", value: money(totalRevenue), icon: FileText },
           { label: "Active subscriptions", value: activeSubscriptions.toLocaleString(), icon: CalendarDays },
         ].map((metric) => {
@@ -208,9 +257,9 @@ export function MarketplaceHistoryWorkspace({ title, pageSlug }: { title: string
 
       {isOverview && (
         <div className="grid gap-3 md:grid-cols-3">
-          <div className="rounded-xl border bg-card p-4"><span className="text-xs text-muted-foreground">Customer contacts</span><b className="mt-1 block text-2xl">{loading ? "—" : contacts.length.toLocaleString()}</b><p className="mt-1 text-xs text-muted-foreground">Includes executive, finance, technology, and HR contacts.</p></div>
+          <div className="rounded-xl border bg-card p-4"><span className="text-xs text-muted-foreground">Customer contacts</span><b className="mt-1 block text-2xl">{loading ? "—" : contactCount.toLocaleString()}</b><p className="mt-1 text-xs text-muted-foreground">Includes executive, finance, technology, and HR contacts.</p></div>
           <div className="rounded-xl border bg-card p-4"><span className="text-xs text-muted-foreground">Invoices requiring attention</span><b className="mt-1 block text-2xl">{loading ? "—" : overdueInvoices.toLocaleString()}</b><p className="mt-1 text-xs text-muted-foreground">Overdue invoices in the latest 500 loaded records.</p></div>
-          <div className="rounded-xl border bg-card p-4"><span className="text-xs text-muted-foreground">Subscriptions in history</span><b className="mt-1 block text-2xl">{loading ? "—" : subscriptions.length.toLocaleString()}</b><p className="mt-1 text-xs text-muted-foreground">Monthly and annual customer agreements.</p></div>
+          <div className="rounded-xl border bg-card p-4"><span className="text-xs text-muted-foreground">Subscriptions in history</span><b className="mt-1 block text-2xl">{loading ? "—" : subscriptionCount.toLocaleString()}</b><p className="mt-1 text-xs text-muted-foreground">Monthly and annual customer agreements.</p></div>
         </div>
       )}
 
