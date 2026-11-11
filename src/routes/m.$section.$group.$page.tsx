@@ -28,6 +28,7 @@ import { HelpBuddyIntelligenceManagement } from "@/components/workspace/HelpBudd
 import { MarketplaceHistoryWorkspace } from "@/components/workspace/MarketplaceHistoryWorkspace";
 import { WorkforceHistoryWorkspace } from "@/components/workspace/WorkforceHistoryWorkspace";
 import { IntelliOfficeWorkspace } from "@/components/workspace/IntelliOfficeWorkspace";
+import { IntelliCalendarWorkspace } from "@/components/workspace/IntelliCalendarWorkspace";
 import { findPage, toneVar } from "@/lib/nav";
 import { getSupabaseClient } from "@/lib/supabase";
 import { useWork } from "@/lib/work-context";
@@ -1228,6 +1229,7 @@ function PageFoundation() {
   const workforceHistory = workforceHistorySlugs.includes(page.slug);
   const workflowCenter = section.slug === "home-and-command-center" && group.slug === "workflow-center";
   const knowledgeSpaces = section.slug === "knowledge-spaces";
+  const calendarWorkspace = page.slug === "intellicalendar";
   const officeTool = ["intelliword", "intellisheets", "intellislides", "intellichat"].includes(page.slug);
   const suitePlanned = ["intellinotes", "intellidrive", "intelliforms", "intellistudio", "intellitext"].includes(page.slug);
   const helpBuddy = section.slug === "help-buddy";
@@ -1261,7 +1263,7 @@ function PageFoundation() {
             <p className="text-sm text-muted-foreground">{group.title}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {(officeTool || helpBuddy || workflowCenter || ticketWorkspace || workforceHistory || directory === "tickets") && (
+            {(calendarWorkspace || officeTool || helpBuddy || workflowCenter || ticketWorkspace || workforceHistory || directory === "tickets") && (
               <StatusBadge status="Built" />
             )}
             {((directory && directory !== "tickets") || marketplace || knowledgeSpaces) && (
@@ -1291,7 +1293,9 @@ function PageFoundation() {
           </Link>
         </div>
       )}
-      {officeTool ? (
+      {calendarWorkspace ? (
+        <IntelliCalendarWorkspace />
+      ) : officeTool ? (
         <IntelliOfficeWorkspace pageSlug={page.slug} />
       ) : suitePlanned ? (
         <section className="rounded-xl border bg-card p-5 shadow-card">
