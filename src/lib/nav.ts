@@ -1,4 +1,4 @@
-// Single source of truth for the eleven primary hamburger navigation areas.
+// Single source of truth for the 17 primary hamburger navigation areas.
 // Every item resolves to a real route: /m/$section/$group/$page.
 
 export type SectionTone =
@@ -239,6 +239,7 @@ export const NAV: NavSection[] = MENU.map(([title, summary, tone, groups], i) =>
 export function findSection(slug: string) {
   const aliases: Record<string, string> = {
     "my-business-center": "business-products",
+    "identity-and-access-management": "new-active-directory",
     "knowledge-bases": "knowledge-spaces",
     "intellibase": "knowledge-spaces",
   };
