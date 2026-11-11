@@ -1294,7 +1294,9 @@ function PageFoundation() {
       )}
       {officeTool ? (
         <IntelliOfficeWorkspace pageSlug={page.slug} />
-      ) : suiteTools ? (\n        <IntelliSphereToolsWorkspace pageSlug={page.slug} />\n      ) : knowledgeSpaces ? (
+      ) : suiteTools ? (
+        <IntelliSphereToolsWorkspace pageSlug={page.slug} />
+      ) : knowledgeSpaces ? (
         <KnowledgeSpacesWorkspace title={page.title} pageSlug={page.slug} />
       ) : helpBuddyManagement ? (
         <HelpBuddyIntelligenceManagement pageSlug={page.slug} />
