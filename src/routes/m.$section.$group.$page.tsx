@@ -139,11 +139,14 @@ function SupabaseDirectory({ kind, title }: { kind: DirectoryKind; title: string
         live = false;
       };
     }
-    supabase
-      .from(kind)
-      .select("*")
-      .limit(500)
-      .then(({ data, error: queryError }) => {
+    const directoryQuery =
+      kind === "users"
+        ? supabase
+            .from("profiles")
+            .select("id,organization_id,tenant_id,department_id,display_name,job_title")
+            .limit(500)
+        : supabase.from(kind).select("*").limit(500);
+    directoryQuery.then(({ data, error: queryError }) => {
         if (!live) return;
         if (queryError) setError(queryError.message);
         else setRows((data ?? []) as Row[]);
@@ -157,7 +160,7 @@ function SupabaseDirectory({ kind, title }: { kind: DirectoryKind; title: string
   const columns = useMemo(() => {
     const preferred =
       kind === "users"
-        ? ["name", "full_name", "email", "role", "company_id", "tenant_id", "status"]
+        ? ["display_name", "job_title", "department_id", "organization_id", "tenant_id"]
         : kind === "devices"
           ? ["name", "device_name", "serial_number", "type", "assigned_to", "status"]
           : kind === "tenants"
@@ -179,6 +182,10 @@ function SupabaseDirectory({ kind, title }: { kind: DirectoryKind; title: string
 
   const createRecord = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (kind === "users") {
+      setError("User provisioning is not available here. Create identities through the approved authentication and invitation workflow.");
+      return;
+    }
     const supabase = getSupabaseClient();
     if (!supabase) return;
     const payload: Row =
@@ -264,14 +271,14 @@ function SupabaseDirectory({ kind, title }: { kind: DirectoryKind; title: string
           </div>
           <h2 className="text-xl font-semibold">{title}</h2>
           <p className="text-sm text-muted-foreground">
-            Authenticated records from the `{kind}` table.
+            {kind === "users" ? "Directory identity fields from the profiles table; account provisioning is handled separately." : "Authenticated records from the selected table."}
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span>
             {filtered.length} visible · {rows.length} loaded
           </span>
-          {(kind === "users" || kind === "devices" || kind === "tickets") && (
+          {(kind === "devices" || kind === "tickets") && (
             <button
               type="button"
               className="inline-flex items-center gap-1 rounded-md border px-2 py-1 font-medium text-primary hover:bg-accent"
