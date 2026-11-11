@@ -1268,7 +1268,7 @@ function PageFoundation() {
             {((directory && directory !== "tickets") || marketplace || knowledgeSpaces) && (
               <StatusBadge status="Connected" />
             )}
-            {(!officeTool && !suiteTools && !helpBuddy && !workflowCenter && !ticketWorkspace && !workforceHistory && !directory && !marketplace && !knowledgeSpaces)) && (
+            {(!officeTool && !suiteTools && !helpBuddy && !workflowCenter && !ticketWorkspace && !workforceHistory && !directory && !marketplace && !knowledgeSpaces) && (
               <StatusBadge status="Awaiting configuration" />
             )}
           </div>
