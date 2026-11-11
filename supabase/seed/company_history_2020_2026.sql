@@ -352,7 +352,7 @@ with people as (
 ),
 hire_dates as (
   select p.*,
-    date '2020-02-10' + ((p.n*97)%2400) as hire_date
+    date '2020-02-10' + (((p.n*97)%2400)::int) as hire_date
   from people p
 )
 insert into public.workforce_employment_events
@@ -380,7 +380,7 @@ insert into public.workforce_employment_events
 select
   md5('history-employment-promotion-'||p.employee_id)::uuid,
   p.organization_id,p.id,'IS-EMP-EVT-PROMO-'||p.employee_id,'promotion',
-  least(current_date,date '2020-02-10' + ((p.n*97)%2400) + interval '18 months')::date,
+  least(current_date,date '2020-02-10' + (((p.n*97)%2400)::int) + interval '18 months')::date,
   p.job_title,
   case when p.job_level in ('Senior','Manager','Director','Executive') then p.job_title
        else 'Senior '||p.job_title end,
@@ -388,7 +388,7 @@ select
   'Career progression and role-level review.',
   jsonb_build_object('record_lineage','company_history_seed_v1'),
   (select id from public.company_history_batches where batch_key='intellistack-company-history-2020-2026-v1'),
-  least(current_date,date '2020-02-10' + ((p.n*97)%2400) + interval '18 months')::timestamptz
+  least(current_date,date '2020-02-10' + (((p.n*97)%2400)::int) + interval '18 months')::timestamptz
 from people p
 where p.n%3=0
 on conflict (id) do nothing;
@@ -615,16 +615,16 @@ select
   p.organization_id,
   'IS-WORK-DOC-'||p.employee_id||'-'||d.n,
   d.module_key,d.doc_type,d.title,p.id,
-  date '2020-02-10'+((p.n*97)%2400),
-  case when d.n=2 then date '2020-02-10'+((p.n*97)%2400)+365 else null end,
+  date '2020-02-10'+(((p.n*97)%2400)::int),
+  case when d.n=2 then date '2020-02-10'+(((p.n*97)%2400)::int)+365 else null end,
   case when d.n=3 and p.n%5=0 then 'archived' else 'signed' end,
   '# '||d.title||E'\n\nEmployee: '||p.display_name||E'\nEmployee ID: '||p.employee_id||
-  E'\nEffective date: '||(date '2020-02-10'+((p.n*97)%2400))::text||
+  E'\nEffective date: '||(date '2020-02-10'+(((p.n*97)%2400)::int))::text||
   E'\n\nThis document is part of the employee''s IntelliWork employment record. It records the applicable policy, role expectations, acknowledgement, and review history.',
   (select id from public.workforce_people where job_title='Chief Human Resources Officer' order by employee_id limit 1),
   jsonb_build_object('record_lineage','company_history_seed_v1','employee_id',p.employee_id),
   (select id from public.company_history_batches where batch_key='intellistack-company-history-2020-2026-v1'),
-  (date '2020-02-10'+((p.n*97)%2400))::timestamptz
+  (date '2020-02-10'+(((p.n*97)%2400)::int))::timestamptz
 from people p cross join doc_types d
 on conflict (id) do nothing;
 
