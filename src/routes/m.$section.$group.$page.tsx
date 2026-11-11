@@ -24,6 +24,7 @@ import { TicketWorkspace } from "@/components/workspace/TicketWorkspace";
 import { WorkflowCenter } from "@/components/workspace/WorkflowCenter";
 import { HelpBuddyWorkspace, KnowledgeSpacesWorkspace } from "@/components/workspace/KnowledgeAndHelpWorkspaces";
 import { HelpBuddyIntelligenceManagement } from "@/components/workspace/HelpBuddyIntelligenceManagement";
+import { MarketplaceHistoryWorkspace } from "@/components/workspace/MarketplaceHistoryWorkspace";
 import { findPage, toneVar } from "@/lib/nav";
 import { getSupabaseClient } from "@/lib/supabase";
 import { useWork } from "@/lib/work-context";
@@ -520,6 +521,10 @@ const marketplaceSlugs = [
   "subscription-management",
   "seats-and-licensing",
   "upgrades-and-feature-access",
+  "financial-overview",
+  "income-and-revenue",
+  "transactions-and-payments",
+  "billing-and-renewals",
 ];
 const subscriptionLevels = ["Level 1", "Level 2", "Level 3", "Level 4", "Level 5"];
 const catalogSeed = [
@@ -550,7 +555,7 @@ const catalogSeed = [
   },
 ];
 
-function MarketplaceWorkspace({ title }: { title: string }) {
+function MarketplaceCatalogWorkspace({ title }: { title: string }) {
   const [catalog, setCatalog] = useState<Row[]>(catalogSeed);
   const [selected, setSelected] = useState<string[]>(["IntelliDesk"]);
   const [filter, setFilter] = useState("All");
@@ -888,6 +893,23 @@ function MarketplaceWorkspace({ title }: { title: string }) {
       </section>
     </div>
   );
+}
+
+function MarketplaceWorkspace({ title, pageSlug }: { title: string; pageSlug: string }) {
+  const historyPages = [
+    "marketplace-overview",
+    "company-purchases",
+    "tenant-purchases",
+    "subscription-management",
+    "billing-and-renewals",
+    "transactions-and-payments",
+    "financial-overview",
+    "income-and-revenue",
+  ];
+  if (historyPages.includes(pageSlug)) {
+    return <MarketplaceHistoryWorkspace title={title} pageSlug={pageSlug} />;
+  }
+  return <MarketplaceCatalogWorkspace title={title} />;
 }
 
 function EnvironmentAssessment() {
@@ -1258,7 +1280,7 @@ function PageFoundation() {
       ) : ticketWorkspace ? (
         <TicketWorkspace />
       ) : marketplace ? (
-        <MarketplaceWorkspace title={page.title} />
+        <MarketplaceWorkspace title={page.title} pageSlug={page.slug} />
       ) : directory ? (
         <SupabaseDirectory kind={directory} title={page.title} />
       ) : (
