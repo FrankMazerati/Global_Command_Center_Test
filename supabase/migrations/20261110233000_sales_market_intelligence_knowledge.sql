@@ -528,6 +528,6 @@ set title = excluded.title,
     body_md = excluded.body_md,
     status = excluded.status,
     visibility = excluded.visibility,
-    published_at = coalesce(public.knowledge_articles.published_at, excluded.published_at),
+    published_at = coalesce(knowledge_articles.published_at, excluded.published_at),
     metadata = excluded.metadata,
     updated_at = now();
