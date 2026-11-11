@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type ChangeEvent } from "react";
-import { FileText, Table2, Presentation, MessageSquare, Plus, Download, Save, Send, Trash2, ChevronLeft, ChevronRight, Bold, Users, LockKeyhole, FileDown, FilePlus2, PenLine, Cloud, ExternalLink, Video, UserPlus, X, CheckCircle2 } from "lucide-react";
+import { useCallback, useEffect, useState, type ChangeEvent } from "react";
+import { FileText, Table2, Presentation, MessageSquare, Plus, Download, Save, Send, Trash2, ChevronLeft, ChevronRight, Bold, Users, FileDown, FilePlus2, PenLine, Cloud, ExternalLink, Video, UserPlus } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabase";
 
 type OfficeKind = "intelliword" | "intellisheets" | "intellislides" | "intellichat";
@@ -354,7 +354,7 @@ function ChatWorkspace() {
   const [messageStatus, setMessageStatus] = useState("Checking your account…");
   const [busy, setBusy] = useState(false);
 
-  const loadChannels = async () => {
+  const loadChannels = useCallback(async () => {
     if (!client) return;
     const { data, error } = await client
       .from("intellisphere_chat_channels")
@@ -364,10 +364,8 @@ function ChatWorkspace() {
       setMessageStatus("Chat channels unavailable: " + error.message);
       return;
     }
-    const rows = (data ?? []) as ChatChannel[];
-    setChannels(rows);
-    if (!activeChannelId && rows.length > 0) setActiveChannelId(rows[0]!.id);
-  };
+    setChannels((data ?? []) as ChatChannel[]);
+  }, [client]);
 
   useEffect(() => {
     let active = true;
@@ -405,7 +403,11 @@ function ChatWorkspace() {
       if (active) setMessageStatus("Connected · private group messaging is ready");
     })();
     return () => { active = false; };
-  }, []);
+  }, [client, loadChannels]);
+
+  useEffect(() => {
+    if (!activeChannelId && channels.length > 0) setActiveChannelId(channels[0]!.id);
+  }, [activeChannelId, channels]);
 
   useEffect(() => {
     if (!client || !activeChannelId) {
@@ -413,8 +415,6 @@ function ChatWorkspace() {
       return;
     }
     let active = true;
-    const { data: ignored } = { data: null };
-    void ignored;
     void (async () => {
       const { data, error } = await client
         .from("intellisphere_chat_messages")
