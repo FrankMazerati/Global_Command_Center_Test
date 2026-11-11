@@ -185,6 +185,28 @@ A feature is not complete merely because a menu item or mock screen exists. For 
 9. Run persona-based acceptance tests and cross-scope security tests.
 10. Publish only after all release gates pass.
 
+
+## 11. Initial schema and implementation audit (2026-11-11)
+
+Read-only inspection of the connected Supabase project found:
+
+- `profiles` contains employee/company identity, organization and tenant references, manager, work email/phone, title, status, location, timezone, avatar fields, and a JSONB `profile_metadata` column.
+- The inspected schema does **not** currently expose dedicated profile columns for biography or LinkedIn URL.
+- The inspected schema does **not** show dedicated personal payment-method, billing-account, subscription, connected-account, or user-preference tables under the candidate names queried. This does not rule out a differently named provider integration; it means no such account-center data model was confirmed in this inspection.
+- Badge progress, star transactions, and XP transactions exist as separate employee-recognition records.
+- Profile RLS includes self-read and self-update policies. The self-update policy checks row ownership but does not itself restrict which columns a user can update. A client-side form showing only safe fields is not a sufficient column-level security boundary. Review table grants/column privileges and use a safe server-side write design before declaring self-service profile edits production-safe.
+- Existing homepage profile editor state for biography, LinkedIn URL, and payment entry is local UI state and is not evidence of persistent profile storage or a payment provider integration.
+
+### Immediate security and data-model blockers
+
+1. Do not store payment card numbers, CVV, bank credentials, or payment tokens in `profiles.profile_metadata`.
+2. Do not trust profile metadata for authorization, roles, tenant scope, identity verification, or other security decisions. It is user-editable profile content.
+3. Do not enable self-service updates to protected identity/organization fields through a broad table update grant.
+4. Decide and document the payment provider and hosted tokenization flow before enabling payment-method management.
+5. Decide whether bio, LinkedIn URL, portfolio, and visibility belong in normalized columns/tables or a validated user-editable metadata contract.
+6. Review actual database grants, policies, and mutation paths; verify self-update cannot alter IDs, roles, manager, tenant, organization, or employment status.
+
+
 ## 10. Current repository observations
 
 The current branch already contains:
