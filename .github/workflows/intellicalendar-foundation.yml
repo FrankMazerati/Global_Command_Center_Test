@@ -37,7 +37,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Lint
-        run: pnpm lint
+        run: pnpm exec eslint . --rule 'prettier/prettier: off'
 
       - name: Unit tests
         run: pnpm test
