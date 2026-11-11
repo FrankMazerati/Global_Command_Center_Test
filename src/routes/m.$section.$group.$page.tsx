@@ -27,6 +27,7 @@ import { HelpBuddyWorkspace, KnowledgeSpacesWorkspace } from "@/components/works
 import { HelpBuddyIntelligenceManagement } from "@/components/workspace/HelpBuddyIntelligenceManagement";
 import { MarketplaceHistoryWorkspace } from "@/components/workspace/MarketplaceHistoryWorkspace";
 import { WorkforceHistoryWorkspace } from "@/components/workspace/WorkforceHistoryWorkspace";
+import { IntelliOfficeWorkspace } from "@/components/workspace/IntelliOfficeWorkspace";
 import { findPage, toneVar } from "@/lib/nav";
 import { getSupabaseClient } from "@/lib/supabase";
 import { useWork } from "@/lib/work-context";
@@ -1227,6 +1228,7 @@ function PageFoundation() {
   const workforceHistory = workforceHistorySlugs.includes(page.slug);
   const workflowCenter = section.slug === "home-and-command-center" && group.slug === "workflow-center";
   const knowledgeSpaces = section.slug === "knowledge-spaces";
+  const officeTool = ["intelliword", "intellisheets", "intellislides", "intellichat"].includes(page.slug);
   const helpBuddy = section.slug === "help-buddy";
   const helpBuddyManagement = helpBuddy && group.slug === "intelligence-management";
   return (
@@ -1281,7 +1283,9 @@ function PageFoundation() {
           </Link>
         </div>
       )}
-      {knowledgeSpaces ? (
+      {officeTool ? (
+        <IntelliOfficeWorkspace pageSlug={page.slug} />
+      ) : knowledgeSpaces ? (
         <KnowledgeSpacesWorkspace title={page.title} pageSlug={page.slug} />
       ) : helpBuddyManagement ? (
         <HelpBuddyIntelligenceManagement pageSlug={page.slug} />
