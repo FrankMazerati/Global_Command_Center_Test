@@ -150,6 +150,9 @@ export function WorkforceHistoryWorkspace({ title, pageSlug }: { title: string; 
   const visibleAssignments = useMemo(() => assignments.filter((assignment) =>
     [assignment.assignment_number,assignment.role_title,assignment.project_name,assignment.assignment_status]
       .some((value) => String(value ?? "").toLowerCase().includes(term))), [assignments,term]);
+  const visibleApplications = useMemo(() => applications.filter((application) =>
+    [application.application_number,application.application_status,application.stage,application.candidate_id,application.requisition_id]
+      .some((value) => String(value ?? "").toLowerCase().includes(term))), [applications,term]);
 
   return (
     <div className="space-y-5">
@@ -197,6 +200,13 @@ export function WorkforceHistoryWorkspace({ title, pageSlug }: { title: string; 
                 <table className="w-full min-w-[720px] text-left text-sm">
                   <thead className="bg-muted/40 text-xs uppercase text-muted-foreground"><tr><th className="px-3 py-3">Candidate</th><th className="px-3 py-3">Headline</th><th className="px-3 py-3">Experience</th><th className="px-3 py-3">Source</th><th className="px-3 py-3">Status</th></tr></thead>
                   <tbody>{visibleCandidates.slice(0,150).map((candidate) => <tr key={candidate.id} className="border-t"><td className="px-3 py-3"><b>{candidate.first_name} {candidate.last_name}</b><div className="text-xs text-muted-foreground">{candidate.candidate_number} · {candidate.email}</div></td><td className="px-3 py-3">{candidate.headline ?? "—"}</td><td className="px-3 py-3">{Number(candidate.years_experience).toFixed(1)} yrs</td><td className="px-3 py-3">{label(candidate.candidate_source)}</td><td className="px-3 py-3"><span className="rounded-full bg-muted px-2 py-1 text-xs">{label(candidate.candidate_status)}</span></td></tr>)}</tbody>
+                </table>
+              </div>
+              <div className="overflow-auto rounded-lg border">
+                <div className="border-b px-3 py-3 font-semibold">Recent applications</div>
+                <table className="w-full min-w-[700px] text-left text-sm">
+                  <thead className="bg-muted/40 text-xs uppercase text-muted-foreground"><tr><th className="px-3 py-3">Application</th><th className="px-3 py-3">Candidate ID</th><th className="px-3 py-3">Requisition ID</th><th className="px-3 py-3">Stage</th><th className="px-3 py-3">Fit score</th><th className="px-3 py-3">Applied</th></tr></thead>
+                  <tbody>{visibleApplications.slice(0,100).map((application) => <tr key={application.id} className="border-t"><td className="px-3 py-3 font-medium">{application.application_number}<div className="text-xs text-muted-foreground">{label(application.application_status)}</div></td><td className="px-3 py-3 text-xs">{application.candidate_id.slice(0,8)}…</td><td className="px-3 py-3 text-xs">{application.requisition_id.slice(0,8)}…</td><td className="px-3 py-3">{label(application.stage)}</td><td className="px-3 py-3">{application.fit_score == null ? "—" : Number(application.fit_score).toFixed(0)}</td><td className="px-3 py-3">{dateText(application.applied_at)}</td></tr>)}</tbody>
                 </table>
               </div>
               <div className="overflow-auto rounded-lg border">
