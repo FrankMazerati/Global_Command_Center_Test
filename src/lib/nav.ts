@@ -178,7 +178,7 @@ const MENU: RawSection[] = [
     ["Command Center", ["Dashboard", "Bring the Work to You", "Global Time Zones", "News and Intelligence Feed", "Market Watch", "Command Status"]],
     ["Workflow Center", ["Workflow Dashboard", "Workflow Templates", "Template Builder", "Active Workflows", "My Assigned Tasks", "Approvals and Checkpoints", "Workflow History", "Automation Rules", "Workflow Analytics"]],
   ]],
-  ["Business Products", "Company operations, executive workspaces, financial products and the IntelliSphere marketplace.", "primary", rawGroups("My Business Center").map(([group, pages]) => [group.replace("IntelliHire", "IntelliHire").replace("IntelliStaff", "IntelliStaff"), pages.map((page) => page.replace(/IntelliHire/g, "IntelliHire").replace(/IntelliStaff/g, "IntelliStaff"))])],
+  ["My Business Center", "Company operations, executive workspaces, financial products and the IntelliSphere marketplace.", "primary", rawGroups("My Business Center").map(([group, pages]) => [group.replace("IntelliHire", "IntelliHire").replace("IntelliStaff", "IntelliStaff"), pages.map((page) => page.replace(/IntelliHire/g, "IntelliHire").replace(/IntelliStaff/g, "IntelliStaff"))])],
   ["Identity & Access Management", "Global identity, directory services, tenants, organizations, roles and access governance.", "contractor", [
     ...rawGroups("New Active Directory"),
     ["Global Identity & Access Management", ["Global IAM Overview", "Global Company ID", "Global User ID", "Organizations", "Tenants", "Tenant Membership", "Company Profiles", "Organizational Units", "Departments", "Groups", "Roles", "Permissions", "Managers and Reporting Structure", "Identity Verification", "Authentication", "Multi-Factor Authentication", "Single Sign-On", "Access Requests", "Access Reviews", "Identity Audit"]],
@@ -201,9 +201,9 @@ const MENU: RawSection[] = [
   ["Account & Administration", "Personal preferences, system administration, documentation, integrations and service status.", "primary", [
     ["Account and System Administration", ["My Account", "Profile Settings", "Preferences", "Notification Settings", "Security Settings", "System Settings", "Global Administration", "Tenant Administration", "Role and Permission Administration", "Integration Management", "Service Status", "Documentation", "Help and Support", "Sign Out"]],
   ]],
-  ["Knowledge Spaces", "The platform's organized, permission-aware knowledge collections for company, tenant, role, operational and institutional knowledge.", "tenant", [
-    ["Knowledge Space Overview", ["All Knowledge Spaces", "Search Knowledge", "Recent Articles", "Knowledge Administration", "Knowledge Permissions", "Review and Version History"]],
-    ["Platform and Getting Started", ["Getting Started and Platform Guide", "System Navigation", "Dashboard and Global Widgets", "Platform User Guides", "Role-Based Getting Started"]],
+  ["Knowledge Bases", "IntelliBase: permission-aware company, tenant, role, operational and institutional knowledge.", "tenant", [
+    ["Getting Started", ["Getting Started Platform Guide", "System Navigation", "Dashboard and Global Widgets", "Platform User Guides", "Role-Based Getting Started"]],
+    ["Knowledge Base Overview", ["All Knowledge Bases", "Search Knowledge", "Recent Articles", "Knowledge Administration", "Knowledge Permissions", "Review and Version History"]],
     ["General Knowledge and Support", ["FAQs and Common Questions", "Troubleshooting and Resolutions", "Account and Access Help", "Devices and Applications", "IntelliDesk Support"]],
     ["Operational Knowledge Playbook", ["Help Desk Procedures", "New Active Directory Procedures", "Employee Lifecycle Procedures", "Device and Asset Procedures", "Marketplace and Licensing Procedures", "NOC and SOC Operations", "Security and Incident Response"]],
     ["Workflow Knowledge Library", ["Workflow Library", "Workflow Template Guides", "Tasks and Checkpoints", "Approvals and Verification"]],
@@ -222,7 +222,7 @@ const MENU: RawSection[] = [
 export const NAV: NavSection[] = MENU.map(([title, summary, tone, groups], i) => ({
   number: String(i + 1).padStart(2, "0"),
   title,
-  slug: slugify(title),
+  slug: title === "My Business Center" ? "business-products" : title === "Knowledge Bases" ? "knowledge-spaces" : slugify(title),
   summary,
   tone,
   groups: groups.map(([g, pages]) => ({
@@ -233,13 +233,23 @@ export const NAV: NavSection[] = MENU.map(([title, summary, tone, groups], i) =>
 }));
 
 export function findSection(slug: string) {
-  return NAV.find((s) => s.slug === slug);
+  const aliases: Record<string, string> = {
+    "my-business-center": "business-products",
+    "knowledge-bases": "knowledge-spaces",
+    "intellibase": "knowledge-spaces",
+  };
+  return NAV.find((s) => s.slug === (aliases[slug] ?? slug));
 }
 
 export function findPage(sectionSlug: string, groupSlug: string, pageSlug: string) {
   const section = findSection(sectionSlug);
   const group = section?.groups.find((g) => g.slug === groupSlug);
-  const page = group?.pages.find((p) => p.slug === pageSlug);
+  const pageAliases: Record<string, string> = {
+    "all-knowledge-bases": "all-knowledge-bases",
+    "getting-started-and-platform-guide": "getting-started-platform-guide",
+    "platform-guide": "getting-started-platform-guide",
+  };
+  const page = group?.pages.find((p) => p.slug === (pageAliases[pageSlug] ?? pageSlug));
   return section && group && page ? { section, group, page } : undefined;
 }
 
