@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ChangeEvent } from "react";
-import { FileText, Table2, Presentation, MessageSquare, Plus, Download, Save, Send, Trash2, ChevronLeft, ChevronRight, Bold, Users, FileDown, FilePlus2, PenLine, Cloud, ExternalLink, Video, UserPlus } from "lucide-react";
+import { FileText, Table2, Presentation, MessageSquare, Plus, Download, Save, Send, Trash2, ChevronLeft, ChevronRight, Bold, Users, FileDown, FilePlus2, PenLine, Cloud, Video, UserPlus } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabase";
 
 type OfficeKind = "intelliword" | "intellisheets" | "intellislides" | "intellichat";
