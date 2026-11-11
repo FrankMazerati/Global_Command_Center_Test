@@ -1341,7 +1341,7 @@ function PageFoundation() {
             audit history, and automated tests. No invented counts, sample activity, or nonfunctional action buttons are displayed.
           </p>
         </section>
-      )} )}
+      )}
     </div>
   );
 }
