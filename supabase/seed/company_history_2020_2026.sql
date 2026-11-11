@@ -540,21 +540,21 @@ select
   o.id,'IS-APP-'||lpad(a.n::text,7,'0'),
   md5('history-candidate-'||a.candidate_n)::uuid,
   md5('history-requisition-'||a.req_n)::uuid,
-  case when a.n%100<12 then 'hired'
+  case when c.hired_workforce_person_id is not null and a.n%100<12 then 'hired'
        when a.n%100<28 then 'interview'
        when a.n%100<40 then 'offer'
        when a.n%100<60 then 'screening'
        when a.n%100<75 then 'shortlisted'
        when a.n%100<90 then 'rejected'
        else 'withdrawn' end,
-  case when a.n%100<12 then 'hired'
+  case when c.hired_workforce_person_id is not null and a.n%100<12 then 'hired'
        when a.n%100<28 then 'interview'
        when a.n%100<40 then 'offer'
        when a.n%100<60 then 'screening'
        else 'closed' end,
   (55+(a.n%46))::numeric(5,2),
   r.ids[((a.n-1)%cardinality(r.ids))+1],
-  case when a.n%100<12 then (select hired_workforce_person_id from public.intellihire_candidates where id=md5('history-candidate-'||a.candidate_n)::uuid) else null end,
+  case when a.n%100<12 then c.hired_workforce_person_id else null end,
   greatest(c.created_at::date,date '2020-02-10'+((a.n*41)%2300)),
   least((now() at time zone 'America/Chicago')::date,greatest(c.created_at::date,date '2020-02-10'+((a.n*41)%2300))+ (a.n%45)),
   'Application history includes screening, evaluation, and hiring-stage decisions.',
