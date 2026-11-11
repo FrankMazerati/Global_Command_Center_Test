@@ -29,6 +29,8 @@ import { MarketplaceHistoryWorkspace } from "@/components/workspace/MarketplaceH
 import { WorkforceHistoryWorkspace } from "@/components/workspace/WorkforceHistoryWorkspace";
 import { IntelliOfficeWorkspace } from "@/components/workspace/IntelliOfficeWorkspace";
 import { IntelliSphereToolsWorkspace } from "@/components/workspace/IntelliSphereToolsWorkspace";
+import { EmployeeProfileWorkspace } from "@/components/workspace/EmployeeProfileWorkspace";
+import { GroupMembershipWorkspace } from "@/components/workspace/GroupMembershipWorkspace";
 import { findPage, toneVar } from "@/lib/nav";
 import { getSupabaseClient } from "@/lib/supabase";
 import { useWork } from "@/lib/work-context";
@@ -1323,6 +1325,10 @@ function PageFoundation() {
         <MarketplaceWorkspace title={page.title} pageSlug={page.slug} />
       ) : workforceHistory ? (
         <WorkforceHistoryWorkspace title={page.title} pageSlug={page.slug} />
+      ) : page.slug === "user-profiles" ? (
+        <EmployeeProfileWorkspace />
+      ) : page.slug === "group-membership" ? (
+        <GroupMembershipWorkspace />
       ) : directory === "tickets" ? (
         <TicketManagementWorkspace title={page.title} pageSlug={page.slug} />
       ) : directory ? (
