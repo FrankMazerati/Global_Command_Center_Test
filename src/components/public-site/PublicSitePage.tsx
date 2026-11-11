@@ -10,6 +10,20 @@ type SocialLink = { id: string; platform: string; label: string; url: string; ic
 const footerPages = [["About","about"],["Contact","contact"],["Privacy","privacy"],["Terms","terms"],["Security","security"],["Accessibility","accessibility"],["Responsible Disclosure","responsible-disclosure"]] as const;
 const iconMap = { linkedin: Linkedin, facebook: Facebook, instagram: Instagram, youtube: Youtube, github: Github, link: Link2 } as const;
 
+function MarkdownContent({content}:{content:string}) {
+  const blocks = content.split(/\n{2,}/).map(block=>block.trim()).filter(Boolean);
+  return <div className="space-y-5">
+    {blocks.map((block,index)=>{
+      const lines=block.split("\n");
+      if (/^### /.test(block)) return <h3 key={index} className="text-xl font-semibold text-white">{block.replace(/^### /,"")}</h3>;
+      if (/^## /.test(block)) return <h2 key={index} className="text-2xl font-semibold text-white">{block.replace(/^## /,"")}</h2>;
+      if (/^# /.test(block)) return <h2 key={index} className="text-3xl font-bold text-white">{block.replace(/^# /,"")}</h2>;
+      if (lines.every(line=>/^[-*] /.test(line))) return <ul key={index} className="list-disc space-y-2 pl-6">{lines.map((line,i)=><li key={i}>{line.replace(/^[-*] /,"")}</li>)}</ul>;
+      return <p key={index} className="leading-8 text-slate-200">{block}</p>;
+    })}
+  </div>;
+}
+
 export function PublicSitePage({ slug, initialPage, initialSocial }: { slug: string; initialPage: SitePage | null; initialSocial: SocialLink[] }) {
   const page = initialPage;
   const social = initialSocial;
@@ -56,7 +70,7 @@ export function PublicSitePage({ slug, initialPage, initialSocial }: { slug: str
     <main className="mx-auto min-h-[65vh] max-w-5xl px-5 py-12">
       {loading ? <p className="text-sm text-slate-400">Loading published page…</p> : notFound || !page ? <div className="rounded-2xl border border-white/10 bg-white/5 p-8"><h1 className="text-3xl font-bold">Page unavailable</h1><p className="mt-3 text-slate-300">This page is not published or does not exist.</p><Link to="/" className="mt-5 inline-block text-sky-300">Return to sign in</Link></div> : <>
         <div className="mb-8 border-b border-sky-300/20 pb-7"><p className="text-xs font-semibold uppercase tracking-[.22em] text-sky-300">IntelliStack Systems · {page.page_type}</p><h1 className="mt-3 text-4xl font-bold tracking-tight">{page.title}</h1><p className="mt-3 max-w-3xl text-lg text-slate-300">{page.summary}</p></div>
-        <article className="max-w-3xl whitespace-pre-wrap leading-8 text-slate-200">{page.content_markdown}</article>
+        <article className="max-w-3xl"><MarkdownContent content={page.content_markdown}/></article>
         {slug === "contact" && <form onSubmit={submit} className="mt-10 grid max-w-2xl gap-4 rounded-2xl border border-sky-300/20 bg-white/5 p-6">
           <h2 className="text-xl font-semibold">Send an inquiry</h2>
           <div className="grid gap-3 sm:grid-cols-2"><label className="grid gap-1 text-sm">Name<input required maxLength={160} value={form.name} onChange={e=>setForm({...form,name:e.target.value})} className="rounded-lg border border-white/15 bg-[#08182d] px-3 py-2"/></label><label className="grid gap-1 text-sm">Work email<input required type="email" maxLength={254} value={form.email} onChange={e=>setForm({...form,email:e.target.value})} className="rounded-lg border border-white/15 bg-[#08182d] px-3 py-2"/></label></div>
