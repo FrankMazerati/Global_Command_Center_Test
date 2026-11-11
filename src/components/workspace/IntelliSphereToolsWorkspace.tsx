@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
-import { BookOpen, CloudUpload, Download, FileText, FolderOpen, FormInput, Image, MessageSquareText, Plus, Save, Send, Trash2 } from "lucide-react";
+import { BookOpen, CloudUpload, Download, FileText, FolderOpen, FormInput, Image, MessageSquareText, Plus, Save, Send } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabase";
 
 type ToolKind = "intellinotes" | "intellidrive" | "intelliforms" | "intellistudio" | "intellitext";
@@ -93,7 +93,7 @@ export function IntelliSphereToolsWorkspace({ pageSlug }: { pageSlug: string }) 
       content_markdown: content, version: type === product.docType && existing ? existing.version + 1 : 1,
       metadata, updated_at: new Date().toISOString(),
     };
-    const { data, error } = await client.from("intellisphere_documents").insert(payload)
+    const { data, error } = await client.from("intellisphere_documents").upsert(payload, { onConflict: "id" })
       .select("id,title,content_markdown,version,metadata,updated_at").single();
     setBusy(false);
     if (error) { setStatus("Save failed: " + error.message); return null; }
