@@ -25,6 +25,7 @@ import { WorkflowCenter } from "@/components/workspace/WorkflowCenter";
 import { HelpBuddyWorkspace, KnowledgeSpacesWorkspace } from "@/components/workspace/KnowledgeAndHelpWorkspaces";
 import { HelpBuddyIntelligenceManagement } from "@/components/workspace/HelpBuddyIntelligenceManagement";
 import { MarketplaceHistoryWorkspace } from "@/components/workspace/MarketplaceHistoryWorkspace";
+import { WorkforceHistoryWorkspace } from "@/components/workspace/WorkforceHistoryWorkspace";
 import { findPage, toneVar } from "@/lib/nav";
 import { getSupabaseClient } from "@/lib/supabase";
 import { useWork } from "@/lib/work-context";
@@ -525,6 +526,14 @@ const marketplaceSlugs = [
   "income-and-revenue",
   "transactions-and-payments",
   "billing-and-renewals",
+];
+const workforceHistorySlugs = [
+  "intellistaff",
+  "intellistaff-overview",
+  "intellihire",
+  "intellihire-overview",
+  "intelliwork",
+  "intelliwork-overview",
 ];
 const subscriptionLevels = ["Level 1", "Level 2", "Level 3", "Level 4", "Level 5"];
 const catalogSeed = [
@@ -1213,6 +1222,7 @@ function PageFoundation() {
   ].includes(page.slug);
   const directory = directoryKind(page.slug);
   const marketplace = marketplaceSlugs.includes(page.slug);
+  const workforceHistory = workforceHistorySlugs.includes(page.slug);
   const workflowCenter = section.slug === "home-and-command-center" && group.slug === "workflow-center";
   const knowledgeSpaces = section.slug === "knowledge-spaces";
   const helpBuddy = section.slug === "help-buddy";
@@ -1281,6 +1291,8 @@ function PageFoundation() {
         <TicketWorkspace />
       ) : marketplace ? (
         <MarketplaceWorkspace title={page.title} pageSlug={page.slug} />
+      ) : workforceHistory ? (
+        <WorkforceHistoryWorkspace title={page.title} pageSlug={page.slug} />
       ) : directory ? (
         <SupabaseDirectory kind={directory} title={page.title} />
       ) : (
