@@ -169,8 +169,8 @@ function WordWorkspace() {
   const exportWord = () => {
     const html = "<!doctype html><html><head><meta charset='utf-8'><title>" +
       escapeHtml(value.title) +
-      "</title><style>body{font:12pt Calibri,Arial,sans-serif;line-height:1.6;margin:1in}h1{font-size:22pt}pre{white-space:pre-wrap;font:12pt Calibri,Arial,sans-serif}</style></head><body><h1>" +
-      escapeHtml(value.title) + "</h1><pre>" + escapeHtml(value.body) + "</pre></body></html>";
+      "</title><style>body{font:12pt Calibri,Arial,sans-serif;line-height:1.6;margin:1in}h1{font-size:22pt}main{font:12pt Calibri,Arial,sans-serif}p{margin:0 0 10pt}ul{margin:0 0 10pt;padding-left:24pt}li{margin-bottom:4pt}</style></head><body><h1>" +
+      escapeHtml(value.title) + "</h1><main>" + renderDocumentBody(value.body) + "</main></body></html>";
     downloadText(fileBase + ".doc", html, "application/msword");
   };
 
@@ -182,9 +182,9 @@ function WordWorkspace() {
     }
     printWindow.document.write("<!doctype html><html><head><meta charset='utf-8'><title>" +
       escapeHtml(value.title) +
-      "</title><style>body{font:12pt Arial,sans-serif;line-height:1.6;margin:1in}h1{font-size:22pt}pre{white-space:pre-wrap;font:12pt Arial,sans-serif}@media print{body{margin:0.75in}}</style></head><body><h1>" +
-      escapeHtml(value.title) + "</h1><pre>" + escapeHtml(value.body) +
-      "</pre><script>window.onload=()=>window.print()</script></body></html>");
+      "</title><style>body{font:12pt Arial,sans-serif;line-height:1.6;margin:1in}h1{font-size:22pt}main{font:12pt Arial,sans-serif}p{margin:0 0 10pt}ul{margin:0 0 10pt;padding-left:24pt}li{margin-bottom:4pt}@media print{body{margin:0.75in}}</style></head><body><h1>" +
+      escapeHtml(value.title) + "</h1><main>" + renderDocumentBody(value.body) +
+      "</main><script>window.onload=()=>window.print()</script></body></html>");
     printWindow.document.close();
   };
 
@@ -317,6 +317,48 @@ function SlidesWorkspace() {
     </div>
   </div>;
 }
+
+function renderDocumentBody(markdown: string) {
+  const lines = markdown.split(/\r?\n/);
+  const output: string[] = [];
+  let inList = false;
+  const closeList = () => {
+    if (inList) {
+      output.push("</ul>");
+      inList = false;
+    }
+  };
+  for (const line of lines) {
+    const trimmed = line.trim();
+    const inline = escapeHtml(trimmed)
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>");
+    const heading = /^(#{1,3})\s+(.+)$/.exec(trimmed);
+    const bullet = /^(?:[-*•])\s+(.+)$/.exec(trimmed);
+    if (bullet) {
+      if (!inList) {
+        output.push("<ul>");
+        inList = true;
+      }
+      const item = escapeHtml(bullet[1] ?? "")
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*(.+?)\*/g, "<em>$1</em>");
+      output.push("<li>" + item + "</li>");
+      continue;
+    }
+    closeList();
+    if (!trimmed) continue;
+    if (heading) {
+      const level = heading[1]!.length;
+      output.push("<h" + level + ">" + escapeHtml(heading[2] ?? "") + "</h" + level + ">");
+    } else {
+      output.push("<p>" + inline + "</p>");
+    }
+  }
+  closeList();
+  return output.join("\n");
+}
+
 
 type ChatProfile = {
   id: string;
