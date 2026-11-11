@@ -76,3 +76,8 @@ Initial target objectives for a production-ready adapter: 99.5% monthly successf
 6. Expand connector cohorts based on customer demand and measured stability.
 
 The 100+ directory is a catalog and roadmap, not a claim that 100+ live adapters have been implemented.
+
+
+## Search and product surfacing
+
+The catalog also carries featured ranking, display order, search aliases and product-surface tags so the Connector Hub can prioritize the core enterprise providers (Microsoft 365, Entra ID, Google Workspace, Okta, AWS, Salesforce, Slack, Zoom, ServiceNow, Intune, Workday and GitHub) while retaining a searchable 100+ long tail. Product surfaces currently identify Command Center, IntelliStaff, IntelliHire, IntelliWork, IntelliSphere and IntelliPay relevance. These are routing/discovery tags, not a statement of live adapter support.
