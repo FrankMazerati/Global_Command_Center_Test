@@ -132,6 +132,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuItem onSelect={() => go("account-and-administration","account-and-system-administration","security-settings")}><ShieldCheck className="mr-2 size-4"/>Security settings</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => go("account-and-administration","account-and-system-administration","notification-settings")}><Bell className="mr-2 size-4"/>Notification settings</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => go("account-and-administration","account-and-system-administration","preferences")}><Settings2 className="mr-2 size-4"/>Preferences</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => go("account-and-administration","account-and-system-administration","system-settings")}><Settings2 className="mr-2 size-4"/>Settings</DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-slate-700"/>
                 <DropdownMenuItem onSelect={() => { void signOut(); }}><LogOut className="mr-2 size-4"/>Sign out</DropdownMenuItem>
               </DropdownMenuContent>
