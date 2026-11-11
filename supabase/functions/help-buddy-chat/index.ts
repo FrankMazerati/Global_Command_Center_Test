@@ -14,7 +14,7 @@ function json(body: unknown, status = 200) {
 }
 
 function normalizeQuestion(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9\\s]/g, " ").replace(/\\s+/g, " ").trim();
+  return value.toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function scoreExample(question: string, example: string) {
