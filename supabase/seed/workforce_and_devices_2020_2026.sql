@@ -211,7 +211,7 @@ set
     when e.n%100<86 then 'compliant'
     when e.n%100<96 then 'at_risk'
     else 'non_compliant' end,
-  compliance_checked_at=((now() at time zone 'America/Chicago')::date-(e.n%60))::timestamp at time zone 'America/Chicago',
+  compliance_checked_at=((now() at time zone 'America/Chicago')::date-((e.n%60)::int))::timestamp at time zone 'America/Chicago',
   encryption_status=case when e.n%100<96 then 'enabled' else 'disabled' end,
   secure_boot_status=case when e.n%100<96 then 'enabled' else 'disabled' end,
   firewall_status=case when e.n%100<96 then 'enabled' else 'disabled' end,
