@@ -46,6 +46,7 @@ export const Route = createFileRoute("/m/$section/$group/$page")({
     meta: loaderData
       ? [
           { title: `${loaderData.title} · ${loaderData.section} · Maximus Optimus` },
+          { name: "robots", content: "noindex,nofollow" },
           {
             name: "description",
             content: `${loaderData.title} in ${loaderData.group}, part of ${loaderData.section}.`,
