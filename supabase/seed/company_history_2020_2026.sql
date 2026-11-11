@@ -620,7 +620,7 @@ select
   case when d.n=3 and p.n%5=0 then 'archived' else 'signed' end,
   '# '||d.title||E'\n\nEmployee: '||p.display_name||E'\nEmployee ID: '||p.employee_id||
   E'\nEffective date: '||(date '2020-02-10'+((p.n*97)%2400))::text||
-  E'\n\nThis document is part of the employee's IntelliWork employment record. It records the applicable policy, role expectations, acknowledgement, and review history.',
+  E'\n\nThis document is part of the employee''s IntelliWork employment record. It records the applicable policy, role expectations, acknowledgement, and review history.',
   (select id from public.workforce_people where job_title='Chief Human Resources Officer' order by employee_id limit 1),
   jsonb_build_object('record_lineage','company_history_seed_v1','employee_id',p.employee_id),
   (select id from public.company_history_batches where batch_key='intellistack-company-history-2020-2026-v1'),
