@@ -16,13 +16,14 @@ import { NAV, slugify } from "@/lib/nav";
 import { GlobalSearch } from "./GlobalSearch";
 import { HelpBuddyLauncher, HelpBuddySheet } from "./HelpBuddy";
 import { NavMenu } from "./NavMenu";
+import { OfficialSocialLinks } from "@/components/public-site/OfficialSocialLinks";
 
 const FOOTER_COLUMNS = [
   { title: "COMMAND", links: ["Global Command Center", "Bring the Work to You", "IntelliDesk", "IntelliChat", "IntelliCalendar"] },
   { title: "CONNECT", links: ["Partner With Us", "Become a Client", "Looking for Work Marketplace", "Become a Vendor", "Technology & Integration Partners"] },
   { title: "WORKFORCE", links: ["IntelliStaff", "IntelliHire", "IntelliWork", "Employees", "Contractors"] },
   { title: "GOVERNANCE", links: ["Security Center", "Compliance", "Audit & Approvals", "Policies", "Service Status"] },
-  { title: "INTELLISTACK", links: ["About IntelliStack", "Our Ecosystem", "Knowledge Center", "Help & Support", "Contact"] },
+  { title: "INTELLISTACK", links: ["About IntelliStack", "Our Ecosystem", "Knowledge Center", "Help & Support", "Contact", "Privacy Policy", "Terms of Service", "Accessibility", "Security Center", "Responsible Disclosure"] },
 ];
 
 const FOOTER_DESTINATIONS: Record<string, [string, string, string]> = {
@@ -67,6 +68,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     navigate({ to: "/m/$section/$group/$page", params: { section, group, page } });
 
   const footerGo = (label: string) => {
+    const publicPageSlugs: Record<string,string> = { "About IntelliStack":"about", "Contact":"contact", "Privacy Policy":"privacy", "Terms of Service":"terms", "Accessibility":"accessibility", "Security Center":"security", "Responsible Disclosure":"responsible-disclosure" };
+    if (publicPageSlugs[label]) { navigate({ to: "/p/$slug", params: { slug: publicPageSlugs[label] } }); return; }
     if (label === "Global Command Center") {
       navigate({ to: "/" });
       return;
@@ -153,7 +156,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           ))}
         </div>
-        <div className="border-t border-sky-300/10 px-4 py-3 text-center text-[10px] tracking-wide text-slate-500">© 2026 IntelliStack Systems <span className="mx-2 text-sky-500">•</span> ONE WORLD. ONE SYSTEM. ONE INTELLIGENT NETWORK.</div>
+        <div className="flex flex-wrap items-center justify-center gap-4 border-t border-sky-300/10 px-4 py-3"><OfficialSocialLinks/><span className="text-[10px] tracking-wide text-slate-500">© 2026 IntelliStack Systems <span className="mx-2 text-sky-500">•</span> ONE WORLD. ONE SYSTEM. ONE INTELLIGENT NETWORK.</span></div>
       </footer>
 
       <NavMenu open={menuOpen} onOpenChange={setMenuOpen}/>
