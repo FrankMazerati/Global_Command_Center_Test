@@ -18,6 +18,26 @@ export function PublicSitePage({ slug }: { slug: string }) {
   const [form,setForm] = useState({name:"",email:"",company:"",topic:"General inquiry",message:"",consent:false});
   const [sending,setSending] = useState(false);
   useEffect(() => {
+    if (!page) return;
+    const title = page.seo_title || page.title + " | IntelliStack Systems";
+    document.title = title;
+    const setMeta = (key: string, value: string, property = false) => {
+      const selector = property ? 'meta[property="' + key + '"]' : 'meta[name="' + key + '"]';
+      let element = document.head.querySelector(selector) as HTMLMetaElement | null;
+      if (!element) { element = document.createElement("meta"); if (property) element.setAttribute("property",key); else element.name=key; document.head.appendChild(element); }
+      element.content = value;
+    };
+    setMeta("description", page.seo_description || page.summary);
+    setMeta("og:title", title, true);
+    setMeta("og:description", page.seo_description || page.summary, true);
+    setMeta("og:type", "website", true);
+    setMeta("twitter:card", "summary");
+    if (page.og_image_url) { setMeta("og:image",page.og_image_url,true); setMeta("twitter:image",page.og_image_url); }
+    let canonical = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+    if (!canonical) { canonical=document.createElement("link"); canonical.rel="canonical"; document.head.appendChild(canonical); }
+    canonical.href = page.canonical_path ? new URL(page.canonical_path,window.location.origin).toString() : window.location.href;
+  }, [page]);
+  useEffect(() => {
     let live = true;
     const supabase = getSupabaseClient();
     if (!supabase) { setLoading(false); return; }
