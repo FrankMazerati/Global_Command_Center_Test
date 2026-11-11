@@ -129,6 +129,7 @@ insert into public.tickets
    created_at,updated_at,sla_policy_id,response_due_at,resolution_due_at,first_response_at,
    requester_wait_started_at,requester_wait_seconds,response_breached_at,resolution_breached_at,
    waiting_on,history_batch_id)
+overriding system value
 select
   md5('history-ticket-'||r.n)::uuid,
   1000000+r.n,
@@ -177,6 +178,8 @@ where o.slug='intellistack-managed-services'
   and t.organization_id=o.id
   and b.batch_key='intellistack-company-history-2020-2026-v1'
 on conflict (id) do nothing;
+
+select setval(pg_get_serial_sequence('public.tickets','ticket_number'),(select max(ticket_number) from public.tickets),true);
 
 -- Four lifecycle entries per historical ticket.
 with tickets as (
