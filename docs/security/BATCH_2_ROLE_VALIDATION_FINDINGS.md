@@ -65,7 +65,7 @@ The working branch now includes:
 - The existing AppShell profile dropdown already links “My profile” to the `user-profiles` route. That route now renders the employee profile workspace.
 - `GroupMembershipWorkspace`: allows scoped directory administrators to select a visible employee, inspect that employee's group memberships, add memberships with optional expiry, and remove memberships. The UI checks active role assignments for administrator roles, while database RLS remains the authoritative enforcement layer.
 - Migration `20261111190000_group_membership_admin_write_policies.sql`: defines organization/tenant-scoped insert/delete policies for group memberships. Privileged groups require global administrator authority; organization administrators can manage non-privileged groups only within their assigned scope.
-- `.github/workflows/quality-gates.yml`: defines pnpm frozen-lockfile install, lint, tests, and production build on branch pushes and pull requests.
+- `.github/workflows/production-readiness-checks.yml`: aligned the existing branch-validation workflow with the repository's declared pnpm 11.25.0 toolchain. A temporary duplicate workflow was removed so there is one authoritative CI pipeline.
 
 ## Verification boundary and blockers
 
