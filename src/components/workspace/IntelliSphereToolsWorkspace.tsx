@@ -48,7 +48,7 @@ export function IntelliSphereToolsWorkspace({ pageSlug }: { pageSlug: string }) 
       .is("deleted_at", null).order("updated_at", { ascending: false }).limit(100);
     if (error) { setStatus("Could not load workspace records: " + error.message); return; }
     setRecords((data ?? []) as RecordRow[]);
-  };
+  }, [client, product.docType]);
 
   const loadFiles = useCallback(async (ownerId: string) => {
     if (!client) return;
@@ -58,7 +58,7 @@ export function IntelliSphereToolsWorkspace({ pageSlug }: { pageSlug: string }) 
       .order("created_at", { ascending: false }).limit(200);
     if (error) { setStatus("File index unavailable: " + error.message); return; }
     setFiles((data ?? []) as DriveFile[]);
-  };
+  }, [client]);
 
   useEffect(() => {
     let live = true;
