@@ -245,14 +245,14 @@ function WordWorkspace() {
     </section>
 
     <div className="grid gap-3 sm:grid-cols-2">
-      <a href="/m/account-and-administration/account-and-system-administration/integration-management?provider=microsoft_onedrive" className="flex items-center gap-3 rounded-xl border bg-card p-4 hover:bg-muted/40">
-        <Cloud className="size-5" style={{ color: "#00CFFF" }} /><span className="min-w-0 flex-1"><b className="block text-sm">Save to OneDrive</b><span className="text-xs text-muted-foreground">Connect Microsoft OneDrive in Integration Management first.</span></span><ExternalLink className="size-4" />
-      </a>
-      <a href="/m/account-and-administration/account-and-system-administration/integration-management?provider=microsoft_365" className="flex items-center gap-3 rounded-xl border bg-card p-4 hover:bg-muted/40">
-        <Cloud className="size-5" style={{ color: "#00CFFF" }} /><span className="min-w-0 flex-1"><b className="block text-sm">Save to Microsoft 365</b><span className="text-xs text-muted-foreground">Connect and authorize Microsoft 365 before cloud saving is enabled.</span></span><ExternalLink className="size-4" />
-      </a>
+      <div className="flex items-center gap-3 rounded-xl border bg-card p-4 opacity-70">
+        <Cloud className="size-5" style={{ color: "#00CFFF" }} /><span className="min-w-0 flex-1"><b className="block text-sm">Save to OneDrive</b><span className="text-xs text-muted-foreground">Awaiting Microsoft OneDrive authorization.</span></span><span className="text-[10px] font-semibold uppercase text-amber-600">Not connected</span>
+      </div>
+      <div className="flex items-center gap-3 rounded-xl border bg-card p-4 opacity-70">
+        <Cloud className="size-5" style={{ color: "#00CFFF" }} /><span className="min-w-0 flex-1"><b className="block text-sm">Save to Microsoft 365</b><span className="text-xs text-muted-foreground">Awaiting Microsoft 365 authorization.</span></span><span className="text-[10px] font-semibold uppercase text-amber-600">Not connected</span>
+      </div>
     </div>
-    <p className="text-xs text-muted-foreground">PDF export uses your browser's print dialog; choose “Save as PDF.” Word export is an HTML-based .doc compatibility file, not a native .docx package. OneDrive and Microsoft 365 remain catalog-only until an authorized connection is completed.</p>
+    <p className="text-xs text-muted-foreground">PDF export uses your browser's print dialog; choose “Save as PDF.” Word export is an HTML-based .doc compatibility file, not a native .docx package. Microsoft 365, OneDrive, and Teams are catalog-only with no connected OAuth authorization, so cloud save and live video calling are not enabled.</p>
   </div>;
 }
 
@@ -574,7 +574,7 @@ function ChatWorkspace() {
   return <div className="overflow-hidden rounded-xl border bg-card">
     <div className="flex flex-wrap items-center justify-between gap-3 border-b p-4">
       <div className="flex items-center gap-2"><span className="grid size-9 place-items-center rounded-lg" style={{ backgroundColor: "#6D28D922", color: "#8B5CF6" }}><MessageSquare className="size-5" /></span><div><b>IntelliChat</b><p className="text-xs text-muted-foreground">Persistent, organization-scoped group messaging</p></div></div>
-      <a href="/m/account-and-administration/account-and-system-administration/integration-management?provider=microsoft_teams" className="inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs hover:bg-muted"><Video className="size-4" /> Video meeting setup <ExternalLink className="size-3" /></a>
+      <button type="button" disabled className="inline-flex cursor-not-allowed items-center gap-2 rounded-lg border px-3 py-2 text-xs opacity-60" title="Microsoft Teams is catalog-only and has no connected calling authorization"><Video className="size-4" /> Video chat · not connected</button>
     </div>
     <div className="grid min-h-[480px] md:grid-cols-[230px_1fr]">
       <aside className="border-b bg-muted/20 p-3 md:border-b-0 md:border-r">
