@@ -95,7 +95,7 @@ select
   md5('history-workforce-role-'||w.employee_id)::uuid,
   w.id,r.id,w.organization_id,w.tenant_id,'organization',true,
   w.employment_status='active',
-  (select event_date::timestamptz from public.workforce_employment_events e where e.workforce_person_id=w.id and e.event_type='hire' order by event_date limit 1)
+  ((date '2020-02-10'+(((substring(w.employee_id from 8))::int-3500)*97%2300))::timestamp+time '09:00') at time zone 'America/Chicago'
 from public.workforce_people w
 cross join public.roles r
 where w.history_batch_id=(select id from public.company_history_batches where batch_key='intellistack-company-history-2020-2026-v1')
@@ -198,7 +198,7 @@ enriched as (
 update public.devices d
 set
   purchase_date=coalesce(d.purchase_date,e.purchase_day),
-  warranty_expiration=coalesce(d.warranty_expiration,e.purchase_day+interval '3 years'),
+  warranty_expiration=coalesce(d.warranty_expiration,(e.purchase_day+interval '3 years')::date),
   workforce_person_id=e.person_id,
   assigned_at=coalesce(d.assigned_at,
     case when e.person_id is not null and d.device_status='active'
@@ -234,7 +234,7 @@ set
   building=coalesce(d.building,'Main Office'),
   floor_label=coalesce(d.floor_label,'Floor '||((e.n%8)+1)),
   room_label=coalesce(d.room_label,'Room '||lpad((e.n%40+1)::text,2,'0')),
-  retired_at=case when d.device_status='retired' then coalesce(d.retired_at,((least(e.purchase_day+interval '2 years',(now() at time zone 'America/Chicago')::date))::date::timestamp) at time zone 'America/Chicago') else d.retired_at end,
+  retired_at=case when d.device_status='retired' then coalesce(d.retired_at,(least(e.purchase_day+730,(now() at time zone 'America/Chicago')::date)::timestamp) at time zone 'America/Chicago') else d.retired_at end,
   disposal_method=case when d.device_status='retired' then coalesce(d.disposal_method,'certified_recycling') else d.disposal_method end,
   data_wipe_verified_at=case when d.device_status='retired' then coalesce(d.data_wipe_verified_at,now()) else d.data_wipe_verified_at end,
   history_batch_id=(select id from public.company_history_batches where batch_key='intellistack-company-history-2020-2026-v1'),
@@ -333,8 +333,8 @@ select
        else 'non_compliant' end,
   ((now() at time zone 'America/Chicago')::date-(m.g%60))::timestamp at time zone 'America/Chicago',
   md5('IS-HIST-SN-'||lpad(m.g::text,7,'0')),
-  c.purchase_day,c.purchase_day+interval '3 years',
-  case when m.g%10=0 then c.purchase_day+interval '3 years' else null end,
+  c.purchase_day,(c.purchase_day+interval '3 years')::date,
+  case when m.g%10=0 then (c.purchase_day+interval '3 years')::date else null end,
   case when cat.asset_class='infrastructure' then 4500 when cat.asset_class='mobile' then 800 when cat.asset_class='shared_peripheral' then 450 else 1450 end,
   'USD',
   case when c.device_status='active' and c.device_type_key in ('laptop','desktop','tablet','work_phone','company_phone') and m.g%5<>0
@@ -352,7 +352,7 @@ select
   case when c.device_type_key in ('laptop','desktop') then '22631' else 'Current' end,
   ((now() at time zone 'America/Chicago')::date-(m.g%30))::timestamp at time zone 'America/Chicago',
   ((now() at time zone 'America/Chicago')::date+30)::timestamp at time zone 'America/Chicago',
-  case when c.device_status='retired' then least(c.purchase_day+interval '2 years',(now() at time zone 'America/Chicago')::date)::timestamp at time zone 'America/Chicago' else null end,
+  case when c.device_status='retired' then least(c.purchase_day+730,(now() at time zone 'America/Chicago')::date)::timestamp at time zone 'America/Chicago' else null end,
   case when c.device_status='retired' then 'certified_recycling' else null end,
   case when c.device_status='retired' then ((now() at time zone 'America/Chicago')::date::timestamp) at time zone 'America/Chicago' else null end,
   case when m.g%10=0 then 'work_profile_only' when cat.asset_class='shared_peripheral' then 'shared_equipment' else 'full_company_device' end,
