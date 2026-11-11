@@ -376,7 +376,7 @@ insert into public.device_assignment_history
    condition_on_return,notes,created_at,history_batch_id)
 select
   md5('history-device-assignment-'||d.id)::uuid,
-  d.id,d.workforce_person_id,d.assignment_type,d.assigned_at,
+  d.id,d.workforce_person_id,case when d.assignment_type='individual' then 'issued_to_employee' when d.assignment_type='shared_pool' then 'shared_pool' when d.assignment_type='room' then 'room_assignment' else 'department_assignment' end,d.assigned_at,
   case when d.device_status='retired' then d.retired_at else null end,
   'good',
   case when d.device_status='retired' then 'fair' else null end,
