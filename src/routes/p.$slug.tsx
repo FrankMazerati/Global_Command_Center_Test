@@ -22,7 +22,7 @@ export const Route = createFileRoute("/p/$slug")({
     return { meta: [
       { title },
       { name: "description", content: description },
-      { name: "robots", content: "index,follow" },
+      { name: "robots", content: page ? "index,follow" : "noindex,nofollow" },
       { property: "og:type", content: "website" },
       { property: "og:site_name", content: "IntelliStack Systems" },
       { property: "og:title", content: title },
