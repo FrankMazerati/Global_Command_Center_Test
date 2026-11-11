@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   CalendarDays, CalendarClock, ChevronLeft, ChevronRight, Clock3, MapPin,
   Plus, Search, Trash2, Pencil, X, Users, ListFilter, Sparkles, type LucideIcon,
