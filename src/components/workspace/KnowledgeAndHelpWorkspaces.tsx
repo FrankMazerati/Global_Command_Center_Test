@@ -80,8 +80,8 @@ export function KnowledgeSpacesWorkspace({ title, pageSlug }: { title: string; p
       ? ["getting_started"]
       : pageSlug.includes("faqs") || pageSlug.includes("troubleshooting") || pageSlug.includes("support") || pageSlug.includes("account-and-access") || pageSlug.includes("intellidesk") || pageSlug.includes("help-desk-procedures")
         ? ["help_desk"]
-        : pageSlug.includes("executive") || pageSlug.includes("global-administration") || pageSlug.includes("ceo") || pageSlug.includes("cfo")
-          ? ["business_stakeholders"]
+        : pageSlug.includes("executive") || pageSlug.includes("global-administration") || pageSlug.includes("ceo") || pageSlug.includes("cfo") || pageSlug.includes("sales") || pageSlug.includes("marketing") || pageSlug.includes("business-development") || pageSlug.includes("competitive-intelligence")
+          ? ["business_stakeholders", "sales_market_intelligence"]
           : pageSlug.includes("development-history") || pageSlug.includes("project-intelligence") || pageSlug.includes("architecture") || pageSlug.includes("api-and-integration") || pageSlug.includes("active-directory-procedures") || pageSlug.includes("device-and-asset-procedures") || pageSlug.includes("marketplace-and-licensing") || pageSlug.includes("noc-and-soc") || pageSlug.includes("security-and-incident")
             ? ["idea_ledger", "platform_reference"]
             : pageSlug.includes("help-buddy-knowledge")
