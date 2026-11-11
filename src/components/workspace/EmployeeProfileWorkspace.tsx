@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Award, BriefcaseBusiness, Building2, CalendarDays, Clock3, Mail, MapPin, Phone, ShieldCheck, Sparkles, Star, Users } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabase";
 
@@ -14,6 +14,9 @@ export function EmployeeProfileWorkspace() {
   const [groups, setGroups] = useState<RecordRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editForm, setEditForm] = useState({ display_name: "", work_phone: "", location_city: "", location_region: "", country_code: "", timezone: "", avatar_url: "" });
 
   useEffect(() => {
     let active = true;
@@ -28,6 +31,7 @@ export function EmployeeProfileWorkspace() {
       if (!profileResult.data) { setError("Your authenticated account does not yet have an employee profile. Contact an administrator."); setLoading(false); return; }
       const p = profileResult.data as RecordRow;
       setProfile(p);
+      setEditForm({ display_name: String(p.display_name ?? ""), work_phone: String(p.work_phone ?? ""), location_city: String(p.location_city ?? ""), location_region: String(p.location_region ?? ""), country_code: String(p.country_code ?? ""), timezone: String(p.timezone ?? ""), avatar_url: String(p.avatar_url ?? "") });
       const [badgeResult, starResult, xpResult, groupResult] = await Promise.all([
         supabase.from("employee_badge_progress").select("id,badge_id,current_level,progress_value,level_started_at,last_awarded_at").eq("profile_id", auth.user.id),
         supabase.from("employee_star_transactions").select("stars_delta").eq("profile_id", auth.user.id),
@@ -48,6 +52,28 @@ export function EmployeeProfileWorkspace() {
     void load();
     return () => { active = false; };
   }, []);
+
+
+  const saveProfile = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!profile) return;
+    setSaving(true);
+    const supabase = getSupabaseClient();
+    if (!supabase) { setSaving(false); return; }
+    const { data, error: updateError } = await supabase.from("profiles").update({
+      display_name: editForm.display_name.trim() || null,
+      work_phone: editForm.work_phone.trim() || null,
+      location_city: editForm.location_city.trim() || null,
+      location_region: editForm.location_region.trim() || null,
+      country_code: editForm.country_code.trim().toUpperCase() || null,
+      timezone: editForm.timezone.trim() || null,
+      avatar_url: editForm.avatar_url.trim() || null,
+    }).eq("id", profile.id).select("*").single();
+    setSaving(false);
+    if (updateError) { setError(updateError.message); return; }
+    if (data) setProfile(data as RecordRow);
+    setEditing(false);
+  };
 
   const fields = useMemo(() => profile ? [
     ["Employee Global ID", profile.employee_global_id], ["Company Global ID", profile.company_global_id],
@@ -80,9 +106,14 @@ export function EmployeeProfileWorkspace() {
           <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-center"><Sparkles className="mx-auto size-5 text-cyan-300"/><strong className="mt-1 block text-xl">{xp}</strong><span className="text-[10px] text-slate-300">XP</span></div>
           <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-center"><Award className="mx-auto size-5 text-violet-300"/><strong className="mt-1 block text-xl">{badges.length}</strong><span className="text-[10px] text-slate-300">Badges</span></div>
         </div>
+        <button type="button" onClick={() => setEditing((v) => !v)} className="rounded-lg border border-sky-200/30 px-3 py-2 text-sm text-sky-100 hover:bg-white/10">{editing ? "Close editor" : "Edit my profile"}</button>
       </div>
+      {editing && <form onSubmit={saveProfile} className="grid gap-3 border-t border-white/10 p-5 sm:grid-cols-2">
+        {([["display_name","Display name"],["work_phone","Work phone"],["location_city","City"],["location_region","State / region"],["country_code","Country code"],["timezone","Time zone"],["avatar_url","Avatar image URL"]] as const).map(([key,label]) => <label key={key} className="grid gap-1 text-xs text-slate-300">{label}<input value={editForm[key]} onChange={(e) => setEditForm((v) => ({...v,[key]:e.target.value}))} className="h-10 rounded-md border border-white/15 bg-slate-950/60 px-3 text-sm text-white"/></label>)}
+        <div className="flex items-end"><button disabled={saving} className="rounded-md bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50">{saving ? "Saving…" : "Save profile"}</button></div>
+      </form>}
     </section>
-    <section className="grid gap-4 lg:grid-cols-[1.4fr_.8fr]">
+    <section className="grid gap-4 lg:grid-cols-[1.4fr_.8fr_.8fr]">
       <div className="rounded-xl border bg-card p-5">
         <h2 className="mb-4 flex items-center gap-2 font-semibold"><BriefcaseBusiness className="size-5 text-primary"/>Identity and employment</h2>
         <dl className="grid gap-3 sm:grid-cols-2">{fields.map(([label, field]) => <div key={label} className="min-w-0 rounded-lg border bg-background/60 p-3"><dt className="text-xs text-muted-foreground">{label}</dt><dd className="mt-1 break-words text-sm font-medium">{value(field)}</dd></div>)}</dl>
