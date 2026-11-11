@@ -12,23 +12,27 @@ const products: Record<OfficeKind, { name: string; tagline: string; accent: stri
 };
 
 function useLocalDocument<T>(kind: OfficeKind, initial: T) {
-  const [value, setValue] = useState<T>(() => {
-    try {
-      const saved = window.localStorage.getItem(STORE_PREFIX + kind);
-      return saved ? (JSON.parse(saved) as T) : initial;
-    } catch {
-      return initial;
-    }
-  });
+  const [value, setValue] = useState<T>(initial);
+  const [hydrated, setHydrated] = useState(false);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(STORE_PREFIX + kind);
+      if (saved) setValue(JSON.parse(saved) as T);
+    } catch {
+      // Keep the in-memory draft when browser storage is unavailable.
+    }
+    setHydrated(true);
+  }, [kind]);
+  useEffect(() => {
+    if (!hydrated) return;
     try {
       window.localStorage.setItem(STORE_PREFIX + kind, JSON.stringify(value));
       setSavedAt(new Date().toLocaleTimeString());
     } catch {
       setSavedAt(null);
     }
-  }, [kind, value]);
+  }, [kind, value, hydrated]);
   return { value, setValue, savedAt };
 }
 
