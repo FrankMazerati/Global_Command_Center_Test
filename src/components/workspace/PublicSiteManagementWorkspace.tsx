@@ -1,5 +1,5 @@
-import { useEffect, useState, type FormEvent } from "react";
-import { Check, ExternalLink, FilePlus2, Globe2, Link2, Pencil, Save, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { ExternalLink, FilePlus2, Globe2, Pencil, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { getSupabaseClient } from "@/lib/supabase";
 
@@ -16,7 +16,7 @@ export function PublicSiteManagementWorkspace({view}:{view:"pages"|"social"|"inq
  const [link,setLink]=useState<typeof blankSocial>(blankSocial),[linkId,setLinkId]=useState<string|null>(null);
  const [loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[authorized,setAuthorized]=useState(false);
  const supabase=getSupabaseClient();
- async function load(){
+ const load = useCallback(async()=>{
    if(!supabase){setLoading(false);return;}
    const {data:auth}=await supabase.auth.getUser();
    if(!auth.user){setLoading(false);return;}
@@ -27,8 +27,8 @@ export function PublicSiteManagementWorkspace({view}:{view:"pages"|"social"|"inq
    if(view==="social"){const r=await supabase.from("site_social_links").select("*").order("sort_order");if(r.error)toast.error(r.error.message);else setSocial((r.data??[]) as Social[]);}
    if(view==="inquiries"){const r=await supabase.from("site_contact_submissions").select("*").order("created_at",{ascending:false}).limit(200);if(r.error)toast.error(r.error.message);else setInquiries((r.data??[]) as Inquiry[]);}
    setLoading(false);
- }
- useEffect(()=>{void load();},[view]);
+ },[supabase,view]);
+ useEffect(()=>{void load();},[load]);
  const savePage=async(e:FormEvent)=>{
   e.preventDefault();if(!supabase)return;setSaving(true);
   const payload={...page,seo_title:page.seo_title||null,seo_description:page.seo_description||null,canonical_path:page.canonical_path||null,og_image_url:page.og_image_url||null,updated_by:(await supabase.auth.getUser()).data.user?.id,updated_at:new Date().toISOString(),published_at:page.status==="published"?new Date().toISOString():null};
