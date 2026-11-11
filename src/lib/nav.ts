@@ -174,48 +174,52 @@ const productivityGroups = rawGroups("Productivity", "Collaboration");
 const securityGroups = rawGroups("Security", "Governance");
 
 const MENU: RawSection[] = [
-  ["Home & Command Center", "Your personal command surface and the central place to see and act on work.", "maximus", [
-    ["Command Center", ["Dashboard", "Bring the Work to You", "Global Time Zones", "News and Intelligence Feed", "Market Watch", "Command Status"]],
+  ["Home & Command Center", "Your personal command surface, global clocks, intelligence feeds and the work that needs your attention.", "maximus", [
+    ["Command Center", ["Dashboard", "Bring the Work to You", "Global Time Zones", "News and Intelligence Feed", "Market Watch", "Company Announcements", "Command Status"]],
     ["Workflow Center", ["Workflow Dashboard", "Workflow Templates", "Template Builder", "Active Workflows", "My Assigned Tasks", "Approvals and Checkpoints", "Workflow History", "Automation Rules", "Workflow Analytics"]],
   ]],
-  ["My Business Center", "Company operations, executive workspaces, financial products and the IntelliSphere marketplace.", "primary", rawGroups("My Business Center").map(([group, pages]) => [group.replace("IntelliHire", "IntelliHire").replace("IntelliStaff", "IntelliStaff"), pages.map((page) => page.replace(/IntelliHire/g, "IntelliHire").replace(/IntelliStaff/g, "IntelliStaff"))])],
-  ["Identity & Access Management", "Global identity, directory services, tenants, organizations, roles and access governance.", "contractor", [
-    ...rawGroups("New Active Directory"),
-    ["Global Identity & Access Management", ["Global IAM Overview", "Global Company ID", "Global User ID", "Organizations", "Tenants", "Tenant Membership", "Company Profiles", "Organizational Units", "Departments", "Groups", "Roles", "Permissions", "Managers and Reporting Structure", "Identity Verification", "Authentication", "Multi-Factor Authentication", "Single Sign-On", "Access Requests", "Access Reviews", "Identity Audit"]],
+  ["My Business Center", "Company operations, executive workspaces, financial products and business records.", "primary", rawGroups("My Business Center").filter(([group]) => group !== "IntelliSphere Marketplace")],
+  ["New Active Directory", "Global directory services, identities, devices, organizations, groups, authentication, access and workforce lifecycle.", "contractor", rawGroups("New Active Directory").concat([
+    ["Global Identity and Access", ["Global IAM Overview", "Global Company ID", "Global User ID", "Organizations", "Tenants", "Tenant Membership", "Company Profiles", "Organizational Units", "Departments", "Groups", "Roles", "Permissions", "Managers and Reporting Structure", "Identity Verification", "Authentication", "Multi-Factor Authentication", "Single Sign-On", "Access Requests", "Access Reviews", "Identity Audit"]],
     ["Directory Services", ["IntelliDirectory Overview", "Directory Services", "Directory Objects", "Directory Synchronization", "Directory Health", "Directory Audit History"]],
-  ]],
-  ["Productivity & Collaboration", "Native IntelliStack work tools and approved external collaboration integrations.", "world", productivityGroups.map(([group, pages]) => [group, [...pages, ...(group === "IntelliStack Collaboration Tools" ? ["Email"] : [])]])],
-  ["Service Desk & Enterprise Operations", "IntelliDesk, ticket and mission execution, SLA operations, NOC, infrastructure, remote support and war room.", "network", [
-    ...serviceDeskGroups,
+  ])],
+  ["Productivity", "Native IntelliStack productivity products and connected productivity applications.", "optimus", rawGroups("Productivity")],
+  ["Collaboration", "IntelliStack communication, calendar, shared workspaces and connected collaboration platforms.", "world", rawGroups("Collaboration").map(([group, pages]) => [group, [...pages, ...(group === "IntelliStack Collaboration Tools" ? ["Email"] : [])]])],
+  ["Service Desk & Ticket Operations", "IntelliDesk, ticket management, mission execution, technician workflows, SLA operations and service reporting.", "network", rawSection("Command Center")[3].filter(([group]) => group !== "Workforce Performance & Recognition" && group !== "Command Operations")],
+  ["NOC & Infrastructure Operations", "Network operations, infrastructure monitoring, events, alerts, field service and operational coordination.", "network", [
     ...rawGroups("NOC Center"),
     ["Infrastructure and Field Operations", ["Infrastructure Overview", "Infrastructure Inventory", "Server Operations", "Network Operations", "Field Service", "Remote Support", "Remote Sessions", "War Room", "Incident Coordination", "Service Health", "Operational Runbooks"]],
+    ["Command Operations", ["Team Operations", "Workload Distribution", "Assignment Management", "Team Availability", "Supervisor Oversight", "Operational Reporting", "Operational Activity", "Cross-Team Coordination"]],
   ]],
-  ["Security, Risk & Governance", "Security operations, risk, compliance, policies, audit, approvals and sign-offs.", "tenant", securityGroups],
+  ["Security Operations", "Security posture, threats, vulnerabilities, incident response and security administration.", "optimus", rawGroups("Security")],
+  ["Governance & Compliance", "Compliance frameworks, policies, risk, audit evidence, approvals, sign-offs and permanent audit history.", "tenant", rawGroups("Governance")],
   ["AI & Business Intelligence", "Governed intelligence experiences, analytics, insights and executive decision support.", "everything", rawGroups("AI Systems").filter(([group]) => group !== "Help Buddy")],
-  ["Employee & Manager Workspace", "Employee, contractor and workforce experiences with manager oversight, progression and recognition.", "optimus", [
+  ["Help Buddy", "The conversational assistant, onboarding guide, user workflow, checklists, follow-ups and guided work experience.", "everything", [
+    ...rawGroups("AI Systems").filter(([group]) => group === "Help Buddy"),
+    ["Onboarding and Guided Work", ["New User Onboarding", "Role-Based Onboarding", "Personal Workflow Checklist", "First Week Checklist", "Manager Onboarding Checklist", "My Work and Follow-Ups", "Guided Tasks", "Learning Progress", "Escalation and Handoff"]],
+  ]],
+  ["Employee & Manager Workspace", "Employee, contractor, manager and workforce experiences, progression, recognition and team oversight.", "optimus", [
     ["Workforce Experiences", ["IntelliStaff", "IntelliStaff Overview", "IntelliHire", "IntelliHire Overview", "IntelliWork", "IntelliWork Overview"]],
     ["People and Organization", ["Employees", "Contractors", "Workforce Directory", "Teams", "Managers", "Reporting Structure", "Availability and Shifts", "Onboarding", "Offboarding"]],
     [workforceGroup[0], workforceGroup[1]],
     ["Manager Workspace", ["Manager Dashboard", "Team Overview", "Work Assignment Overview", "Progression and XP Levels", "Stars and Recognition", "Manager Sign-Off Queue", "Performance Reviews", "Objectives and Checkpoints", "Team Reporting"]],
   ]],
-  ["Account & Administration", "Personal preferences, system administration, documentation, integrations and service status.", "primary", [
-    ["Account and System Administration", ["My Account", "Profile Settings", "Preferences", "Notification Settings", "Security Settings", "System Settings", "Global Administration", "Tenant Administration", "Role and Permission Administration", "Integration Management", "Service Status", "Documentation", "Help and Support", "Sign Out"]],
-  ]],
-  ["Knowledge Bases", "IntelliBase: permission-aware company, tenant, role, operational and institutional knowledge.", "tenant", [
+  ["IntelliSphere Marketplace", "Discover IntelliStack products, subscriptions, services, licensing and tenant purchasing.", "primary", rawGroups("My Business Center").filter(([group]) => group === "IntelliSphere Marketplace")],
+  ["IntelliBase — Knowledge Bases", "Permission-aware platform guides, company knowledge, operational playbooks, training and development history.", "tenant", [
     ["Getting Started", ["Getting Started Platform Guide", "System Navigation", "Dashboard and Global Widgets", "Platform User Guides", "Role-Based Getting Started"]],
     ["Knowledge Base Overview", ["All Knowledge Bases", "Search Knowledge", "Recent Articles", "Knowledge Administration", "Knowledge Permissions", "Review and Version History"]],
-    ["General Knowledge and Support", ["FAQs and Common Questions", "Troubleshooting and Resolutions", "Account and Access Help", "Devices and Applications", "IntelliDesk Support"]],
-    ["Operational Knowledge Playbook", ["Help Desk Procedures", "New Active Directory Procedures", "Employee Lifecycle Procedures", "Device and Asset Procedures", "Marketplace and Licensing Procedures", "NOC and SOC Operations", "Security and Incident Response"]],
-    ["Workflow Knowledge Library", ["Workflow Library", "Workflow Template Guides", "Tasks and Checkpoints", "Approvals and Verification"]],
-    ["Executive and Global Administration", ["Executive Knowledge", "CEO and CFO Reference", "Global Administration Guide", "Tenant Governance", "Policies and Risk"]],
-    ["Role-Based Knowledge", ["CEO Knowledge", "CFO Knowledge", "CIO and CTO Knowledge", "COO and CISO Knowledge", "Sales and Business Development", "Marketing and Customer Success", "Human Resources and Finance", "Managers and Project Teams", "IT, Help Desk, NOC and SOC", "Employees and Contractors", "Tenant Administrators"]],
-    ["AI Knowledge Collections", ["AI Systems Overview", "Help Buddy Knowledge", "Maximus Knowledge", "Optimus Knowledge", "Trinity Knowledge"]],
-    ["Company, Tenant and Personal Knowledge", ["Company Knowledge Bases", "Tenant Knowledge Bases", "Department and Team Knowledge", "Personal Knowledge Bases", "Restricted Knowledge Bases"]],
-    ["Development History and Project Intelligence", ["Architecture and System Design", "Development Decisions", "Project History and Roadmap", "API and Integration Reference", "Release and Build History", "Issues and Resolutions"]],
+    ...rawGroups("Knowledge & Learning").filter(([group]) => group !== "Getting Started"),
   ]],
-  ["Help Buddy", "The single conversational assistant and workflow-guidance experience for every authorized user.", "everything", [
-    ["Help Buddy Workspace", ["Help Buddy Overview", "Conversation Workspace", "Conversational Library", "Conversation History", "Unanswered Questions", "Response and Event Rules", "Connected Knowledge Sources", "My Work and Follow-Ups", "Checklists and Notes", "My Tickets and Contributions"]],
-    ["Intelligence Management", ["Intelligence Overview", "Conversational Responses", "Permissions and Escalation Responses", "Personality and Tone Rules", "Persistent Memory Management", "Semantic and Vector Search", "Knowledge Scenario Library", "Response Categories and Subcategories", "Unanswered Question Review", "Response Analytics", "Version and Change History"]],
+  ["Global Network & Connected Services", "Global infrastructure, connected providers, service health, integrations, data flows and platform availability.", "world", [
+    ["Global Network", ["Global Network Overview", "Regional Operations", "Global Service Map", "Network Connectivity", "Service Availability", "Regional Health"]],
+    ["Connected Services", ["Integration Directory", "Connected Applications", "Identity Providers", "Calendar Connections", "Email Connections", "Storage Connections", "Connector Status", "Connection Requests"]],
+    ["Platform Operations", ["Platform Health", "Service Dependencies", "System Events", "Data Synchronization", "Background Jobs", "Operational Status"]],
+  ]],
+  ["Account & Personal Settings", "Your profile, personal preferences, notifications, security and sign-in settings.", "primary", [
+    ["My Account", ["My Account", "Profile Settings", "Edit Bio", "Profile Photo", "LinkedIn Profile", "Availability and Status", "Preferences", "Notification Settings", "Personal Security Settings", "Sign Out"]],
+  ]],
+  ["Global Administration", "Global administrator controls for tenants, roles, access policies, configuration, audit and system operations.", "primary", [
+    ["Global Administration", ["Global Administration Dashboard", "Tenant Administration", "Company Administration", "Role and Permission Administration", "Global Access Policies", "Integration Management", "System Configuration", "Feature Management", "Navigation Management", "Audit and Activity", "Service Status", "Backup and Recovery", "Administration Reports"]],
   ]],
 ];
 
