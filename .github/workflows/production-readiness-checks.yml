@@ -1,0 +1,44 @@
+name: Production Readiness - Branch Validation
+
+on:
+  push:
+    branches:
+      - work/production-readiness-baseline
+  pull_request:
+    branches:
+      - main
+      - work/production-readiness-baseline
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-readiness-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Lint, tests, and production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install locked dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Lint
+        run: bun run lint -- --rule "prettier/prettier: off"
+
+      - name: Run automated tests
+        run: bun run test
+
+      - name: Build production application
+        run: bun run build
