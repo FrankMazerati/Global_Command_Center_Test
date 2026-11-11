@@ -293,13 +293,13 @@ select
   case when g<=15 then 'open' when g<=60 then 'acknowledged' else 'resolved' end,
   null,null,
   t.opened_at+interval '4 hours',
-  case when g>15 then t.opened_at+interval '15 minutes' else null end,
+  case when g<=60 and g>15 then now()-interval '1 minute' when g>60 then t.opened_at+interval '15 minutes' else null end,
   case when g>60 then t.opened_at+interval '8 hours' else null end,
   t.opened_at+interval '10 minutes',
   case when g>60 then t.opened_at+interval '8 hours' when g>15 then t.opened_at+interval '15 minutes' else now() end,
   b.id
 from generate_series(1,900) g
-join public.tickets t on t.id=md5('history-ticket-'||case when g<=15 then g else 185+g end)::uuid
+join public.tickets t on t.id=md5('history-ticket-'||case when g<=60 then g else 185+g end)::uuid
 cross join public.company_history_batches b
 where b.batch_key='intellistack-company-history-2020-2026-v1'
 on conflict (id) do nothing;
