@@ -392,12 +392,15 @@ function ChatWorkspace() {
         return;
       }
       setIdentity({ id: profile.id, organization_id: profile.organization_id, tenant_id: profile.tenant_id });
-      const { data: directory } = await client
+      let directoryQuery = client
         .from("profiles")
         .select("id, display_name, first_name, last_name, work_email")
         .eq("organization_id", profile.organization_id)
-        .eq("member_status", "active")
-        .limit(100);
+        .eq("member_status", "active");
+      directoryQuery = profile.tenant_id
+        ? directoryQuery.eq("tenant_id", profile.tenant_id)
+        : directoryQuery.is("tenant_id", null);
+      const { data: directory } = await directoryQuery.limit(100);
       if (active) setPeople((directory ?? []) as ChatProfile[]);
       await loadChannels();
       if (active) setMessageStatus("Connected · private group messaging is ready");
@@ -448,35 +451,41 @@ function ChatWorkspace() {
   const createGroup = async () => {
     if (!client || !identity || !userId || !newChannelName.trim()) return;
     setBusy(true);
-    const { data: channel, error } = await client
-      .from("intellisphere_chat_channels")
-      .insert({
-        organization_id: identity.organization_id,
-        tenant_id: identity.tenant_id,
-        channel_type: "group",
-        name: newChannelName.trim(),
-        created_by_profile_id: userId,
-      })
-      .select("id, name, channel_type, organization_id, tenant_id")
-      .single();
-    if (error || !channel) {
+    const channelId = crypto.randomUUID();
+    const channelName = newChannelName.trim();
+    const { error } = await client.from("intellisphere_chat_channels").insert({
+      id: channelId,
+      organization_id: identity.organization_id,
+      tenant_id: identity.tenant_id,
+      channel_type: "group",
+      name: channelName,
+      created_by_profile_id: userId,
+    });
+    if (error) {
       setBusy(false);
-      setMessageStatus("Group creation failed: " + (error?.message ?? "No channel returned"));
+      setMessageStatus("Group creation failed: " + error.message);
       return;
     }
     const memberIds = [userId, ...(inviteProfileId ? [inviteProfileId] : [])];
     const { error: memberError } = await client
       .from("intellisphere_chat_members")
-      .insert(memberIds.map((profile_id) => ({ channel_id: channel.id, profile_id })));
+      .insert(memberIds.map((profile_id) => ({ channel_id: channelId, profile_id })));
     setBusy(false);
     if (memberError) {
-      await client.from("intellisphere_chat_channels").delete().eq("id", channel.id);
+      await client.from("intellisphere_chat_channels").delete().eq("id", channelId);
       setMessageStatus("Group membership could not be established: " + memberError.message);
       return;
     }
+    const channel: ChatChannel = {
+      id: channelId,
+      name: channelName,
+      channel_type: "group",
+      organization_id: identity.organization_id,
+      tenant_id: identity.tenant_id,
+    };
     setNewChannelName("");
     setInviteProfileId("");
-    setChannels((current) => [channel as ChatChannel, ...current]);
+    setChannels((current) => [channel, ...current]);
     setActiveChannelId(channel.id);
     setMessageStatus("Group created · members are restricted to your organization and tenant");
   };
