@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MSectionRouteImport } from './routes/m.$section'
 import { Route as MSectionGroupPageRouteImport } from './routes/m.$section.$group.$page'
+import { Route as PublicPageRouteImport } from './routes/p.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,6 +23,11 @@ const IndexRoute = IndexRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PublicPageRoute = PublicPageRouteImport.update({
+  id: '/p/$slug',
+  path: '/p/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MSectionRoute = MSectionRouteImport.update({
@@ -38,12 +44,14 @@ const MSectionGroupPageRoute = MSectionGroupPageRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/p/$slug': typeof PublicPageRoute
   '/m/$section': typeof MSectionRouteWithChildren
   '/m/$section/$group/$page': typeof MSectionGroupPageRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/p/$slug': typeof PublicPageRoute
   '/m/$section': typeof MSectionRouteWithChildren
   '/m/$section/$group/$page': typeof MSectionGroupPageRoute
 }
@@ -51,20 +59,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/p/$slug': typeof PublicPageRoute
   '/m/$section': typeof MSectionRouteWithChildren
   '/m/$section/$group/$page': typeof MSectionGroupPageRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/m/$section' | '/m/$section/$group/$page'
+  fullPaths: '/' | '/login' | '/p/$slug' | '/m/$section' | '/m/$section/$group/$page'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/m/$section' | '/m/$section/$group/$page'
-  id: '__root__' | '/' | '/login' | '/m/$section' | '/m/$section/$group/$page'
+  to: '/' | '/login' | '/p/$slug' | '/m/$section' | '/m/$section/$group/$page'
+  id: '__root__' | '/' | '/login' | '/p/$slug' | '/m/$section' | '/m/$section/$group/$page'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  PublicPageRoute: typeof PublicPageRoute
   MSectionRoute: typeof MSectionRouteWithChildren
 }
 
@@ -82,6 +92,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/p/$slug': {
+      id: '/p/$slug'
+      path: '/p/$slug'
+      fullPath: '/p/$slug'
+      preLoaderRoute: typeof PublicPageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/m/$section': {
@@ -116,6 +133,7 @@ const MSectionRouteWithChildren = MSectionRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  PublicPageRoute: PublicPageRoute,
   MSectionRoute: MSectionRouteWithChildren,
 }
 export const routeTree = rootRouteImport
