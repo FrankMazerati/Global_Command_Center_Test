@@ -7,7 +7,7 @@ type Page = {id:string;slug:string;title:string;summary:string;content_markdown:
 type Social = {id:string;platform:string;label:string;url:string;icon_key:string;sort_order:number;is_active:boolean};
 type Inquiry = {id:string;name:string;email:string;company:string|null;topic:string;message:string;status:string;created_at:string};
 const blankPage = {slug:"",title:"",summary:"",content_markdown:"",page_type:"standard",status:"draft",seo_title:"",seo_description:"",canonical_path:"",og_image_url:"",locale:"en-US"};
-const blankSocial = {platform:"LinkedIn",label:"LinkedIn",url:"https://www.linkedin.com/company/",icon_key:"linkedin",sort_order:0,is_active:false};
+const blankSocial = {platform:"LinkedIn",label:"LinkedIn",url:"",icon_key:"linkedin",sort_order:0,is_active:false};
 const platforms = [{name:"LinkedIn",icon:"linkedin"},{name:"Facebook",icon:"facebook"},{name:"Instagram",icon:"instagram"},{name:"X",icon:"x"},{name:"YouTube",icon:"youtube"},{name:"TikTok",icon:"tiktok"},{name:"Threads",icon:"threads"},{name:"GitHub",icon:"github"}];
 
 export function PublicSiteManagementWorkspace({view}:{view:"pages"|"social"|"inquiries"}) {
