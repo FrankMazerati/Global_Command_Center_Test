@@ -232,8 +232,15 @@ export const NAV: NavSection[] = MENU.map(([title, summary, tone, groups], i) =>
   })),
 }));
 
+// Preserve deep links created before New Active Directory was consolidated
+// into the current Identity & Access Management workspace.
+const LEGACY_SECTION_ALIASES: Record<string, string> = {
+  "new-active-directory": "identity-and-access-management",
+};
+
 export function findSection(slug: string) {
-  return NAV.find((s) => s.slug === slug);
+  const canonicalSlug = LEGACY_SECTION_ALIASES[slug] ?? slug;
+  return NAV.find((s) => s.slug === canonicalSlug);
 }
 
 export function findPage(sectionSlug: string, groupSlug: string, pageSlug: string) {

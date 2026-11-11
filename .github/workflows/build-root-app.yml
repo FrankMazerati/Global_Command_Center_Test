@@ -24,14 +24,14 @@ jobs:
         uses: actions/configure-pages@v5
       - name: Install dependencies
         run: bun install
-      - name: Apply repository formatting
-        run: bun run lint -- --fix
       - name: Lint
-        run: bun run lint
+        run: "bun run lint"
       - name: Tests
-        run: bun run test
+        run: "bun run test"
       - name: Production build
-        run: bun run build
+        run: "bun run build"
+      - name: Check formatting drift
+        run: "bunx prettier --check ."
       - name: Prepare GitHub Pages fallback
         run: |
           echo "Generated static pages:"

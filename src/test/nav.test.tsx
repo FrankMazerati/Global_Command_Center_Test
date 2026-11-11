@@ -2,7 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { createRouter, rootRouteId } from "@tanstack/react-router";
 import { describe, expect, it } from "vitest";
 
-import { ALL_DESTINATIONS, NAV } from "@/lib/nav";
+import { ALL_DESTINATIONS, findPage, findSection, NAV } from "@/lib/nav";
 import { routeTree } from "@/routeTree.gen";
 
 describe("hamburger navigation", () => {
@@ -20,6 +20,13 @@ describe("hamburger navigation", () => {
       "Knowledge Spaces",
       "Help Buddy",
     ]);
+  });
+
+  it("keeps legacy New Active Directory links resolving to Identity & Access Management", () => {
+    expect(findSection("new-active-directory")?.slug).toBe("identity-and-access-management");
+    expect(
+      findPage("new-active-directory", "users-and-identity", "user-accounts")?.page.title,
+    ).toBe("User Accounts");
   });
 
   it("exposes Workflow Center, Knowledge Spaces, and a dedicated Help Buddy category", () => {
