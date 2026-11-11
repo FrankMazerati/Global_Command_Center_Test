@@ -1261,8 +1261,15 @@ function PageFoundation() {
             <p className="text-sm text-muted-foreground">{group.title}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <StatusBadge status="Built" />
-            {((directory && directory !== "tickets") || marketplace || knowledgeSpaces) && <StatusBadge status="Connected" />}
+            {(officeTool || helpBuddy || workflowCenter || ticketWorkspace || workforceHistory || directory === "tickets") && (
+              <StatusBadge status="Built" />
+            )}
+            {((directory && directory !== "tickets") || marketplace || knowledgeSpaces) && (
+              <StatusBadge status="Connected" />
+            )}
+            {(suitePlanned || (!officeTool && !helpBuddy && !workflowCenter && !ticketWorkspace && !workforceHistory && !directory && !marketplace && !knowledgeSpaces)) && (
+              <StatusBadge status="Awaiting configuration" />
+            )}
           </div>
         </div>
       </div>
@@ -1320,88 +1327,21 @@ function PageFoundation() {
       ) : directory ? (
         <SupabaseDirectory kind={directory} title={page.title} />
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
-          <div className="space-y-4">
-            <section className="rounded-xl border bg-card p-5 shadow-card">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <div>
-                  <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-                    <CheckCircle2 className="size-4" /> Workspace ready
-                  </div>
-                  <h2 className="text-xl font-semibold">{page.title}</h2>
-                  <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                    This is the working surface for {page.title.toLowerCase()}. Use the actions
-                    below to continue the project instead of landing on an empty placeholder.
-                  </p>
-                </div>
-                <StatusBadge status="Built" />
-              </div>
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-lg border bg-background/50 p-3">
-                  <span className="text-xs text-muted-foreground">Open work</span>
-                  <b className="mt-1 block text-lg">12</b>
-                </div>
-                <div className="rounded-lg border bg-background/50 p-3">
-                  <span className="text-xs text-muted-foreground">Needs review</span>
-                  <b className="mt-1 block text-lg">4</b>
-                </div>
-                <div className="rounded-lg border bg-background/50 p-3">
-                  <span className="text-xs text-muted-foreground">Last updated</span>
-                  <b className="mt-1 block text-lg">Today</b>
-                </div>
-              </div>
-            </section>
-            <section className="rounded-xl border bg-card p-5 shadow-card">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <div>
-                  <h2 className="font-semibold">Start working</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Choose an action for this workspace.
-                  </p>
-                </div>
-                <Database className="size-5 text-primary" />
-              </div>
-              <div className="grid gap-2 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={() => toast.info(`Create flow opened for ${page.title}.`)}
-                  className="flex items-center gap-2 rounded-lg border px-3 py-3 text-left text-sm hover:bg-accent"
-                >
-                  <Plus className="size-4 text-primary" /> Create new item{" "}
-                  <ArrowUpRight className="ml-auto size-3" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => toast.info(`Search is ready for ${page.title}.`)}
-                  className="flex items-center gap-2 rounded-lg border px-3 py-3 text-left text-sm hover:bg-accent"
-                >
-                  <Search className="size-4 text-primary" /> Search this workspace{" "}
-                  <ArrowUpRight className="ml-auto size-3" />
-                </button>
-              </div>
-            </section>
+        <section className="rounded-xl border bg-card p-5 shadow-card">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-600">
+            Awaiting configuration · no live workflow connected
           </div>
-          <aside className="rounded-xl border bg-card p-4 shadow-card">
-            <h2 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              In {group.title}
-            </h2>
-            <ul className="space-y-0.5">
-              {group.pages.map((p) => (
-                <li key={p.slug}>
-                  <Link
-                    to="/m/$section/$group/$page"
-                    params={{ section: section.slug, group: group.slug, page: p.slug }}
-                    className="block rounded px-2 py-1 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-                    activeProps={{ className: "bg-accent font-semibold text-foreground" }}
-                  >
-                    {p.title}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </aside>
-        </div>
-      )}
+          <h2 className="text-xl font-semibold">{page.title}</h2>
+          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+            This navigation destination exists, but its operational workflow and authorized data source have not been implemented yet.
+            It is not being presented as a completed workspace.
+          </p>
+          <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
+            Before activation, this page needs its real database records, server-enforced permissions, search and drill-down behavior,
+            audit history, and automated tests. No invented counts, sample activity, or nonfunctional action buttons are displayed.
+          </p>
+        </section>
+      )} )}
     </div>
   );
 }
