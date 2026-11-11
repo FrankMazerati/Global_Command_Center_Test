@@ -218,9 +218,9 @@ event_rows as (
     end to_status,
     case e.event_no
       when 1 then t.opened_at
-      when 2 then t.opened_at+interval '2 minutes'
-      when 3 then t.opened_at+interval '5 minutes'
-      else coalesce(t.closed_at,t.resolved_at,t.opened_at+interval '10 minutes')
+      when 2 then case when t.status::text not in ('closed','resolved','cancelled') and t.opened_at>now()-interval '1 hour' then t.opened_at+interval '30 seconds' else t.opened_at+interval '2 minutes' end
+      when 3 then case when t.status::text not in ('closed','resolved','cancelled') and t.opened_at>now()-interval '1 hour' then t.opened_at+interval '60 seconds' else t.opened_at+interval '5 minutes' end
+      else case when t.status::text not in ('closed','resolved','cancelled') and t.opened_at>now()-interval '1 hour' then t.opened_at+interval '90 seconds' else coalesce(t.closed_at,t.resolved_at,t.opened_at+interval '10 minutes') end
     end event_at
   from tickets t
   cross join generate_series(1,4) e(event_no)
