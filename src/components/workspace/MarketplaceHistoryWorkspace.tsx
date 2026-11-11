@@ -107,14 +107,17 @@ export function MarketplaceHistoryWorkspace({ title, pageSlug }: { title: string
             .range(page * 1000, page * 1000 + 999)
         )
       );
-      const [accountResult, companyResult, saleRecentResult, invoiceResult, subscriptionResult,
+      const [accountResult, companyPages, saleRecentResult, invoiceResult, subscriptionResult,
         accountCountResult, salesCountResult, contactCountResult, subscriptionCountResult,
         activeSubscriptionResult, overdueInvoiceResult] = await Promise.all([
         supabase.from("marketplace_customer_accounts")
           .select("id,account_number,customer_company_id,customer_since,account_status,industry,company_size")
           .order("customer_since", { ascending: false }).limit(1000),
-        supabase.from("marketplace_companies")
-          .select("id,display_name,legal_name,headquarters_city,headquarters_region").limit(1000),
+        Promise.all([0, 1].map((page) =>
+          supabase.from("marketplace_companies")
+            .select("id,display_name,legal_name,headquarters_city,headquarters_region")
+            .range(page * 1000, page * 1000 + 999)
+        )),
         supabase.from("marketplace_sales")
           .select("id,sale_number,customer_account_id,sale_date,status,payment_status,total_amount,currency")
           .order("sale_date", { ascending: false }).limit(150),
@@ -133,7 +136,7 @@ export function MarketplaceHistoryWorkspace({ title, pageSlug }: { title: string
       ]);
       if (!active) return;
       const firstError = [
-        ...revenuePages, accountResult, companyResult, saleRecentResult, invoiceResult,
+        ...revenuePages, accountResult, ...companyPages, saleRecentResult, invoiceResult,
         subscriptionResult, accountCountResult, salesCountResult, contactCountResult,
         subscriptionCountResult, activeSubscriptionResult, overdueInvoiceResult,
       ].find((result) => result.error)?.error;
@@ -144,7 +147,7 @@ export function MarketplaceHistoryWorkspace({ title, pageSlug }: { title: string
       }
       const revenueRows = revenuePages.flatMap((result) => result.data ?? []) as Sale[];
       setAccounts((accountResult.data ?? []) as Account[]);
-      setCompanies((companyResult.data ?? []) as Company[]);
+      setCompanies(companyPages.flatMap((result) => result.data ?? []) as Company[]);
       setAllSales(revenueRows);
       setSales((saleRecentResult.data ?? []) as Sale[]);
       setInvoices((invoiceResult.data ?? []) as Invoice[]);
