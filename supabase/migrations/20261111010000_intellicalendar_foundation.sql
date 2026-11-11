@@ -37,15 +37,28 @@ create index if not exists calendar_event_members_user_idx
 alter table public.calendar_events enable row level security;
 alter table public.calendar_event_members enable row level security;
 
+create or replace function public.is_calendar_event_member(_event_id uuid, _user_id uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $
+  select exists (
+    select 1 from public.calendar_event_members m
+    where m.event_id = _event_id and m.user_id = _user_id
+  );
+$;
+
+revoke all on function public.is_calendar_event_member(uuid, uuid) from public;
+grant execute on function public.is_calendar_event_member(uuid, uuid) to authenticated;
+
 drop policy if exists "calendar_events_select_owner_or_member" on public.calendar_events;
 create policy "calendar_events_select_owner_or_member"
   on public.calendar_events for select to authenticated
   using (
     owner_id = (select auth.uid())
-    or exists (
-      select 1 from public.calendar_event_members m
-      where m.event_id = calendar_events.id and m.user_id = (select auth.uid())
-    )
+    or public.is_calendar_event_member(calendar_events.id, (select auth.uid()))
   );
 
 drop policy if exists "calendar_events_insert_owner" on public.calendar_events;
