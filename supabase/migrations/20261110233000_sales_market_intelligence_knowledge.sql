@@ -1,16 +1,19 @@
 -- Sales, executive positioning, and competitive intelligence knowledge collection.
 -- Idempotent seed: safe to apply repeatedly by knowledge-base key and article slug.
 
-insert into public.knowledge_bases (kb_key, name, description, visibility, status)
-values (
+insert into public.knowledge_bases (organization_id, kb_key, name, description, visibility, status)
+select
+  org.id,
   'sales_market_intelligence',
   'Sales, Executive and Market Intelligence',
   'Audience-specific product positioning, differentiators, market context, competitive intelligence, sales playbooks and evidence-backed product claims.',
   'public_internal',
   'active'
-)
+from public.organizations org
+where org.slug = 'intellistack-systems'
 on conflict (kb_key) do update
-set name = excluded.name,
+set organization_id = excluded.organization_id,
+    name = excluded.name,
     description = excluded.description,
     visibility = excluded.visibility,
     status = excluded.status;
