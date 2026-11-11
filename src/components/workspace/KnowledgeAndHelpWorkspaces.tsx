@@ -76,7 +76,7 @@ export function KnowledgeSpacesWorkspace({ title, pageSlug }: { title: string; p
   }, []);
 
   const visibleBases = useMemo(() => {
-    const category = pageSlug.includes("founder-papers")
+    const category = pageSlug.includes("founders-papers")
       ? ["founder_papers"]
       : pageSlug.includes("getting-started") || pageSlug.includes("platform")
         ? ["getting_started"]
