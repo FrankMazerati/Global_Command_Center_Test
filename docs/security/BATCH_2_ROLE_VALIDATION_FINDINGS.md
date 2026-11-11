@@ -55,3 +55,22 @@ The following counts and permission keys came from a read-only query of the conn
 The application directory now reads identity rows from the canonical `profiles` table and includes the existing employee identity, work contact, manager, status, and location fields. The directory routing has also been extended to read existing `groups` and `group_memberships` records without creating duplicate data.
 
 **Not yet certified:** The Groups page is currently a read-only directory view, not a complete membership editor. Role grants have not been changed. RLS/RPC authorization tests have not yet been run. A passing lint/test/build result has not yet been observed. Therefore Batch 2 remains open until those controls and tests are implemented and verified.
+
+
+## Follow-up implementation — employee profile and group management
+
+The working branch now includes:
+
+- `EmployeeProfileWorkspace`: loads the signed-in user's own `profiles` row by `auth.uid()`, displays identity/employment fields, group memberships, badge progress, and star/XP ledger totals. It includes a self-service editor limited to display name, work phone, location, timezone, and avatar URL; it does not expose role, organization, tenant, employee ID, or manager fields for self-editing.
+- The existing AppShell profile dropdown already links “My profile” to the `user-profiles` route. That route now renders the employee profile workspace.
+- `GroupMembershipWorkspace`: allows scoped directory administrators to select a visible employee, inspect that employee's group memberships, add memberships with optional expiry, and remove memberships. The UI checks active role assignments for administrator roles, while database RLS remains the authoritative enforcement layer.
+- Migration `20261111190000_group_membership_admin_write_policies.sql`: defines organization/tenant-scoped insert/delete policies for group memberships. Privileged groups require global administrator authority; organization administrators can manage non-privileged groups only within their assigned scope.
+- `.github/workflows/quality-gates.yml`: defines pnpm frozen-lockfile install, lint, tests, and production build on branch pushes and pull requests.
+
+## Verification boundary and blockers
+
+The application code and migration have been committed to the test branch. The Supabase migration has **not** been applied to the connected database. Therefore group membership write operations are not yet verified against the live RLS policy and may be denied until the migration is reviewed and applied to the intended environment.
+
+No successful CI run has been observed for the latest branch commits. The GitHub workflow-run lookup currently returns no run for the latest commit. A passing lint, test, and production build result is therefore **not certified**.
+
+The Help Desk L1/L2/L3/Lead/Manager authorization matrix remains a separate open implementation item. The database permission snapshot documents current gaps, but no role grants or ticket RLS policies have been changed as part of this follow-up.
