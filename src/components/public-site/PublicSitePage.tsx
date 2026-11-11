@@ -7,7 +7,7 @@ import { getSupabaseClient } from "@/lib/supabase";
 type SitePage = { title: string; summary: string; content_markdown: string; seo_title: string | null; seo_description: string | null; canonical_path: string | null; og_image_url: string | null; page_type: string };
 type SocialLink = { id: string; platform: string; label: string; url: string; icon_key: string; sort_order: number };
 
-const navPages = [["Home","home"],["Products","products"],["Solutions","solutions"],["About","about"],["Partners","partners"],["Careers","careers"],["Contact","contact"]] as const;
+const navPages = [["Home","home"],["Products","products"],["Solutions","solutions"],["About","about"],["Partners","partners"],["Careers","careers"],["Connect","social"],["Contact","contact"]] as const;
 const footerPages = [["Connect","social"],["Privacy","privacy"],["Terms","terms"],["Cookie Preferences","cookie-preferences"],["Acceptable Use","acceptable-use"],["Data Protection","data-protection"],["Security","security"],["Accessibility","accessibility"],["Responsible Disclosure","responsible-disclosure"]] as const;
 const iconMap = { linkedin: Linkedin, facebook: Facebook, instagram: Instagram, youtube: Youtube, github: Github, link: Link2 } as const;
 
