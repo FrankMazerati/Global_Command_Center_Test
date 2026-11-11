@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ChangeEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { BookOpen, CloudUpload, Download, FileText, FolderOpen, FormInput, Image, MessageSquareText, Plus, Save, Send } from "lucide-react";
 import { getSupabaseClient } from "@/lib/supabase";
 
@@ -40,7 +40,7 @@ export function IntelliSphereToolsWorkspace({ pageSlug }: { pageSlug: string }) 
   const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState("");
 
-  const loadRecords = async (ownerId: string) => {
+  const loadRecords = useCallback(async (ownerId: string) => {
     if (!client) return;
     const { data, error } = await client.from("intellisphere_documents")
       .select("id,title,content_markdown,version,metadata,updated_at")
@@ -50,7 +50,7 @@ export function IntelliSphereToolsWorkspace({ pageSlug }: { pageSlug: string }) 
     setRecords((data ?? []) as RecordRow[]);
   };
 
-  const loadFiles = async (ownerId: string) => {
+  const loadFiles = useCallback(async (ownerId: string) => {
     if (!client) return;
     const { data, error } = await client.from("files_metadata")
       .select("id,file_name,storage_bucket,storage_path,mime_type,file_size_bytes,created_at")
@@ -79,7 +79,7 @@ export function IntelliSphereToolsWorkspace({ pageSlug }: { pageSlug: string }) 
       if (live) setStatus("Connected · private organization workspace");
     })();
     return () => { live = false; };
-  }, [client, kind, product.docType]);
+  }, [client, kind, product.docType, loadFiles, loadRecords]);
 
   const saveRecord = async (type = product.docType, recordTitle = title, content = body, metadata: Record<string, unknown> = {}) => {
     if (!client || !profile) { setStatus("Sign in with an active organization account before saving."); return null; }
