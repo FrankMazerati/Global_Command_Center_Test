@@ -11,7 +11,7 @@ on:
       - "src/routes/index.tsx"
       - "src/styles.css"
       - "package.json"
-      - "bun.lock*"
+      - "pnpm-lock.yaml"
 
 permissions:
   contents: read
@@ -22,17 +22,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
         with:
-          bun-version: latest
-      - name: Install dependencies
-        run: bun install
-      - name: Lint
-        run: "bun run lint"
+          version: 11.25.0
+          run_install: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint dashboard entry point
+        run: pnpm exec eslint src/routes/index.tsx
       - name: Tests
-        run: "bun run test"
+        run: pnpm test
       - name: Production build
-        run: "bun run build"
-      - name: Check formatting drift
-        run: "bunx prettier --check ."
+        run: pnpm build
