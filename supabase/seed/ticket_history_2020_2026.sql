@@ -166,7 +166,7 @@ select
   case when r.status_key='waiting' then r.opened_time+interval '1 minute' else null end,
   case when r.status_key='waiting' then 60 else 0 end,
   case when r.n<=15 or (r.n>185 and r.n%13=0) then r.opened_time+(r.response_target_minutes*interval '1 minute') else null end,
-  case when r.n<=15 or (r.n>185 and r.n%11=0) then r.opened_time+(r.resolution_target_minutes*interval '1 minute') else null end,
+  case when r.n<=15 or (r.status_key in ('closed','resolved') and r.n%11=0) then r.opened_time+(r.resolution_target_minutes*interval '1 minute') else null end,
   case when r.status_key='waiting' then 'requester' when r.status_key='escalated' then 'internal_team' else 'none' end,
   b.id
 from ticket_rows r
@@ -204,7 +204,7 @@ event_rows as (
     case e.event_no
       when 1 then null
       when 2 then 'new'
-      when 3 then case when t.status::text='accepted' then 'new' else 'accepted' end
+      when 3 then 'accepted'
       else case when t.status::text='accepted' then 'accepted' else 'in_progress' end
     end from_status,
     case e.event_no
@@ -299,7 +299,7 @@ select
   case when g>60 then t.opened_at+interval '8 hours' when g>15 then t.opened_at+interval '15 minutes' else now() end,
   b.id
 from generate_series(1,900) g
-join public.tickets t on t.id=md5('history-ticket-'||(((g*7-1)%9249)+1))::uuid
+join public.tickets t on t.id=md5('history-ticket-'||case when g<=15 then g else 185+g end)::uuid
 cross join public.company_history_batches b
 where b.batch_key='intellistack-company-history-2020-2026-v1'
 on conflict (id) do nothing;
