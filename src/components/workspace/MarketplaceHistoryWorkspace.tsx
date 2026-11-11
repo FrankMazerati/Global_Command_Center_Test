@@ -60,8 +60,6 @@ type Subscription = {
   starts_at: string;
   next_billing_at: string | null;
 };
-type Row = Record<string, unknown>;
-
 const money = (value: number, currency = "USD") =>
   new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(value || 0);
 const dateLabel = (value: string | null | undefined) =>
@@ -219,7 +217,7 @@ export function MarketplaceHistoryWorkspace({ title, pageSlug }: { title: string
       <section className="rounded-xl border bg-card p-4 shadow-card">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="font-semibold">{isAccountView ? "Customer companies and tenant accounts" : isInvoiceView ? "Invoices and payment history" : isSubscriptionView ? "Customer subscriptions" : "Sales and purchase history"}</h3>
+            <h3 className="font-semibold">{isAccountView ? "Customer company accounts" : isInvoiceView ? "Invoices and payment history" : isSubscriptionView ? "Customer subscriptions" : "Sales and purchase history"}</h3>
             <p className="text-sm text-muted-foreground">{isAccountView ? "Open a company to review its CEO, CFO, CIO, and HR contacts." : "Search historical marketplace records and open a customer account for executive details."}</p>
           </div>
           <div className="flex min-w-[220px] items-center gap-2 rounded-md border px-3 py-2">
