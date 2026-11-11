@@ -4,17 +4,17 @@ import { ArrowUpRight, Facebook, Github, Instagram, Linkedin, Link2, Send, Youtu
 import { toast } from "sonner";
 import { getSupabaseClient } from "@/lib/supabase";
 
-type SitePage = { title: string; summary: string; content_markdown: string; seo_title: string | null; seo_description: string | null; page_type: string };
+type SitePage = { title: string; summary: string; content_markdown: string; seo_title: string | null; seo_description: string | null; canonical_path: string | null; og_image_url: string | null; page_type: string };
 type SocialLink = { id: string; platform: string; label: string; url: string; icon_key: string; sort_order: number };
 
 const footerPages = [["About","about"],["Contact","contact"],["Privacy","privacy"],["Terms","terms"],["Security","security"],["Accessibility","accessibility"],["Responsible Disclosure","responsible-disclosure"]] as const;
 const iconMap = { linkedin: Linkedin, facebook: Facebook, instagram: Instagram, youtube: Youtube, github: Github, link: Link2 } as const;
 
-export function PublicSitePage({ slug }: { slug: string }) {
-  const [page,setPage] = useState<SitePage | null>(null);
-  const [social,setSocial] = useState<SocialLink[]>([]);
-  const [loading,setLoading] = useState(true);
-  const [notFound,setNotFound] = useState(false);
+export function PublicSitePage({ slug, initialPage, initialSocial }: { slug: string; initialPage: SitePage | null; initialSocial: SocialLink[] }) {
+  const page = initialPage;
+  const social = initialSocial;
+  const loading = false;
+  const notFound = !page;
   const [form,setForm] = useState({name:"",email:"",company:"",topic:"General inquiry",message:"",consent:false});
   const [sending,setSending] = useState(false);
   useEffect(() => {
@@ -37,22 +37,6 @@ export function PublicSitePage({ slug }: { slug: string }) {
     if (!canonical) { canonical=document.createElement("link"); canonical.rel="canonical"; document.head.appendChild(canonical); }
     canonical.href = page.canonical_path ? new URL(page.canonical_path,window.location.origin).toString() : window.location.href;
   }, [page]);
-  useEffect(() => {
-    let live = true;
-    const supabase = getSupabaseClient();
-    if (!supabase) { setLoading(false); return; }
-    Promise.all([
-      supabase.from("site_pages").select("title,summary,content_markdown,seo_title,seo_description,page_type").eq("slug",slug).eq("status","published").maybeSingle(),
-      supabase.from("site_social_links").select("id,platform,label,url,icon_key,sort_order").eq("is_active",true).order("sort_order"),
-    ]).then(([p,s]) => {
-      if (!live) return;
-      setPage((p.data as SitePage | null) ?? null);
-      setNotFound(!p.data);
-      setSocial((s.data ?? []) as SocialLink[]);
-      setLoading(false);
-    });
-    return () => { live = false; };
-  },[slug]);
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     const supabase = getSupabaseClient();
