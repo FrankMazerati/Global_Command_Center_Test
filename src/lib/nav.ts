@@ -86,7 +86,7 @@ const RAW: RawSection[] = [
     "Native IntelliStack productivity products, kept separate from connected external applications.",
     "optimus",
     [
-      ["IntelliStack Productivity Tools", ["Productivity Overview", "IntelliTax", "IntelliPay", "Native Productivity Applications", "Personal Productivity Workspace", "Business Productivity Workspace"]],
+      ["IntelliStack Productivity Tools", ["Productivity Overview", "IntelliWord", "IntelliSheets", "IntelliSlides", "IntelliTax", "IntelliPay", "Native Productivity Applications", "Personal Productivity Workspace", "Business Productivity Workspace"]],
       ["Connected Productivity Tools", ["Microsoft 365", "Microsoft Project and Project Management", "Monday.com", "Financial and Accounting Applications", "External Productivity Applications", "Connected Application Directory", "Connector Settings", "Connection Status", "Data and Permission Settings"]],
     ],
   ],
