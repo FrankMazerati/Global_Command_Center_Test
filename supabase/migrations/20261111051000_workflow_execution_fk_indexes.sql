@@ -1,0 +1,9 @@
+create index if not exists workflow_versions_workflow_fk_idx on public.workflow_versions(workflow_id);
+create index if not exists workflow_versions_published_by_fk_idx on public.workflow_versions(published_by);
+create index if not exists workflow_versions_created_by_fk_idx on public.workflow_versions(created_by);
+create index if not exists workflow_step_runs_run_fk_idx on public.workflow_step_runs(workflow_run_id);
+create index if not exists workflow_step_runs_assignee_fk_idx on public.workflow_step_runs(assigned_profile_id);
+create index if not exists workflow_run_events_actor_fk_idx on public.workflow_run_events(actor_profile_id);
+create index if not exists workflow_run_checkpoints_run_fk_idx on public.workflow_run_checkpoints(workflow_run_id);
+create index if not exists workflow_run_checkpoints_creator_fk_idx on public.workflow_run_checkpoints(created_by);
+create index if not exists situation_runs_tenant_fk_idx on public.situation_runs(tenant_id);
