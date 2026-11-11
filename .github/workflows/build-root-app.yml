@@ -9,10 +9,6 @@ permissions:
   pages: write
   id-token: write
 
-concurrency:
-  group: command-center-production-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   quality-checks:
     name: "1. Lint and Test"
