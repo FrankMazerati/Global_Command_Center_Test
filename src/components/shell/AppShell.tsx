@@ -124,7 +124,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               <DropdownMenuContent align="end" className="w-56 border-sky-300/25 bg-[#0a172b]/95 text-slate-100 backdrop-blur-xl">
                 <DropdownMenuLabel>My Command Profile<div className="text-xs font-normal text-slate-400">{w.availability}</div></DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-slate-700"/>
-                <DropdownMenuItem onSelect={() => go("identity-and-access-management","users-and-identity","user-profiles")}><UserRound className="mr-2 size-4"/>My profile</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => go("identity-and-access-management","users-and-identity","user-profiles")}><UserRound className="mr-2 size-4"/>My full profile</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => go("identity-and-access-management","groups-and-organization","group-membership")}><Users className="mr-2 size-4"/>My group memberships</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => go("command-center","workforce-performance-and-recognition","badges-and-achievements")}><Award className="mr-2 size-4"/>Badges and achievements</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => go("command-center","workforce-performance-and-recognition","stars-and-recognition")}><Star className="mr-2 size-4"/>Stars and recognition</DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => go("account-and-administration","account-and-system-administration","preferences")}><Settings2 className="mr-2 size-4"/>Preferences</DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-slate-700"/>
                 <DropdownMenuItem onSelect={() => { void signOut(); }}><LogOut className="mr-2 size-4"/>Sign out</DropdownMenuItem>
