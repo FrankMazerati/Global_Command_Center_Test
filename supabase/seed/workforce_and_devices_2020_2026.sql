@@ -282,23 +282,23 @@ insert into public.devices
    retired_at,disposal_method,data_wipe_verified_at,privacy_scope,remote_lock_allowed,remote_wipe_allowed,
    metadata,history_batch_id)
 select
-  md5('history-device-'||m.g)::uuid,
+  md5('history-device-'||c.g)::uuid,
   o.id,t.id,
-  'IS-DEVICE-'||lpad((4220+m.g)::text,6,'0'),
+  'IS-DEVICE-'||lpad((4220+c.g)::text,6,'0'),
   c.device_type_key,
-  case when c.device_type_key in ('server','network_switch','wireless_access_point') then (array['Cisco','Juniper','Ubiquiti','HPE'])[((m.g*3-1)%4)+1]
-       when c.device_type_key in ('work_phone','company_phone','tablet') then (array['Apple','Samsung','Google'])[((m.g*5-1)%3)+1]
-       when c.device_type_key in ('monitor','printer') then (array['Dell','HP','LG','Canon'])[((m.g*7-1)%4)+1]
-       else (array['Dell','Lenovo','HP','Apple'])[((m.g*11-1)%4)+1] end,
-  case when c.device_type_key='laptop' then (array['Latitude 7440','ThinkPad T14','EliteBook 840','MacBook Pro'])[((m.g*3-1)%4)+1]
-       when c.device_type_key='desktop' then (array['OptiPlex 7010','ThinkCentre M90','ProDesk 600'])[((m.g*3-1)%3)+1]
-       when c.device_type_key='tablet' then (array['iPad Air','Galaxy Tab S9','Surface Pro'])[((m.g*3-1)%3)+1]
-       when c.device_type_key in ('work_phone','company_phone') then (array['iPhone 15','Galaxy S24','Pixel 9'])[((m.g*3-1)%3)+1]
-       when c.device_type_key='server' then (array['ProLiant DL380','PowerEdge R760','ThinkSystem SR650'])[((m.g*3-1)%3)+1]
-       when c.device_type_key='network_switch' then (array['Catalyst 9300','EX3400','UniFi Pro'])[((m.g*3-1)%3)+1]
+  case when c.device_type_key in ('server','network_switch','wireless_access_point') then (array['Cisco','Juniper','Ubiquiti','HPE'])[((c.g*3-1)%4)+1]
+       when c.device_type_key in ('work_phone','company_phone','tablet') then (array['Apple','Samsung','Google'])[((c.g*5-1)%3)+1]
+       when c.device_type_key in ('monitor','printer') then (array['Dell','HP','LG','Canon'])[((c.g*7-1)%4)+1]
+       else (array['Dell','Lenovo','HP','Apple'])[((c.g*11-1)%4)+1] end,
+  case when c.device_type_key='laptop' then (array['Latitude 7440','ThinkPad T14','EliteBook 840','MacBook Pro'])[((c.g*3-1)%4)+1]
+       when c.device_type_key='desktop' then (array['OptiPlex 7010','ThinkCentre M90','ProDesk 600'])[((c.g*3-1)%3)+1]
+       when c.device_type_key='tablet' then (array['iPad Air','Galaxy Tab S9','Surface Pro'])[((c.g*3-1)%3)+1]
+       when c.device_type_key in ('work_phone','company_phone') then (array['iPhone 15','Galaxy S24','Pixel 9'])[((c.g*3-1)%3)+1]
+       when c.device_type_key='server' then (array['ProLiant DL380','PowerEdge R760','ThinkSystem SR650'])[((c.g*3-1)%3)+1]
+       when c.device_type_key='network_switch' then (array['Catalyst 9300','EX3400','UniFi Pro'])[((c.g*3-1)%3)+1]
        else c.device_type_key||' Enterprise' end,
-  'IS-HIST-SN-'||lpad(m.g::text,7,'0'),
-  'IS-HIST-ASSET-'||lpad(m.g::text,7,'0'),
+  'IS-HIST-SN-'||lpad(c.g::text,7,'0'),
+  'IS-HIST-ASSET-'||lpad(c.g::text,7,'0'),
   case when c.device_type_key in ('laptop','desktop') then 'Windows'
        when c.device_type_key in ('tablet','work_phone','company_phone') then 'iOS / Android'
        when c.device_type_key in ('server','network_switch','wireless_access_point') then 'Linux / Network OS'
@@ -307,56 +307,56 @@ select
        when c.device_type_key in ('tablet','work_phone','company_phone') then '17'
        else 'Current' end,
   c.device_status::asset_status,
-  case when c.device_status='active' then now()-((m.g%25)||' days')::interval else null end,
+  case when c.device_status='active' then now()-((c.g%25)||' days')::interval else null end,
   'company_history_seed',
-  jsonb_build_object('device_type',c.device_type_key,'procurement_batch','IS-PROC-'||lpad(((m.g-1)/100+1)::text,4,'0')),
+  jsonb_build_object('device_type',c.device_type_key,'procurement_batch','IS-PROC-'||lpad(((c.g-1)/100+1)::text,4,'0')),
   c.purchase_day::timestamptz,now(),
-  case when c.device_status='active' and c.device_type_key in ('laptop','desktop','tablet','work_phone','company_phone') and m.g%5<>0
+  case when c.device_status='active' and c.device_type_key in ('laptop','desktop','tablet','work_phone','company_phone') and c.g%5<>0
        then p.id else null end,
   cat.asset_class,
   case when c.device_type_key in ('byod_phone','byod_tablet','byod_laptop') then 'byod'
-       when m.g%10=0 then 'leased' else 'company_owned' end,
-  case when cat.default_assignment_type='individual' and c.device_status='active' and m.g%5<>0 then 'individual'
+       when c.g%10=0 then 'leased' else 'company_owned' end,
+  case when cat.default_assignment_type='individual' and c.device_status='active' and c.g%5<>0 then 'individual'
        else cat.default_assignment_type end,
   case when c.device_status='retired' then 'retired'
        when c.device_status='planned' then 'pending'
        when c.device_status='quarantined' then 'blocked'
        when c.device_status='active' then 'enrolled'
        else 'enrolled' end,
-  case when m.g%5=0 then 'Jamf Pro' when m.g%5=1 then 'Cisco Network Management' else 'Microsoft Intune' end,
+  case when c.g%5=0 then 'Jamf Pro' when c.g%5=1 then 'Cisco Network Management' else 'Microsoft Intune' end,
   case when c.device_status='retired' then 'not_applicable'
        when c.device_status='planned' then 'pending_review'
        when c.device_status='quarantined' then 'non_compliant'
        when c.device_status='maintenance' then 'at_risk'
-       when m.g%100<85 then 'compliant'
-       when m.g%100<95 then 'at_risk'
+       when c.g%100<85 then 'compliant'
+       when c.g%100<95 then 'at_risk'
        else 'non_compliant' end,
-  ((now() at time zone 'America/Chicago')::date-(m.g%60))::timestamp at time zone 'America/Chicago',
-  md5('IS-HIST-SN-'||lpad(m.g::text,7,'0')),
+  ((now() at time zone 'America/Chicago')::date-(c.g%60))::timestamp at time zone 'America/Chicago',
+  md5('IS-HIST-SN-'||lpad(c.g::text,7,'0')),
   c.purchase_day,(c.purchase_day+interval '3 years')::date,
-  case when m.g%10=0 then (c.purchase_day+interval '3 years')::date else null end,
+  case when c.g%10=0 then (c.purchase_day+interval '3 years')::date else null end,
   case when cat.asset_class='infrastructure' then 4500 when cat.asset_class='mobile' then 800 when cat.asset_class='shared_peripheral' then 450 else 1450 end,
   'USD',
-  case when c.device_status='active' and c.device_type_key in ('laptop','desktop','tablet','work_phone','company_phone') and m.g%5<>0
+  case when c.device_status='active' and c.device_type_key in ('laptop','desktop','tablet','work_phone','company_phone') and c.g%5<>0
        then ((c.purchase_day+14)::timestamp+time '09:00') at time zone 'America/Chicago' else null end,
-  'Chicago Headquarters','Main Office','Floor '||((m.g%8)+1),'Room '||lpad((m.g%40+1)::text,2,'0'),
-  'IS-HIST-'||lpad(m.g::text,6,'0'),'intellistack.example',
+  'Chicago Headquarters','Main Office','Floor '||((c.g%8)+1),'Room '||lpad((c.g%40+1)::text,2,'0'),
+  'IS-HIST-'||lpad(c.g::text,6,'0'),'intellistack.example',
   case when c.device_type_key in ('laptop','desktop') then 'entra_id' when c.device_type_key in ('server','network_switch','wireless_access_point') then 'infrastructure' else 'not_applicable' end,
   case when c.device_type_key in ('laptop','desktop') then 'Intel Core i7' when c.device_type_key='server' then 'Intel Xeon' else 'Not Applicable' end,
   case when c.device_type_key in ('laptop','desktop') then 16 when c.device_type_key='server' then 128 else 8 end,
   case when c.device_type_key in ('laptop','desktop') then 512 when c.device_type_key='server' then 4096 else 256 end,
-  case when c.device_status='quarantined' or m.g%100>=95 then 'disabled' else 'enabled' end,
-  case when c.device_status='quarantined' or m.g%100>=95 then 'disabled' else 'enabled' end,
-  case when c.device_status='quarantined' or m.g%100>=95 then 'disabled' else 'enabled' end,
-  case when c.device_status='quarantined' or m.g%100>=95 then 'disabled' else 'enabled' end,
+  case when c.device_status='quarantined' or c.g%100>=95 then 'disabled' else 'enabled' end,
+  case when c.device_status='quarantined' or c.g%100>=95 then 'disabled' else 'enabled' end,
+  case when c.device_status='quarantined' or c.g%100>=95 then 'disabled' else 'enabled' end,
+  case when c.device_status='quarantined' or c.g%100>=95 then 'disabled' else 'enabled' end,
   case when c.device_type_key in ('laptop','desktop') then '22631' else 'Current' end,
-  ((now() at time zone 'America/Chicago')::date-(m.g%30))::timestamp at time zone 'America/Chicago',
+  ((now() at time zone 'America/Chicago')::date-(c.g%30))::timestamp at time zone 'America/Chicago',
   ((now() at time zone 'America/Chicago')::date+30)::timestamp at time zone 'America/Chicago',
   case when c.device_status='retired' then least(c.purchase_day+730,(now() at time zone 'America/Chicago')::date)::timestamp at time zone 'America/Chicago' else null end,
   case when c.device_status='retired' then 'certified_recycling' else null end,
   case when c.device_status='retired' then ((now() at time zone 'America/Chicago')::date::timestamp) at time zone 'America/Chicago' else null end,
-  case when m.g%10=0 then 'work_profile_only' when cat.asset_class='shared_peripheral' then 'shared_equipment' else 'full_company_device' end,
-  m.g%10<>0,m.g%10<>0,
+  case when c.g%10=0 then 'work_profile_only' when cat.asset_class='shared_peripheral' then 'shared_equipment' else 'full_company_device' end,
+  c.g%10<>0,c.g%10<>0,
   jsonb_build_object('record_lineage','company_history_seed_v1','procurement_year',extract(year from c.purchase_day)),
   b.id
 from type_map c
