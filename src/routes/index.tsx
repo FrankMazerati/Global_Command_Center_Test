@@ -105,12 +105,61 @@ const clocks = [
 const clockChoices = [
   ["New York", "America/New_York"],
   ["Chicago", "America/Chicago"],
-  ["London", "Europe/London"],
-  ["Dubai", "Asia/Dubai"],
-  ["Tokyo", "Asia/Tokyo"],
   ["Los Angeles", "America/Los_Angeles"],
-  ["Sydney", "Australia/Sydney"],
+  ["San Francisco", "America/Los_Angeles"],
+  ["Seattle", "America/Los_Angeles"],
+  ["Denver", "America/Denver"],
+  ["Phoenix", "America/Phoenix"],
+  ["Dallas", "America/Chicago"],
+  ["Houston", "America/Chicago"],
+  ["Mexico City", "America/Mexico_City"],
+  ["Toronto", "America/Toronto"],
+  ["Vancouver", "America/Vancouver"],
+  ["Montreal", "America/Toronto"],
+  ["Sao Paulo", "America/Sao_Paulo"],
+  ["Buenos Aires", "America/Argentina/Buenos_Aires"],
+  ["London", "Europe/London"],
+  ["Dublin", "Europe/Dublin"],
+  ["Lisbon", "Europe/Lisbon"],
+  ["Paris", "Europe/Paris"],
+  ["Madrid", "Europe/Madrid"],
+  ["Amsterdam", "Europe/Amsterdam"],
+  ["Berlin", "Europe/Berlin"],
+  ["Zurich", "Europe/Zurich"],
+  ["Rome", "Europe/Rome"],
+  ["Athens", "Europe/Athens"],
+  ["Istanbul", "Europe/Istanbul"],
+  ["Moscow", "Europe/Moscow"],
+  ["Cairo", "Africa/Cairo"],
+  ["Johannesburg", "Africa/Johannesburg"],
+  ["Lagos", "Africa/Lagos"],
+  ["Nairobi", "Africa/Nairobi"],
+  ["Dubai", "Asia/Dubai"],
+  ["Riyadh", "Asia/Riyadh"],
+  ["Doha", "Asia/Qatar"],
+  ["Tel Aviv", "Asia/Jerusalem"],
+  ["Mumbai", "Asia/Kolkata"],
+  ["Delhi", "Asia/Kolkata"],
+  ["Karachi", "Asia/Karachi"],
+  ["Dhaka", "Asia/Dhaka"],
+  ["Bangkok", "Asia/Bangkok"],
+  ["Jakarta", "Asia/Jakarta"],
   ["Singapore", "Asia/Singapore"],
+  ["Kuala Lumpur", "Asia/Kuala_Lumpur"],
+  ["Hong Kong", "Asia/Hong_Kong"],
+  ["Shanghai", "Asia/Shanghai"],
+  ["Taipei", "Asia/Taipei"],
+  ["Seoul", "Asia/Seoul"],
+  ["Tokyo", "Asia/Tokyo"],
+  ["Manila", "Asia/Manila"],
+  ["Perth", "Australia/Perth"],
+  ["Adelaide", "Australia/Adelaide"],
+  ["Sydney", "Australia/Sydney"],
+  ["Melbourne", "Australia/Melbourne"],
+  ["Brisbane", "Australia/Brisbane"],
+  ["Auckland", "Pacific/Auckland"],
+  ["Honolulu", "Pacific/Honolulu"],
+  ["Anchorage", "America/Anchorage"],
 ] as const;
 
 const availableQuickPicks: QuickPick[] = [
@@ -176,111 +225,6 @@ const connectorChoices = [
   "ServiceNow",
 ];
 type ProfileEditor = "photo" | "background" | "bio" | "linkedin" | "payment" | "status" | null;
-
-const defaultNewsFeeds = [
-  ["AI Brief", "Maximus and Optimus systems are operating normally."],
-  ["Security", "No critical threat activity is open for review."],
-  ["Network", "Global infrastructure health remains within target."],
-  ["Product", "IntelliStack connector review is scheduled today."],
-  ["Company", "Quarterly planning materials are ready in Knowledge Vault."],
-  ["People", "Two access requests are waiting for approval."],
-  ["Learning", "New Command Center training content is available."],
-  ["Operations", "Service desk workload is tracking to plan."],
-  ["Governance", "Compliance checklist review is due this week."],
-  ["Build", "Project completion review remains the active focus."],
-] as const;
-
-const defaultTickers = [
-  ["NASDAQ", "+0.87%"],
-  ["S&P 500", "+0.42%"],
-  ["DOW", "+0.19%"],
-  ["BTC", "-0.18%"],
-  ["ETH", "+1.12%"],
-] as const;
-
-const workItems: WorkItem[] = [
-  {
-    id: "PROJ-0001",
-    title: "Finish the complete Global Command Center project",
-    detail:
-      "Complete every destination page, workflow, connector, and review item in the test repository.",
-    tone: "urgent",
-    action: "Open",
-  },
-  {
-    id: "BUILD-0024",
-    title: "Complete all hamburger navigation pages",
-    detail:
-      "Replace placeholder destination surfaces with finished page content and validated actions.",
-    tone: "high",
-    action: "Open",
-  },
-  {
-    id: "BUILD-0025",
-    title: "Verify page-to-page navigation and access rules",
-    detail: "Check every route, breadcrumb, permission boundary, and back-navigation path.",
-    tone: "high",
-    action: "Open",
-  },
-  {
-    id: "BUILD-0026",
-    title: "Finish Help Buddy workflow integration",
-    detail:
-      "Connect assistant context, missions, knowledge, activity, and handoff behavior to real work.",
-    tone: "high",
-    action: "Open",
-  },
-  {
-    id: "BUILD-0027",
-    title: "Complete tablet and phone QA",
-    detail:
-      "Validate the closed and open hamburger states, independently scrolling work areas, and touch controls.",
-    tone: "medium",
-    action: "Open",
-  },
-  {
-    id: "SEC-4860",
-    title: "Suspicious login attempt",
-    detail: "Multiple failed sign-ins detected on finance-portal",
-    tone: "urgent",
-    action: "View",
-  },
-  {
-    id: "INC-4582",
-    title: "Client Support Ticket #45872",
-    detail: "User experiencing VPN connection issues",
-    tone: "high",
-    action: "Resolve",
-  },
-  {
-    id: "REQ-1047",
-    title: "Review new user access request",
-    detail: "Pending approval for Sarah Johnson (Marketing)",
-    tone: "high",
-    action: "Approve",
-  },
-  {
-    id: "OPS-2204",
-    title: "System update available",
-    detail: "Windows security patch for 3 servers",
-    tone: "medium",
-    action: "Review",
-  },
-  {
-    id: "KB-1098",
-    title: "Knowledge Vault update",
-    detail: "New documentation available: Network Troubleshooting",
-    tone: "medium",
-    action: "Open",
-  },
-  {
-    id: "GOV-0902",
-    title: "Compliance checklist",
-    detail: "Quarterly audit items are due this week",
-    tone: "low",
-    action: "Open",
-  },
-];
 
 const toneStyles = {
   urgent: "border-rose-400/40 bg-rose-500/10 text-rose-200",
@@ -349,23 +293,15 @@ function CommandCenterHome() {
   const [quickPickEditorOpen, setQuickPickEditorOpen] = useState(false);
   const [quickPickItems, setQuickPickItems] = useState([...quickPicks]);
   const [draggedQuickPick, setDraggedQuickPick] = useState<string | null>(null);
-  const [connectedConnectors, setConnectedConnectors] = useState([
-    "Microsoft 365",
-    "Microsoft Entra ID",
-    "AWS",
-    "GitHub",
-    "Google Workspace",
-  ]);
+  const [connectedConnectors, setConnectedConnectors] = useState<string[]>([]);
   const [profilePhoto, setProfilePhoto] = useState("/assets/frank-mazerati.png");
   const [backgroundPhoto, setBackgroundPhoto] = useState<string | null>(null);
   const [bio, setBio] = useState("Founder and Global Administrator");
   const [linkedin, setLinkedin] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
   const [statusNote, setStatusNote] = useState("Available for focused work");
-  const [newsItems, setNewsItems] = useState<Array<readonly [string, string]>>([
-    ...defaultNewsFeeds,
-  ]);
-  const [tickers, setTickers] = useState<Array<readonly [string, string]>>([...defaultTickers]);
+  const [newsItems, setNewsItems] = useState<Array<readonly [string, string]>>([]);
+  const [tickers, setTickers] = useState<Array<readonly [string, string]>>([]);
   const [newsManagerOpen, setNewsManagerOpen] = useState(false);
   const [tickerManagerOpen, setTickerManagerOpen] = useState(false);
   const [expandedFeed, setExpandedFeed] = useState<string | null>(null);
@@ -445,7 +381,6 @@ function CommandCenterHome() {
           rows.find((row) =>
             /manager|admin|owner/i.test(String(row["role"] ?? row["title"] ?? "")),
           ) ??
-          rows[0] ??
           null;
         setManagerRecord(match);
       },
@@ -455,7 +390,7 @@ function CommandCenterHome() {
     };
   }, []);
 
-  const items = liveItems.length ? liveItems : workItems;
+  const items = liveItems;
   const availability = work.availability;
   const managerName = String(
     managerRecord?.["full_name"] ?? managerRecord?.["name"] ?? "Frank Mazerati",
@@ -946,11 +881,7 @@ function CommandCenterHome() {
                 <b>{timeFor("America/Chicago", now)}</b>
                 <span>{dateFor("America/Chicago", now)}</span>
               </div>
-              <div className="cc-local-weather">
-                <CloudSun size={14} />
-                <b>72°F</b>
-                <span>Mostly sunny</span>
-              </div>
+              <div className="cc-local-weather"><CloudSun size={14} /><span>Weather service not connected</span></div>
             </div>
           </section>
 
@@ -1346,7 +1277,7 @@ function CommandCenterHome() {
                         <b>{item.title}</b>
                       </div>
                       <p>{item.detail}</p>
-                      <small>{item.id} · 2 hours ago</small>
+                      <small>{item.id} · {item.detail}</small>
                     </div>
                     <button className="cc-row-action" onClick={() => openItem(item)}>
                       {item.action}
@@ -1484,29 +1415,7 @@ function CommandCenterHome() {
                   })}
                 </div>
               </section>
-              <section className="cc-side-panel">
-                <div className="cc-panel-heading">
-                  <div>
-                    <Activity size={15} />
-                    <h2>RECENT ACTIVITY</h2>
-                  </div>
-                  <button className="cc-text-link">View all</button>
-                </div>
-                <ul>
-                  <li>
-                    <span className="activity-dot green" />
-                    System backup completed <small>2 hrs ago</small>
-                  </li>
-                  <li>
-                    <span className="activity-dot blue" />
-                    Access request approved <small>3 hrs ago</small>
-                  </li>
-                  <li>
-                    <span className="activity-dot violet" />
-                    Policy update published <small>5 hrs ago</small>
-                  </li>
-                </ul>
-              </section>
+              
             </aside>
           </div>
         </main>
@@ -1514,7 +1423,7 @@ function CommandCenterHome() {
           <span>
             <ShieldCheck size={13} /> Secure, Trusted &amp; Compliant.
           </span>
-          <span>© 2026 IntelliStack Systems · One world. One system. One intelligent network.</span>
+          <span>Think beyond locally, connect everything globally, powered by intelligence.</span>
           <span>
             <i className="cc-online-dot" /> Global Command Center v2.0.0
           </span>
