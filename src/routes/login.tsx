@@ -21,6 +21,7 @@ import { getSupabaseClient } from "@/lib/supabase";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
+      { name: "robots", content: "noindex,nofollow" },
       { title: "Secure sign in · Maximus Optimus" },
       {
         name: "description",
