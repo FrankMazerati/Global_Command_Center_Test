@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import {
-  Bell, CalendarDays, LogOut, Mail, Menu, MessageSquare,
-  Search, Settings2, ShieldCheck, UserRound,
+  Award, Bell, CalendarDays, LogOut, Mail, Menu, MessageSquare,
+  Search, Settings2, ShieldCheck, Star, UserRound, Users,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
