@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ChangeEvent } from "react";
-import { FileText, Table2, Presentation, MessageSquare, Plus, Download, Save, Search, Send, Trash2, ChevronLeft, ChevronRight, Bold, Italic, Underline, Palette, Users, LockKeyhole } from "lucide-react";
+import { FileText, Table2, Presentation, MessageSquare, Plus, Download, Save, Send, Trash2, ChevronLeft, ChevronRight, Bold, Users, LockKeyhole } from "lucide-react";
 
 type OfficeKind = "intelliword" | "intellisheets" | "intellislides" | "intellichat";
 const STORE_PREFIX = "intellistack.office.v1.";
@@ -72,7 +72,6 @@ function SheetsWorkspace() {
   const initial = { title: "Untitled workbook", cells: Array.from({length:8}, () => Array.from({length:6}, () => "")) };
   const { value, setValue, savedAt } = useLocalDocument("intellisheets", initial);
   const [active, setActive] = useState("A1");
-  const [formula, setFormula] = useState("");
   const [search, setSearch] = useState("");
   const updateCell = (r:number,c:number,next:string) => setValue(v => ({...v,cells:v.cells.map((row,ri)=>ri===r?row.map((cell,ci)=>ci===c?next:cell):row)}));
   const exportCsv = () => downloadText((value.title || "workbook")+".csv", value.cells.map(row=>row.map(cell=>`"${String(cell).replace(/"/g,'""')}"`).join(",")).join("\n"), "text/csv");
