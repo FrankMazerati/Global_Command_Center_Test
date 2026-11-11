@@ -36,6 +36,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - name: Install locked dependencies
+        id: install
         run: pnpm install --frozen-lockfile
       - name: Lint profile and public-site feature files
         run: >-
@@ -56,8 +57,8 @@ jobs:
         run: pnpm lint
         continue-on-error: true
       - name: Run automated tests
-        if: always()
+        if: steps.install.outcome == 'success'
         run: pnpm test
       - name: Build production application
-        if: always()
+        if: steps.install.outcome == 'success'
         run: pnpm build
