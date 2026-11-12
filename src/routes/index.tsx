@@ -339,7 +339,6 @@ function CommandCenterHome() {
   const [tickerToAdd, setTickerToAdd] = useState("");
   const [draggedClock, setDraggedClock] = useState<string | null>(null);
   const [liveItems, setLiveItems] = useState<WorkItem[]>([]);
-  const [ticketSource, setTicketSource] = useState<"supabase" | "project">("project");
   const [managerRecord, setManagerRecord] = useState<Record<string, unknown> | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
@@ -389,7 +388,6 @@ function CommandCenterHome() {
           } satisfies WorkItem;
         });
         setLiveItems(mapped);
-        setTicketSource("supabase");
       });
     return () => {
       active = false;
