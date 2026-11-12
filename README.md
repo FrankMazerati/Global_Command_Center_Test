@@ -36,9 +36,11 @@ The employee directory and profiles belong under **New Active Directory → User
 
 CEO, CFO, CIO, and CTO experiences are separate executive workspaces with role- and tenant-scoped data. Executive titles do not imply Global Admin / Super Admin access.
 
-## Commercial and organizational architecture
+## Commercial, organizational, and security architecture
 
-- [IntelliStack subscription, location licensing, and operations management](docs/commercial/INTELLISTACK_SUBSCRIPTION_AND_LOCATION_LICENSING.md)
+- [Three subscription plans, location licensing, and Local / Regional / Global Operations](docs/commercial-subscription-and-operations-management.md)
+- [IntelliAccess privileged access management design](docs/intelliaccess-privileged-access-management-design.md)
+- [Original subscription and location licensing reference](docs/commercial/INTELLISTACK_SUBSCRIPTION_AND_LOCATION_LICENSING.md)
 
 ## Engineering baselines
 
