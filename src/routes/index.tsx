@@ -405,7 +405,9 @@ function CommandCenterHome() {
   const [profileEditor, setProfileEditor] = useState<ProfileEditor>(null);
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState("Main Workflow");
-  const [activeBuddyTab, setActiveBuddyTab] = useState("Workflow");
+  const [activeBuddyTab, setActiveBuddyTab] = useState("Checklist");
+  const [assistantCollapsed, setAssistantCollapsed] = useState(false);
+  const [checklistDraft, setChecklistDraft] = useState("");
   const [clockEntries, setClockEntries] = useState<ReadonlyArray<readonly [string, string]>>([
     ...clocks,
   ]);
@@ -1549,12 +1551,18 @@ function CommandCenterHome() {
                     <p>Your AI Help Desk Assistant</p>
                   </div>
                   <button
+                    type="button"
                     className="cc-mini-button"
-                    onClick={() => toast.info("Help Buddy is ready for your next question.")}
+                    aria-label={assistantCollapsed ? "Open Chat Buddy" : "Minimize Chat Buddy"}
+                    aria-expanded={!assistantCollapsed}
+                    title={assistantCollapsed ? "Open Chat Buddy" : "Minimize Chat Buddy"}
+                    onClick={() => setAssistantCollapsed((value) => !value)}
                   >
-                    <Settings2 size={14} />
+                    <ChevronDown size={14} className={assistantCollapsed ? "rotate-180" : ""} />
                   </button>
                 </div>
+                {!assistantCollapsed && (
+                  <>
                 <div className="cc-buddy-card">
                   <img src="/assets/help-buddy.png" alt="Help Buddy" />
                   <div>
@@ -1562,12 +1570,12 @@ function CommandCenterHome() {
                     <span>Ask. Find. Connect. Get it done.</span>
                   </div>
                 </div>
-                <div className="cc-buddy-tabs" role="tablist" aria-label="Help Buddy views">
+                <div className="cc-buddy-tabs" role="tablist" aria-label="Chat Buddy scenarios">
                   {(
                     [
                       ["Assist", Bot],
-                      ["Workflow", Activity],
-                      ["Tickets", Ticket],
+                      ["Checklist", Activity],
+                      ["Prepare", CalendarDays],
                       ["Alerts", Bell],
                     ] as Array<[string, LucideIcon]>
                   ).map(([label, Icon]) => (
@@ -1584,18 +1592,63 @@ function CommandCenterHome() {
                     </button>
                   ))}
                 </div>
-                <div className="cc-buddy-actions">
-                  <button onClick={() => setMessage("Create a ticket for me")}>
-                    Create a Ticket
-                  </button>
-                  <button onClick={() => setMessage("Find documentation")}>
-                    Find Documentation
-                  </button>
-                  <button onClick={() => setMessage("Check system status")}>
-                    Check System Status
-                  </button>
-                  <button onClick={() => setMessage("Talk to a human")}>Talk to a Human</button>
-                </div>
+                {activeBuddyTab === "Checklist" ? (
+                  <div className="cc-buddy-checklist">
+                    <div className="cc-buddy-checklist-heading">
+                      <strong>MY CHECKLIST</strong>
+                      <span>{work.checklist.filter((entry) => entry.done).length}/{work.checklist.length} complete</span>
+                    </div>
+                    {work.checklist.length ? (
+                      <ul>
+                        {work.checklist.map((entry) => (
+                          <li key={entry.id}>
+                            <label>
+                              <input
+                                type="checkbox"
+                                checked={entry.done}
+                                onChange={() => work.toggleChecklistItem(entry.id)}
+                              />
+                              <span className={entry.done ? "is-done" : ""}>{entry.label}</span>
+                            </label>
+                            <button type="button" aria-label={`Remove ${entry.label}`} onClick={() => work.removeChecklistItem(entry.id)}>×</button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="cc-buddy-checklist-empty">No checklist steps yet. Add the first step below.</p>
+                    )}
+                    <form onSubmit={(event) => {
+                      event.preventDefault();
+                      if (checklistDraft.trim()) work.addChecklistItem(checklistDraft.trim());
+                      setChecklistDraft("");
+                    }}>
+                      <input value={checklistDraft} onChange={(event) => setChecklistDraft(event.target.value)} placeholder="Add a checklist step…" aria-label="New checklist step" />
+                      <button type="submit" disabled={!checklistDraft.trim()}><Plus size={13} /> Add</button>
+                    </form>
+                    <small>Personal checklist · Saved in this browser until persistent workflow storage is connected.</small>
+                  </div>
+                ) : activeBuddyTab === "Prepare" ? (
+                  <div className="cc-buddy-actions">
+                    <button onClick={() => setMessage("Help me prepare a meeting: identify the purpose, draft an agenda, suggest attendees from information I am authorized to access, and check my connected calendar. Do not send invitations without my confirmation.")}>Schedule a Meeting</button>
+                    <button onClick={() => setMessage("Help me prepare a trip: organize dates, destination, approved travel requirements, itinerary, and documents. Do not book or purchase anything without explicit authorization.")}>Prepare a Trip</button>
+                    <button onClick={() => setMessage("Gather the business documents relevant to my current work. Search only repositories and records I am authorized to access, and include source links.")}>Gather Business Documents</button>
+                  </div>
+                ) : activeBuddyTab === "Alerts" ? (
+                  <div className="cc-buddy-alerts">
+                    {liveItems.length ? liveItems.filter((entry) => entry.tone === "urgent" || entry.tone === "high").slice(0, 5).map((entry) => (
+                      <button type="button" key={entry.id} onClick={() => openItem(entry)}>
+                        <strong>{entry.title}</strong><span>{entry.id} · {entry.tone.toUpperCase()}</span>
+                      </button>
+                    )) : <p>No live alert records are connected to this view yet. Sample dashboard records are not shown as live alerts.</p>}
+                  </div>
+                ) : (
+                  <div className="cc-buddy-actions">
+                    <button onClick={() => setMessage("Create a ticket for me. First check whether I am authorized to create it and ask for any missing required details.")}>Create a Ticket</button>
+                    <button onClick={() => setMessage("Find documentation I am authorized to access for my current task.")}>Find Documentation</button>
+                    <button onClick={() => setMessage("Check the live system status sources available to my role. Clearly identify unavailable integrations.")}>Check System Status</button>
+                    <button onClick={() => setMessage("Help me contact the appropriate human support team for my authorized scope.")}>Talk to a Human</button>
+                  </div>
+                )}
                 {conversation.length > 0 && (
                   <div className="cc-conversation">
                     {conversation.slice(-4).map((entry, index) => (
@@ -1616,6 +1669,8 @@ function CommandCenterHome() {
                     <ChevronRight size={15} />
                   </button>
                 </form>
+                  </>
+                )}
               </section>
               <section className="cc-connector-panel">
                 <div className="cc-panel-heading">
