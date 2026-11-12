@@ -57,6 +57,9 @@ alter table public.marketplace_entitlements
   add column if not exists scope_type text not null default 'organization',
   add column if not exists location_organization_id uuid references public.organizations(id);
 
+create index if not exists marketplace_entitlements_scope_lookup_idx
+  on public.marketplace_entitlements(organization_id, entitlement_key, status, location_organization_id);
+
 alter table public.marketplace_entitlements
   add constraint marketplace_entitlements_scope_type_check
     check (scope_type in ('organization', 'location')),
