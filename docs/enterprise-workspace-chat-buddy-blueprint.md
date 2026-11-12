@@ -177,4 +177,11 @@ A batch is complete only when its UI, data model, server-side authorization, aud
 - New work queue and approval tables have RLS enabled, no anonymous table grants, and organization/tenant/active-membership checks.
 - The homepage no longer falls back to fabricated work cards, sample news headlines, sample market prices, or pre-marked connected integrations. Empty/unconfigured states are preferable to false live status.
 - No assistant messages, work items, approvals, or workflow runs are seeded. They are created only through actual authenticated user actions or authorized source-system imports.
+
+- Global Admin and organization-admin reads now use the existing `is_global_admin()` / `is_org_admin(organization_id)` helpers; task, approval, audit, integration, role-assignment, and hierarchy readers apply the matching scope.
+- Client-side Chat Buddy inserts are restricted to `sender_type='user'`; users cannot update/delete message history or forge assistant messages. A fixed, authenticated, ownership-checked security-definer RPC creates one idempotent welcome message per real session.
+- A structural SQL regression script was executed against the live Supabase project and passed. It verifies RLS, anonymous grants, admin helper grants, message-authoring restrictions, workflow write policies, and role/hierarchy policies.
+- Live row counts remain intentionally empty for assistant messages, command work items, work-item events, approvals, and workflow runs. No synthetic conversations or assignments were inserted. The first real authenticated Chat Buddy session creates its welcome message; real checklist actions create real Command Work items.
+- The latest recorded Responsive Layout QA run passed. The latest Production Readiness run failed on 22 Prettier formatting errors in existing shell/dynamic-route files plus two hook warnings. Those specific formatting/warning issues were corrected on the PR branch, but a fresh CI run has not yet been recorded; tests and production build therefore remain unverified.
+
 - Remaining completion gates: run formatter/lint, unit tests, production build, authenticated integration tests, negative cross-tenant tests, and verify all changed migration files are aligned with the live migration history.
