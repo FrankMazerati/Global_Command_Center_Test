@@ -346,7 +346,7 @@ export function HelpBuddyPanel({ className }: { className?: string }) {
             ))}
           </div>
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Assigned work</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Work queue</h3>
             <Button
               type="button"
               size="sm"
@@ -400,7 +400,7 @@ export function HelpBuddyPanel({ className }: { className?: string }) {
             <div className="rounded-lg border border-dashed p-4 text-center">
               <ListTodo className="mx-auto mb-2 size-6 text-muted-foreground" />
               <p className="text-sm font-medium">No assigned work yet</p>
-              <p className="mt-1 text-xs text-muted-foreground">Tasks you create in the Workflow tab and work assigned to you will appear here.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Tasks you create in the Workflow tab and work visible to your account will appear here.</p>
             </div>
           )}
         </TabsContent>
