@@ -524,7 +524,7 @@ function CommandCenterHome() {
     };
   }, []);
 
-  const items = [...liveItems, ...commandItems];
+  const items = useMemo(() => [...liveItems, ...commandItems], [liveItems, commandItems]);
   const availability = work.availability;
   const managerName = String(
     managerRecord?.["display_name"] ||
