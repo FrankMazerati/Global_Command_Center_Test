@@ -87,8 +87,11 @@ alter table public.marketplace_entitlements
   add constraint marketplace_entitlements_location_scope_check
     check (
       (scope_type = 'organization' and location_organization_id is null)
-      or (scope_type = 'location' and location_organization_id is not null)
-    );
+      or (scope_type = 'location' and location_organization_id is not null and organization_id is not null)
+    ),
+  add constraint marketplace_entitlements_location_parent_fk
+    foreign key (location_organization_id, organization_id)
+    references public.organizations(id, parent_organization_id);
 
 create table if not exists public.marketplace_subscription_locations (
   id uuid primary key default gen_random_uuid(),
