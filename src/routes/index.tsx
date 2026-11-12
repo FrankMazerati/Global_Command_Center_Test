@@ -507,6 +507,7 @@ function CommandCenterHome() {
 
   const openItem = (item: WorkItem) => {
     setSummaryCategory(null);
+    setApprovalDecisionReason("");
     setSelectedWorkItem(item);
   };
 
