@@ -969,7 +969,7 @@ function MarketplaceCatalogWorkspace({ title }: { title: string }) {
 }
 
 function MarketplaceWorkspace({ title, pageSlug }: { title: string; pageSlug: string }) {
-  if (pageSlug === "available-plans") {
+  if (["available-plans", "pricing-and-feature-comparisons"].includes(pageSlug)) {
     return <SubscriptionPlansWorkspace title={title} />;
   }
   const historyPages = [
