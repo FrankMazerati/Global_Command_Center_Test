@@ -7,7 +7,7 @@
 
 ## Product objective
 
-Build an enterprise operating environment that is ready to enter an enterprise: reusable role dashboards, organizational hierarchies, role-aware AI assistance, a meaningful work-prioritization console, and secure workflows. The product must be useful with clearly labeled synthetic demonstration data before a customer imports production data.
+Build an enterprise operating environment that is ready to enter an enterprise: reusable role dashboards, organizational hierarchies, role-aware AI assistance, a meaningful work-prioritization console, and secure workflows. The product must not fabricate demo tenants, companies, employees, devices, conversations, or work assignments. Preserve existing records and their provenance. Any pre-existing synthetic-seed records must remain explicitly identified as synthetic and must never be presented as verified people or production activity.
 
 ## Non-negotiable principles
 
@@ -16,7 +16,7 @@ Build an enterprise operating environment that is ready to enter an enterprise: 
 3. Every consequential action is checked server-side against the actor, organization, tenant, resource, action, scope, delegation, and approval requirements.
 4. Chat Buddy cannot self-authorize, bypass approvals, or elevate the user's permissions.
 5. AI-prepared work is distinct from AI-executed work. Preparation may include drafts, checklists, summaries, and proposed schedules; execution requires an explicit authorized action and any required pre-approval.
-6. Demonstration records must be explicitly marked synthetic. Never present synthetic metrics, candidates, transactions, or activity as verified customer data.
+6. Do not create new synthetic/demo business populations or activity records without explicit authorization. Preserve existing records; retain provenance and clearly distinguish synthetic-seed data from verified production data.
 7. Reuse and extend existing tables, routes, and components after schema inspection. Do not create duplicate tables or parallel permission engines.
 8. Keep the Command Center's premium dark navy / electric cyan enterprise visual language, compact controls, readable data, responsive tablet/mobile behavior, and independently scrollable work panels.
 
@@ -56,7 +56,7 @@ Role templates are starting configurations, not grants. A user receives capabili
 
 At minimum include CEO, President, COO, CFO, CIO, CTO, CISO, CHRO, CMO, CRO, CPO, CDO, CLO/General Counsel, Chief Compliance Officer, Chief Risk Officer, Chief Strategy Officer, Chief Customer Officer, Chief Procurement Officer, CAO, VP/SVP/EVP, Controller/Treasurer, Finance Director, HR Director, Talent Acquisition Director, IT Director, Engineering Director, SOC Manager, NOC Manager, Regional Manager, Branch/Office Manager, Department Manager, Team Lead, Supervisor, and broad departmental individual-contributor templates.
 
-Dashboards should expose only role-relevant and authorized objectives, KPIs, people, work, risks, budgets, approvals, and drill-downs. Six-year views should support five years of historical periods plus current year and forward-looking plans/forecasts as configured. Synthetic sample data must be labeled; imported/verified production data must retain provenance.
+Dashboards should expose only role-relevant and authorized objectives, KPIs, people, work, risks, budgets, approvals, and drill-downs. Six-year views should support five years of historical periods plus current year and forward-looking plans/forecasts as configured. Do not manufacture sample populations or metrics. Existing records must retain source/provenance labels; imported records must be verified before being represented as production.
 
 ## Workspace switching
 
@@ -121,7 +121,7 @@ The live Supabase project currently contains:
 - existing organization, tenant, department, organizational-unit, workforce hierarchy, role-assignment, permission, access-request, ticket-approval, work-assignment, workflow, audit, assistant session/message, avatar, wardrobe, and IntelliHire tables;
 - zero public base tables without RLS in the current schema audit.
 
-These existing objects must be inspected and extended before creating new schema. Existing database presence does not by itself prove every UI workflow is connected or every policy is correct. Verify RLS policies, grants, foreign keys, constraints, and actual read/write flows.
+These existing objects must be inspected and extended before creating new schema. The existing workforce and candidate seed populations carry synthetic provenance and must not be represented as verified real people; preserve them until the owner authorizes a specific data action. Existing database presence does not by itself prove every UI workflow is connected or every policy is correct. Verify RLS policies, grants, foreign keys, constraints, and actual read/write flows.
 
 ## Implementation sequence
 
@@ -166,3 +166,15 @@ These existing objects must be inspected and extended before creating new schema
 ## Completion criteria
 
 A batch is complete only when its UI, data model, server-side authorization, audit behavior, tests, and failure/empty states are verified. A commit or a populated screen alone is not completion.
+
+
+## Current backend batch execution record — 2026-11-12
+
+- Existing assistant session/message tables are reused for Chat Buddy history; the UI writes only actual user messages and does not fabricate assistant replies.
+- A tenant-scoped Command Work queue, immutable work-item event history, and work-item approval records have been added because the existing `work_assignments` table is for staffing/marketplace placements, not everyday internal tasks.
+- Workflow write policies now permit the workflow owner to update runs and steps within the same organization/tenant; step assignment checks require same-scope active profiles.
+- The existing 67-role catalog, 25 governance management-role definitions, workforce role assignments, and workforce organizational units are reused; no duplicate catalog or hierarchy table is introduced.
+- New work queue and approval tables have RLS enabled, no anonymous table grants, and organization/tenant/active-membership checks.
+- The homepage no longer falls back to fabricated work cards, sample news headlines, sample market prices, or pre-marked connected integrations. Empty/unconfigured states are preferable to false live status.
+- No assistant messages, work items, approvals, or workflow runs are seeded. They are created only through actual authenticated user actions or authorized source-system imports.
+- Remaining completion gates: run formatter/lint, unit tests, production build, authenticated integration tests, negative cross-tenant tests, and verify all changed migration files are aligned with the live migration history.
