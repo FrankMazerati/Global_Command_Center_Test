@@ -418,13 +418,15 @@ function CommandCenterHome() {
     listCommandWorkItems()
       .then((rows) => {
         if (!active) return;
-        setCommandItems(rows.map((row) => ({
-          id: row.id,
-          title: row.title,
-          detail: row.description ?? row.status.replaceAll("_", " "),
-          tone: row.priority === "critical" ? "urgent" : row.priority,
-          action: row.status === "completed" ? "View" : "Open",
-        })));
+        setCommandItems(rows
+          .filter((row) => row.status !== "completed" && row.status !== "cancelled")
+          .map((row) => ({
+            id: row.id,
+            title: row.title,
+            detail: row.description ?? row.status.replaceAll("_", " "),
+            tone: row.priority === "critical" ? "urgent" : row.priority,
+            action: "Open",
+          })));
       })
       .catch(() => { if (active) setCommandItems([]); });
     return () => { active = false; };
