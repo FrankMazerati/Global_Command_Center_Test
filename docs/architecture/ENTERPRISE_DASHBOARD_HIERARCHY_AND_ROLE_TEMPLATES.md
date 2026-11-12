@@ -333,3 +333,8 @@ The detailed schema audit, canonical scope-assignment model, dashboard-template 
 The implementation must reuse the existing tenant, organization, profile, role, permission, and workforce structures. It must not create a duplicate hierarchy or role catalog. The live-schema audit found that the existing role catalog already includes the core executive roles, while explicit manager-to-location assignment is still a missing capability.
 
 The current connected Supabase project had no isolated development branch during the audit. Accordingly, Batch 008 documentation was committed to the existing feature branch, but no production schema or customer data was changed. The additive migration and server-side assignment operations remain gated on isolated validation.
+
+
+## Batch 009 implementation sequence
+
+The completed Batch 008 management foundation is documented in [Batch 008 — Organizational Intelligence & Management Scope Foundation](./BATCH_008_ORGANIZATIONAL_INTELLIGENCE_FOUNDATION.md). The next implementation scope is [Batch 009 — Scoped Operations Intelligence & Dashboard Delivery](./BATCH_009_SCOPED_OPERATIONS_INTELLIGENCE_DASHBOARDS.md), which defines the unified server-side scope resolver, entitlement-aware role templates, and the Location, Regional and Global Operations dashboards.
