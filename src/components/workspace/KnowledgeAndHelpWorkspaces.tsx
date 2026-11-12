@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import {
   BookOpen, Bot, Clock3, Database, FileText,
-  Library, MessageCircle, RefreshCw, Search, Send, ShieldCheck, Ticket,
+  Library, MessageCircle, RefreshCw, Search, Send, ShieldCheck, Ticket, ThumbsDown, ThumbsUp,
   Users, Workflow,
 } from "lucide-react";
 
