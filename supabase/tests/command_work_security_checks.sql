@@ -92,6 +92,25 @@ begin
     raise exception 'A required role catalog or workforce hierarchy read policy is missing.';
   end if;
 
+  if not exists (
+    select 1 from pg_policies
+    where schemaname='public'
+      and tablename='integration_connections'
+      and policyname='integration_connections_global_admin_read'
+  ) or not exists (
+    select 1 from pg_policies
+    where schemaname='public'
+      and tablename='workforce_management_assignments'
+      and policyname='workforce_management_assignments_read_admin_scope'
+  ) then
+    raise exception 'A required global-admin integration or management-assignment policy is missing.';
+  end if;
+
+  if not has_function_privilege('authenticated', 'public.is_global_admin()', 'execute')
+    or has_function_privilege('anon', 'public.is_global_admin()', 'execute') then
+    raise exception 'Global-admin scope helper grants are incorrect.';
+  end if;
+
   if not has_table_privilege('anon', 'public.site_pages', 'select')
     or not has_table_privilege('anon', 'public.site_social_links', 'select')
     or not has_table_privilege('anon', 'public.site_contact_submissions', 'insert') then
