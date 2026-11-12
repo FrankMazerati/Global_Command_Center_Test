@@ -148,3 +148,8 @@ The Marketplace **Available Plans** route now opens a dedicated subscription wor
 ## Related operations dashboard specification
 
 The three-tier commercial model is paired with three distinct role-based operational dashboards. See [Global, Regional & Location Operations Dashboards](../operations/GLOBAL_REGIONAL_LOCATION_DASHBOARD_TEMPLATES.md) for executive and functional templates, assigned-location scope rules, entitlement boundaries, and acceptance criteria.
+
+
+## Dashboard and role-template architecture
+
+The three-level Global, Regional, and Location Operations Dashboard model, executive and department role-template catalog, scoped dashboard behavior, and six remaining implementation workstreams are specified in [Enterprise Dashboard Hierarchy and Role Templates](../architecture/ENTERPRISE_DASHBOARD_HIERARCHY_AND_ROLE_TEMPLATES.md).
