@@ -155,3 +155,10 @@ These findings require call-site, trigger and constraint review before changing 
 3. Verify workforce assignment person/scope and location/scope checks.
 4. Add negative tests for scoped global roles, cross-tenant role use, cross-organization workforce assignment, and foreign location IDs.
 5. Only after those tests pass, connect the Platform Administration Center's privileged operations through narrow server-side procedures.
+
+
+### RLS call-site impact
+
+The global-admin helpers are referenced by multiple existing RLS policies, including policies on access requests, permission/role administration, profiles, role assignments, command work items and approvals, assistant/avatar administration, knowledge management, site content, scenario management, and workforce-related records.
+
+Because these helper functions are shared authorization dependencies, correcting their scope semantics requires regression tests across every dependent policy—not only the new Platform Administration Center. A scoped `super_admin` or `global_admin` must never satisfy a global helper, and existing legitimate unscoped global-admin behavior must remain intact.
