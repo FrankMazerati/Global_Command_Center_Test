@@ -128,7 +128,7 @@ Before enabling checkout or claiming a module is production-ready:
 
 ## Application surface
 
-The Marketplace **Available Plans** route now opens a dedicated subscription workspace. It presents the three approved plan directions, location versus organization billing units, and Local/Regional/Global management scopes. It queries the marketplace price and entitlement catalogs when the migration is present; otherwise it clearly labels the display as a commercial-specification preview. It does not offer checkout or activate entitlements.
+The Marketplace **Available Plans** route now opens a dedicated subscription workspace. The **Business Locations** route now opens a company-scoped location manager that lists child location records and offers registration only when the migration, organization-admin role, and required subscription entitlement are present. The server-side registration RPC rechecks authorization and subscription scope, creates a child location record, and writes an audit event. It presents the three approved plan directions, location versus organization billing units, and Local/Regional/Global management scopes. It queries the marketplace price and entitlement catalogs when the migration is present; otherwise it clearly labels the display as a commercial-specification preview. It does not offer checkout or activate entitlements.
 
 ## Current implementation status
 
