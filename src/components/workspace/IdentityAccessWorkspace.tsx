@@ -20,6 +20,8 @@ const DATASETS: Record<string, { table: string; description: string; fields: str
   "identity-verification": { table: "profiles", description: "Identity profile and account status fields. Verification evidence is not inferred.", fields: ["display_name", "work_email", "member_status", "updated_at"] },
   "account-status": { table: "profiles", description: "Account lifecycle status from the canonical profile record.", fields: ["display_name", "work_email", "member_status", "updated_at"] },
   departments: { table: "departments", description: "Organization-scoped departments and reporting structure.", fields: ["name", "code", "manager_profile_id", "organization_id"] },
+  "organizational-units": { table: "organizational_units", description: "Organization-scoped directory units.", fields: ["name", "unit_type", "parent_unit_id", "organization_id"] },
+  "organizational-hierarchy": { table: "departments", description: "Department hierarchy and reporting relationships.", fields: ["name", "code", "parent_department_id", "manager_profile_id", "organization_id"] },
   teams: { table: "organizational_units", description: "Organization-scoped organizational units and team records.", fields: ["name", "unit_type", "parent_unit_id", "organization_id"] },
   "security-groups": { table: "groups", description: "Security groups and their organization and tenant scope.", fields: ["name", "group_key", "group_type", "is_privileged", "organization_id", "tenant_id"] },
   "group-objects": { table: "groups", description: "Directory group objects.", fields: ["name", "group_key", "group_type", "description", "is_privileged"] },
