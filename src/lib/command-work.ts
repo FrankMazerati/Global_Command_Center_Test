@@ -615,3 +615,37 @@ export async function listPendingWorkItemApprovals(): Promise<PendingWorkItemApp
     };
   });
 }
+
+
+export interface WorkforceManagementAssignment {
+  id: string;
+  workforce_person_id: string;
+  management_role_key: string;
+  organization_id: string;
+  scope_type: string;
+  region_id: string | null;
+  tenant_id: string | null;
+  department_id: string | null;
+  status: string;
+  authorization_enabled: boolean;
+  starts_at: string;
+  ends_at: string | null;
+  approved_by_profile_id: string | null;
+  approved_at: string | null;
+  created_by_profile_id: string | null;
+  assignment_reason: string;
+}
+
+export async function listWorkforceManagementAssignments(): Promise<WorkforceManagementAssignment[]> {
+  const client = getSupabaseClient();
+  if (!client) throw new Error("Supabase is not configured.");
+  const profile = await currentProfile(client);
+  const { data, error } = await client
+    .from("workforce_management_assignments")
+    .select("id,workforce_person_id,management_role_key,organization_id,scope_type,region_id,tenant_id,department_id,status,authorization_enabled,starts_at,ends_at,approved_by_profile_id,approved_at,created_by_profile_id,assignment_reason")
+    .eq("organization_id", profile.organization_id)
+    .order("starts_at", { ascending: false })
+    .limit(500);
+  if (error) throw error;
+  return (data ?? []) as WorkforceManagementAssignment[];
+}
