@@ -61,6 +61,9 @@ alter table public.marketplace_subscriptions
   add column if not exists additional_location_monthly_price numeric(12,2);
 
 alter table public.marketplace_subscriptions
+  add constraint marketplace_subscriptions_id_organization_uidx unique (id, organization_id);
+
+alter table public.marketplace_subscriptions
   add constraint marketplace_subscriptions_scope_type_check
     check (scope_type in ('location', 'organization')),
   add constraint marketplace_subscriptions_management_scope_check
@@ -89,7 +92,7 @@ alter table public.marketplace_entitlements
 
 create table if not exists public.marketplace_subscription_locations (
   id uuid primary key default gen_random_uuid(),
-  subscription_id uuid not null references public.marketplace_subscriptions(id) on delete cascade,
+  subscription_id uuid not null,
   organization_id uuid not null references public.organizations(id),
   location_organization_id uuid not null,
   status text not null default 'pending'
@@ -99,6 +102,9 @@ create table if not exists public.marketplace_subscription_locations (
   ends_at date,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
+  constraint marketplace_subscription_locations_subscription_org_fk
+    foreign key (subscription_id, organization_id)
+    references public.marketplace_subscriptions(id, organization_id) on delete cascade,
   constraint marketplace_subscription_locations_parent_fk
     foreign key (location_organization_id, organization_id)
     references public.organizations(id, parent_organization_id),
