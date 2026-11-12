@@ -570,3 +570,48 @@ export async function listWorkforceRoleAssignments(): Promise<WorkforceRoleAssig
   if (error) throw error;
   return (data ?? []) as WorkforceRoleAssignment[];
 }
+
+
+export interface PendingWorkItemApproval {
+  id: string;
+  work_item_id: string;
+  reason: string;
+  requested_at: string;
+  participant_role: "requester" | "approver";
+  work_item_title: string;
+  priority: CommandWorkPriority;
+}
+
+export async function listPendingWorkItemApprovals(): Promise<PendingWorkItemApproval[]> {
+  const client = getSupabaseClient();
+  if (!client) throw new Error("Supabase is not configured.");
+  const profile = await currentProfile(client);
+  const { data: approvals, error } = await client
+    .from("command_work_item_approvals")
+    .select("id,work_item_id,requested_by_profile_id,reason,requested_at")
+    .eq("organization_id", profile.organization_id)
+    .eq("status", "pending")
+    .order("requested_at", { ascending: false })
+    .limit(100);
+  if (error) throw error;
+  if (!approvals?.length) return [];
+  const workItemIds = [...new Set(approvals.map((approval) => approval.work_item_id as string))];
+  const { data: workItems, error: workError } = await client
+    .from("command_work_items")
+    .select("id,title,priority")
+    .in("id", workItemIds);
+  if (workError) throw workError;
+  const workItemMap = new Map((workItems ?? []).map((item) => [item.id as string, item]));
+  return approvals.map((approval) => {
+    const item = workItemMap.get(approval.work_item_id as string);
+    return {
+      id: approval.id as string,
+      work_item_id: approval.work_item_id as string,
+      reason: approval.reason as string,
+      requested_at: approval.requested_at as string,
+      participant_role: approval.requested_by_profile_id === profile.id ? "requester" : "approver",
+      work_item_title: (item?.title as string | undefined) ?? "Work item awaiting review",
+      priority: (item?.priority as CommandWorkPriority | undefined) ?? "medium",
+    };
+  });
+}
