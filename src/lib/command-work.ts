@@ -196,7 +196,7 @@ export async function createCommandWorkItem(input: {
     .single();
   if (error) throw error;
   const item = data as CommandWorkItem;
-  await client.from("command_work_item_events").insert({
+  const { error: eventError } = await client.from("command_work_item_events").insert({
     work_item_id: item.id,
     organization_id: item.organization_id,
     tenant_id: item.tenant_id,
@@ -204,6 +204,10 @@ export async function createCommandWorkItem(input: {
     event_type: "created",
     to_value: { status: item.status, priority: item.priority, assignee_profile_id: item.assignee_profile_id },
   });
+  if (eventError) {
+    await client.from("command_work_items").delete().eq("id", item.id);
+    throw eventError;
+  }
   return item;
 }
 
@@ -233,23 +237,35 @@ export async function updateCommandWorkItem(
     .single();
   if (error) throw error;
   const after = data as CommandWorkItem;
-  await client.from("command_work_item_events").insert({
+  const eventType =
+    patch.status === "completed"
+      ? "completed"
+      : patch.status === "open"
+        ? "reopened"
+        : patch.status === "cancelled"
+          ? "cancelled"
+          : patch.status
+            ? "status_changed"
+            : patch.priority
+              ? "priority_changed"
+              : patch.assignee_profile_id
+                ? "reassigned"
+                : "updated";
+  const { error: eventError } = await client.from("command_work_item_events").insert({
     work_item_id: id,
     organization_id: after.organization_id,
     tenant_id: after.tenant_id,
     actor_profile_id: profile.id,
-    event_type: patch.status === "completed" ? "completed" : patch.status === "open" ? "reopened" : "updated",
+    event_type: eventType,
     from_value: { status: before.status, priority: before.priority, assignee_profile_id: before.assignee_profile_id },
     to_value: { status: after.status, priority: after.priority, assignee_profile_id: after.assignee_profile_id },
   });
+  if (eventError) throw eventError;
   return after;
 }
 
 export async function deleteCommandWorkItem(id: string): Promise<void> {
-  const client = getSupabaseClient();
-  if (!client) throw new Error("Supabase is not configured.");
-  const { error } = await client.from("command_work_items").delete().eq("id", id);
-  if (error) throw error;
+  await updateCommandWorkItem(id, { status: "cancelled" });
 }
 
 
