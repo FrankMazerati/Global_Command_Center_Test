@@ -47,7 +47,7 @@ import {
 } from "@/components/ui/dialog";
 import { AVAILABILITY, useWork } from "@/lib/work-context";
 import { NAV } from "@/lib/nav";
-import { loadChatBuddyMessages, saveChatBuddyMessage, listCommandWorkItems, listIntegrationConnections, listRecentAuditEvents, type ChatBuddyMessage, type RecentAuditEvent } from "@/lib/command-work";
+import { loadChatBuddyMessages, saveChatBuddyMessage, listCommandWorkItems, listPendingWorkItemApprovals, listIntegrationConnections, listRecentAuditEvents, decideWorkItemApproval, type ChatBuddyMessage, type RecentAuditEvent } from "@/lib/command-work";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -66,11 +66,19 @@ type WorkItem = {
   detail: string;
   tone: "urgent" | "high" | "medium" | "low";
   action: string;
+  createdAt?: string;
+  approvalId?: string;
+  canDecide?: boolean;
 };
 
 type QuickPick = { label: string; detail: string; icon: LucideIcon; href: string };
 type SummaryCategory =
-  "Assigned" | "Needs Your Attention" | "High Priority" | "Medium Priority" | "Low Priority";
+  | "Assigned"
+  | "Needs Your Attention"
+  | "High Priority"
+  | "Medium Priority"
+  | "Low Priority"
+  | "Waiting & Approvals";
 
 const quickPicks: QuickPick[] = [
   {
@@ -344,6 +352,7 @@ function CommandCenterHome() {
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [summaryCategory, setSummaryCategory] = useState<SummaryCategory | null>(null);
   const [selectedWorkItem, setSelectedWorkItem] = useState<WorkItem | null>(null);
+  const [approvalDecisionReason, setApprovalDecisionReason] = useState("");
   const [message, setMessage] = useState("");
   const [conversation, setConversation] = useState<ChatBuddyMessage[]>([]);
   const [commandItems, setCommandItems] = useState<WorkItem[]>([]);
@@ -385,6 +394,7 @@ function CommandCenterHome() {
             detail: String(row["description"] ?? row["summary"] ?? row["status"] ?? "Open ticket"),
             tone,
             action: String(row["action"] ?? "Open"),
+            createdAt: String(row["created_at"] ?? row["updated_at"] ?? ""),
           } satisfies WorkItem;
         });
         setLiveItems(mapped);
@@ -413,20 +423,34 @@ function CommandCenterHome() {
 
   useEffect(() => {
     let active = true;
-    listCommandWorkItems()
-      .then((rows) => {
-        if (!active) return;
-        setCommandItems(rows
-          .filter((row) => row.status !== "completed" && row.status !== "cancelled")
-          .map((row) => ({
-            id: row.id,
-            title: row.title,
-            detail: row.description ?? row.status.replaceAll("_", " "),
-            tone: row.priority === "critical" ? "urgent" : row.priority,
-            action: "Open",
-          })));
-      })
-      .catch(() => { if (active) setCommandItems([]); });
+    Promise.allSettled([listCommandWorkItems(), listPendingWorkItemApprovals()]).then(([workResult, approvalResult]) => {
+      if (!active) return;
+      const workItems = workResult.status === "fulfilled"
+        ? workResult.value
+            .filter((row) => row.status !== "completed" && row.status !== "cancelled")
+            .map((row) => ({
+              id: row.id,
+              title: row.title,
+              detail: row.description ?? row.status.replaceAll("_", " "),
+              tone: row.priority === "critical" ? "urgent" as const : row.priority,
+              action: "Open",
+              createdAt: row.created_at,
+            }))
+        : [];
+      const approvals = approvalResult.status === "fulfilled"
+        ? approvalResult.value.map((approval) => ({
+            id: `approval:${approval.id}`,
+            approvalId: approval.id,
+            canDecide: approval.participant_role === "approver",
+            title: approval.work_item_title,
+            detail: `${approval.participant_role === "approver" ? "Approval needed from you" : "Waiting for approval"} · ${approval.reason}`,
+            tone: approval.priority === "critical" ? "urgent" as const : approval.priority,
+            action: approval.participant_role === "approver" ? "Review" : "Track",
+            createdAt: approval.requested_at,
+          }))
+        : [];
+      setCommandItems([...workItems, ...approvals]);
+    });
     return () => { active = false; };
   }, []);
 
@@ -486,12 +510,26 @@ function CommandCenterHome() {
     setSelectedWorkItem(item);
   };
 
+  const decideSelectedApproval = async (decision: "approved" | "denied") => {
+    if (!selectedWorkItem?.approvalId || !selectedWorkItem.canDecide) return;
+    try {
+      await decideWorkItemApproval(selectedWorkItem.approvalId, decision, approvalDecisionReason);
+      setCommandItems((current) => current.filter((item) => item.approvalId !== selectedWorkItem.approvalId));
+      setSelectedWorkItem(null);
+      setApprovalDecisionReason("");
+      toast.success(decision === "approved" ? "Approval recorded." : "Request denied and recorded.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to record this approval decision.");
+    }
+  };
+
   const summaryItems: Record<SummaryCategory, WorkItem[]> = {
     Assigned: items,
     "Needs Your Attention": items.filter((item) => item.tone === "urgent"),
     "High Priority": items.filter((item) => item.tone === "high"),
     "Medium Priority": items.filter((item) => item.tone === "medium"),
     "Low Priority": items.filter((item) => item.tone === "low"),
+    "Waiting & Approvals": items.filter((item) => Boolean(item.approvalId)),
   };
 
   const sendMessage = async (event: FormEvent<HTMLFormElement>) => {
@@ -1382,6 +1420,7 @@ function CommandCenterHome() {
                     ["High Priority", "High priority"],
                     ["Medium Priority", "Medium priority"],
                     ["Low Priority", "Lower priority"],
+                    ["Waiting & Approvals", "Pending decisions"],
                   ] as const
                 ).map(([category, caption]) => (
                   <button
@@ -1420,7 +1459,7 @@ function CommandCenterHome() {
                         <b>{item.title}</b>
                       </div>
                       <p>{item.detail}</p>
-                      <small>{item.id} · 2 hours ago</small>
+                      <small>{item.id} · {item.createdAt ? new Date(item.createdAt).toLocaleString() : "Date unavailable"}</small>
                     </div>
                     <button className="cc-row-action" onClick={() => openItem(item)}>
                       {item.action}
@@ -1662,6 +1701,37 @@ function CommandCenterHome() {
               <p className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
                 {selectedWorkItem.detail}
               </p>
+              {selectedWorkItem.approvalId && selectedWorkItem.canDecide && (
+                <div className="mt-4 grid gap-3">
+                  <label className="grid gap-1 text-sm font-medium">
+                    Decision reason (required)
+                    <textarea
+                      className="min-h-24 rounded-lg border bg-background p-3 text-sm"
+                      value={approvalDecisionReason}
+                      onChange={(event) => setApprovalDecisionReason(event.target.value)}
+                      placeholder="Record the reason for your decision."
+                    />
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="rounded-md border px-3 py-2 text-sm hover:bg-accent disabled:opacity-50"
+                      disabled={approvalDecisionReason.trim().length < 4}
+                      onClick={() => void decideSelectedApproval("approved")}
+                    >
+                      Approve
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded-md border px-3 py-2 text-sm hover:bg-accent disabled:opacity-50"
+                      disabled={approvalDecisionReason.trim().length < 4}
+                      onClick={() => void decideSelectedApproval("denied")}
+                    >
+                      Reject
+                    </button>
+                  </div>
+                </div>
+              )}
               {summaryCategory && (
                 <button
                   type="button"
