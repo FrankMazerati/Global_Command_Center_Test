@@ -37,6 +37,26 @@ begin
     raise exception 'Anonymous access remains granted on a sensitive workspace table.';
   end if;
 
+  if has_table_privilege('authenticated', 'public.assistant_messages', 'update')
+    or has_table_privilege('authenticated', 'public.assistant_messages', 'delete') then
+    raise exception 'Authenticated users must not rewrite or delete assistant message history.';
+  end if;
+
+  if not has_function_privilege('authenticated', 'public.ensure_chat_buddy_welcome_message(uuid)', 'execute')
+    or has_function_privilege('anon', 'public.ensure_chat_buddy_welcome_message(uuid)', 'execute') then
+    raise exception 'Chat Buddy welcome RPC grants are incorrect.';
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname='public'
+      and tablename='assistant_messages'
+      and policyname='assistant_messages_user_insert'
+      and with_check like '%sender_type = ''user''%'
+  ) then
+    raise exception 'Client message insertion is not restricted to user-authored messages.';
+  end if;
+
   if not exists (
     select 1 from pg_indexes
     where schemaname = 'public'
