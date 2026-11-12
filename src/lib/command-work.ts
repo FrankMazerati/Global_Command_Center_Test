@@ -251,3 +251,180 @@ export async function deleteCommandWorkItem(id: string): Promise<void> {
   const { error } = await client.from("command_work_items").delete().eq("id", id);
   if (error) throw error;
 }
+
+
+export interface EnterpriseRoleCatalogEntry {
+  id: string;
+  role_key: string;
+  name: string;
+  description: string | null;
+  is_privileged: boolean;
+  is_system_role: boolean;
+}
+
+export interface OrganizationalUnit {
+  id: string;
+  organization_id: string;
+  tenant_id: string;
+  parent_unit_id: string | null;
+  ou_key: string;
+  name: string;
+  distinguished_path: string;
+}
+
+export async function listEnterpriseRoleCatalog(): Promise<EnterpriseRoleCatalogEntry[]> {
+  const client = getSupabaseClient();
+  if (!client) throw new Error("Supabase is not configured.");
+  const { data, error } = await client
+    .from("roles")
+    .select("id,role_key,name,description,is_privileged,is_system_role")
+    .order("name", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as EnterpriseRoleCatalogEntry[];
+}
+
+export async function listOrganizationalHierarchy(): Promise<OrganizationalUnit[]> {
+  const client = getSupabaseClient();
+  if (!client) throw new Error("Supabase is not configured.");
+  const profile = await currentProfile(client);
+  let query = client
+    .from("workforce_organizational_units")
+    .select("id,organization_id,tenant_id,parent_unit_id,ou_key,name,distinguished_path")
+    .eq("organization_id", profile.organization_id);
+  query = profile.tenant_id
+    ? query.eq("tenant_id", profile.tenant_id)
+    : query.is("tenant_id", null);
+  const { data, error } = await query.order("distinguished_path", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as OrganizationalUnit[];
+}
+
+export async function requestWorkItemApproval(input: {
+  workItemId: string;
+  approverProfileId?: string | null;
+  reason: string;
+}): Promise<{ id: string; status: string }> {
+  const client = getSupabaseClient();
+  if (!client) throw new Error("Supabase is not configured.");
+  const profile = await currentProfile(client);
+  const { data: item, error: itemError } = await client
+    .from("command_work_items")
+    .select("id,organization_id,tenant_id")
+    .eq("id", input.workItemId)
+    .single();
+  if (itemError) throw itemError;
+  const { data, error } = await client
+    .from("command_work_item_approvals")
+    .insert({
+      work_item_id: item.id,
+      organization_id: item.organization_id,
+      tenant_id: item.tenant_id,
+      requested_by_profile_id: profile.id,
+      approver_profile_id: input.approverProfileId ?? null,
+      reason: input.reason.trim(),
+      status: "pending",
+    })
+    .select("id,status")
+    .single();
+  if (error) throw error;
+  await client.from("command_work_item_events").insert({
+    work_item_id: item.id,
+    organization_id: item.organization_id,
+    tenant_id: item.tenant_id,
+    actor_profile_id: profile.id,
+    event_type: "approval_requested",
+    to_value: { approval_id: data.id, approver_profile_id: input.approverProfileId ?? null },
+    note: input.reason.trim(),
+  });
+  return data as { id: string; status: string };
+}
+
+export async function decideWorkItemApproval(
+  approvalId: string,
+  decision: "approved" | "denied",
+  reason: string,
+): Promise<void> {
+  const client = getSupabaseClient();
+  if (!client) throw new Error("Supabase is not configured.");
+  const profile = await currentProfile(client);
+  const { data, error } = await client
+    .from("command_work_item_approvals")
+    .update({
+      status: decision,
+      decision_reason: reason.trim(),
+      decided_by_profile_id: profile.id,
+      decided_at: new Date().toISOString(),
+    })
+    .eq("id", approvalId)
+    .eq("status", "pending")
+    .select("id,work_item_id,organization_id,tenant_id")
+    .single();
+  if (error) throw error;
+  await client.from("command_work_item_events").insert({
+    work_item_id: data.work_item_id,
+    organization_id: data.organization_id,
+    tenant_id: data.tenant_id,
+    actor_profile_id: profile.id,
+    event_type: "approval_decided",
+    to_value: { approval_id: data.id, decision },
+    note: reason.trim(),
+  });
+}
+
+export async function startWorkflowRun(workflowId: string): Promise<string> {
+  const client = getSupabaseClient();
+  if (!client) throw new Error("Supabase is not configured.");
+  const profile = await currentProfile(client);
+  const { data: workflow, error: workflowError } = await client
+    .from("workflows")
+    .select("id,organization_id,tenant_id,definition")
+    .eq("id", workflowId)
+    .single();
+  if (workflowError) throw workflowError;
+  const { data, error } = await client
+    .from("workflow_runs")
+    .insert({
+      workflow_id: workflow.id,
+      organization_id: workflow.organization_id,
+      tenant_id: workflow.tenant_id,
+      started_by: profile.id,
+      run_status: "queued",
+      run_context: { initiated_from: "command_center" },
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id as string;
+}
+
+export async function addWorkflowStepRun(input: {
+  workflowRunId: string;
+  stepKey: string;
+  stepOrder: number;
+  assignedProfileId?: string | null;
+}): Promise<string> {
+  const client = getSupabaseClient();
+  if (!client) throw new Error("Supabase is not configured.");
+  const profile = await currentProfile(client);
+  const { data: run, error: runError } = await client
+    .from("workflow_runs")
+    .select("organization_id,tenant_id")
+    .eq("id", input.workflowRunId)
+    .single();
+  if (runError) throw runError;
+  const { data, error } = await client
+    .from("workflow_step_runs")
+    .insert({
+      workflow_run_id: input.workflowRunId,
+      organization_id: run.organization_id,
+      tenant_id: run.tenant_id,
+      step_key: input.stepKey,
+      step_order: input.stepOrder,
+      assigned_profile_id: input.assignedProfileId ?? profile.id,
+      step_status: "pending",
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id as string;
+}
