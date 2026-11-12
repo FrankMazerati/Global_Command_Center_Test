@@ -126,6 +126,10 @@ Before enabling checkout or claiming a module is production-ready:
 11. Run Supabase security/performance advisors and application lint, unit tests, integration tests, and production build.
 12. Confirm real provider agreements, AI usage budgets, video/storage limits, support and migration costs before publishing final customer-facing terms.
 
+## Application surface
+
+The Marketplace **Available Plans** route now opens a dedicated subscription workspace. It presents the three approved plan directions, location versus organization billing units, and Local/Regional/Global management scopes. It queries the marketplace price and entitlement catalogs when the migration is present; otherwise it clearly labels the display as a commercial-specification preview. It does not offer checkout or activate entitlements.
+
 ## Current implementation status
 
 - Existing marketplace tables and pricing history are present in the live database.
