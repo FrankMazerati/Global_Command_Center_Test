@@ -1324,7 +1324,8 @@ function PageFoundation() {
     "access-audit",
     "directory-audit-history",
   ]);
-  const identityAccess = section.slug === "new-active-directory" && identityAccessSlugs.has(page.slug);
+  const identityAccess =
+    section.slug === "new-active-directory" && identityAccessSlugs.has(page.slug);
   const publicSiteView =
     page.slug === "website-content-management"
       ? "pages"
