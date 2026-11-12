@@ -39,6 +39,17 @@ begin
   ) then raise exception 'Company-scoped location metadata read policy missing'; end if;
 
   if not exists (
+    select 1 from pg_trigger
+    where tgrelid = 'public.marketplace_subscription_locations'::regclass
+      and tgname = 'marketplace_subscription_locations_validate_location'
+      and not tgisinternal
+  ) then raise exception 'Subscription-location parent/type validation trigger missing'; end if;
+
+  if has_function_privilege('anon', 'public.validate_marketplace_subscription_location()', 'execute') then
+    raise exception 'Anonymous users must not execute subscription-location validation trigger function';
+  end if;
+
+  if not exists (
     select 1 from public.marketplace_price_versions
     where price_key = 'package-essential-location-2026-v1'
       and monthly_location_price = 799
