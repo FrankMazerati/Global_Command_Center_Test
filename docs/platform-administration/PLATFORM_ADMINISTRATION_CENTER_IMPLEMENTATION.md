@@ -235,3 +235,18 @@ The sequence is complete only when:
 ### Next implementation checkpoint
 
 Inventory the existing Supabase schema, migrations, role/permission records, organization/tenant model, audit tables, and current RLS policies. Produce a reuse-versus-gap matrix before proposing any migration. Only then implement the shared server-side authorization and audit foundation, with negative cross-tenant tests before connecting administrative mutations.
+
+
+### Gate 0 data inventory — read-only inspection completed
+
+- Inspected the connected Supabase project across `public`, `dispatch`, and `intellisync`: 202 tables, all with RLS enabled; 291 policies; 49 RLS-enabled tables currently have no policies.
+- Confirmed 127 applied migrations at the time of inspection.
+- Confirmed existing canonical organization, tenant, department, profile, role, permission, scoped-grant, access-request, audit, service-catalog, integration and workflow structures.
+- Confirmed `workflow_versions` already provides versioned workflow definitions and `help_buddy_response_templates` provides a domain-specific versioned/approved template pattern.
+- No generic administration template registry or global platform configuration registry was identified in the inspected public schema by table-name pattern.
+- Current role catalog has 67 roles and 49 permissions, with 300 role-permission mappings; only three active profile-role assignments currently exist. This is not sufficient to infer or auto-populate the intended pilot role assignments.
+- Security advisor currently reports 16 SECURITY DEFINER functions executable by authenticated users, 49 no-policy tables, and 36 multiple-permissive-policy findings. None of the 16 reviewed in the advisor output is executable by anon. These are review items, not an instruction to revoke functions or open policies indiscriminately.
+
+See [PLATFORM_ADMINISTRATION_DATA_REUSE_MATRIX.md](PLATFORM_ADMINISTRATION_DATA_REUSE_MATRIX.md) for the table-by-table reuse decisions and the next verification gate.
+
+**Safety decision:** no Supabase schema changes, grants, policies, role assignments, or data mutations were made. The next step is source-review of privileged functions and exact policy predicates, followed by negative cross-tenant tests and a narrowly scoped migration proposal.
