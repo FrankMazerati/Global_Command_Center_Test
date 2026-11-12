@@ -38,7 +38,7 @@ CEO, CFO, CIO, and CTO experiences are separate executive workspaces with role- 
 
 ## Commercial, organizational, and security architecture
 
-- [Three subscription plans, location licensing, and Local / Regional / Global Operations](docs/commercial-subscription-and-operations-management.md)
+- [Three subscription plans, location licensing, and Local / Regional / Global Operations](docs/commercial/INTELLISTACK_SUBSCRIPTION_AND_LOCATION_LICENSING.md)
 - [IntelliAccess privileged access management design](docs/intelliaccess-privileged-access-management-design.md)
 - [Original subscription and location licensing reference](docs/commercial/INTELLISTACK_SUBSCRIPTION_AND_LOCATION_LICENSING.md)
 
