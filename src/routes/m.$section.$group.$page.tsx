@@ -29,6 +29,7 @@ import {
 } from "@/components/workspace/KnowledgeAndHelpWorkspaces";
 import { HelpBuddyIntelligenceManagement } from "@/components/workspace/HelpBuddyIntelligenceManagement";
 import { MarketplaceHistoryWorkspace } from "@/components/workspace/MarketplaceHistoryWorkspace";
+import { SubscriptionPlansWorkspace } from "@/components/workspace/SubscriptionPlansWorkspace";
 import { WorkforceHistoryWorkspace } from "@/components/workspace/WorkforceHistoryWorkspace";
 import { IntelliOfficeWorkspace } from "@/components/workspace/IntelliOfficeWorkspace";
 import { IntelliSphereToolsWorkspace } from "@/components/workspace/IntelliSphereToolsWorkspace";
@@ -966,6 +967,9 @@ function MarketplaceCatalogWorkspace({ title }: { title: string }) {
 }
 
 function MarketplaceWorkspace({ title, pageSlug }: { title: string; pageSlug: string }) {
+  if (pageSlug === "available-plans") {
+    return <SubscriptionPlansWorkspace title={title} />;
+  }
   const historyPages = [
     "marketplace-overview",
     "company-purchases",
