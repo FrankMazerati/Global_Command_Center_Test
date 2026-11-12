@@ -147,7 +147,7 @@ These existing objects must be inspected and extended before creating new schema
 ### Phase 3 — executive and departmental dashboards
 - Build CEO/CFO/COO/CIO/CTO/CISO/CHRO and remaining executive workspaces.
 - Build functional department and L1/L2/L3/team-lead/manager/regional/office variants.
-- Connect metrics to real scoped records and synthetic demonstration datasets.
+- Connect metrics only to real authorized records with explicit provenance; do not seed demo populations.
 
 ### Phase 4 — Bring the Work to You
 - Replace decorative/hardcoded work cards with live priority and attention queries.
