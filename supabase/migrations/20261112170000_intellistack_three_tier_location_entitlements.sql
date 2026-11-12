@@ -40,7 +40,7 @@ alter table public.marketplace_price_versions
   add column if not exists annual_location_price numeric(12,2),
   add column if not exists included_location_count integer,
   add column if not exists additional_location_monthly_price numeric(12,2),
-  add column if not exists management_scope text not null default 'local';
+  add column if not exists management_scope text;
 
 alter table public.marketplace_price_versions
   add constraint marketplace_price_versions_location_prices_nonnegative
@@ -51,7 +51,7 @@ alter table public.marketplace_price_versions
       and (included_location_count is null or included_location_count >= 0)
     ),
   add constraint marketplace_price_versions_management_scope_check
-    check (management_scope in ('local', 'multi_location', 'global'));
+    check (management_scope is null or management_scope in ('local', 'multi_location', 'global'));
 
 alter table public.marketplace_subscriptions
   add column if not exists scope_type text not null default 'organization',
