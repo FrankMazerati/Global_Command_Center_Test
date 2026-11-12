@@ -265,4 +265,161 @@ values
   ('enterprise','cross_region_federation','integration','global',true,false,'Governed cross-region and organization federation capabilities where configured.')
 on conflict (plan_key, entitlement_key) do nothing;
 
+
+-- Location creation is a controlled operation: Essential can register its first location;
+-- additional locations require an active Professional/Enterprise organization entitlement.
+create or replace function public.create_organization_location(
+  p_organization_id uuid,
+  p_name text,
+  p_location_code text,
+  p_region text default null,
+  p_timezone text default 'UTC',
+  p_country_code text default 'US',
+  p_address jsonb default '{}'::jsonb
+)
+returns public.organizations
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $function$
+declare
+  v_actor uuid := auth.uid();
+  v_existing_locations integer;
+  v_location public.organizations;
+  v_has_local_entitlement boolean;
+  v_has_multi_location_entitlement boolean;
+begin
+  if v_actor is null then
+    raise exception 'Authentication required' using errcode = '42501';
+  end if;
+
+  if not public.is_org_admin(p_organization_id) then
+    raise exception 'Organization administrator access required' using errcode = '42501';
+  end if;
+
+  if nullif(trim(p_name), '') is null then
+    raise exception 'Location name is required' using errcode = '22023';
+  end if;
+
+  if p_location_code !~ '^[A-Za-z0-9][A-Za-z0-9_-]{1,31} then
+    raise exception 'Location code must be 2-32 characters using letters, numbers, hyphens, or underscores' using errcode = '22023';
+  end if;
+
+  if p_country_code !~ '^[A-Za-z]{2} then
+    raise exception 'Country code must be a two-letter ISO code' using errcode = '22023';
+  end if;
+
+  if p_address is not null and jsonb_typeof(p_address) <> 'object' then
+    raise exception 'Location address must be a JSON object' using errcode = '22023';
+  end if;
+
+  if not exists (select 1 from pg_timezone_names where name = p_timezone) then
+    raise exception 'Unknown timezone: %', p_timezone using errcode = '22023';
+  end if;
+
+  if not exists (
+    select 1 from public.organizations o
+    where o.id = p_organization_id
+      and o.status = 'active'
+      and o.organization_type in ('company', 'business_unit')
+  ) then
+    raise exception 'Active company organization not found' using errcode = '22023';
+  end if;
+
+  select count(*)::integer into v_existing_locations
+  from public.organizations o
+  where o.parent_organization_id = p_organization_id
+    and o.organization_type = 'location'
+    and o.status = 'active';
+
+  select exists (
+    select 1 from public.marketplace_entitlements e
+    where e.organization_id = p_organization_id
+      and e.entitlement_key = 'local_operations'
+      and e.status = 'active'
+      and e.scope_type = 'organization'
+      and e.location_organization_id is null
+      and (e.starts_at is null or e.starts_at <= statement_timestamp())
+      and (e.expires_at is null or e.expires_at > statement_timestamp())
+  ) into v_has_local_entitlement;
+
+  if not v_has_local_entitlement then
+    raise exception 'An active Essential, Professional, or Enterprise local-operations entitlement is required' using errcode = '42501';
+  end if;
+
+  if v_existing_locations > 0 then
+    select exists (
+      select 1 from public.marketplace_entitlements e
+      where e.organization_id = p_organization_id
+        and e.entitlement_key in ('multi_location_management', 'global_operations_center')
+        and e.status = 'active'
+        and e.scope_type = 'organization'
+        and e.location_organization_id is null
+        and (e.starts_at is null or e.starts_at <= statement_timestamp())
+        and (e.expires_at is null or e.expires_at > statement_timestamp())
+    ) into v_has_multi_location_entitlement;
+
+    if not v_has_multi_location_entitlement then
+      raise exception 'Additional locations require Professional multi-location or Enterprise global-operations entitlement' using errcode = '42501';
+    end if;
+  end if;
+
+  insert into public.organizations (
+    parent_organization_id,
+    name,
+    organization_type,
+    status,
+    region,
+    location_code,
+    location_timezone,
+    location_country_code,
+    location_address
+  )
+  values (
+    p_organization_id,
+    trim(p_name),
+    'location',
+    'active',
+    nullif(trim(p_region), ''),
+    upper(p_location_code),
+    p_timezone,
+    upper(p_country_code),
+    coalesce(p_address, '{}'::jsonb)
+  )
+  returning * into v_location;
+
+  insert into public.audit_events (
+    organization_id,
+    actor_profile_id,
+    actor_auth_user_id,
+    action,
+    resource_type,
+    resource_id,
+    outcome,
+    event_data
+  )
+  values (
+    p_organization_id,
+    v_actor,
+    v_actor,
+    'organization.location_created',
+    'organization_location',
+    v_location.id::text,
+    'success',
+    jsonb_build_object(
+      'location_code', v_location.location_code,
+      'location_name', v_location.name,
+      'parent_organization_id', p_organization_id,
+      'organization_type', 'location'
+    )
+  );
+
+  return v_location;
+end;
+$function$;
+
+revoke all on function public.create_organization_location(uuid, text, text, text, text, text, jsonb) from public, anon;
+grant execute on function public.create_organization_location(uuid, text, text, text, text, text, jsonb) to authenticated;
+
+
 commit;
