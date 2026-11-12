@@ -1,0 +1,44 @@
+name: Temporary PR 7 source formatter
+
+on:
+  push:
+    branches:
+      - temp/format-command-center-pr7
+
+permissions:
+  contents: write
+
+jobs:
+  format-pr-7:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR 7 source branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/enterprise-workspace-chat-buddy-build
+          persist-credentials: true
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Format changed application and blueprint files
+        run: pnpm exec prettier --write src/routes/index.tsx src/components/shell/HelpBuddy.tsx src/lib/command-work.ts src/lib/work-context.tsx src/styles.css docs/enterprise-workspace-chat-buddy-blueprint.md
+
+      - name: Commit formatted files to PR 7 branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/index.tsx src/components/shell/HelpBuddy.tsx src/lib/command-work.ts src/lib/work-context.tsx src/styles.css docs/enterprise-workspace-chat-buddy-blueprint.md
+          if ! git diff --cached --quiet; then
+            git commit -m "style: format Command Center backend batch"
+            git push origin HEAD:refs/heads/feature/enterprise-workspace-chat-buddy-build
+          fi
