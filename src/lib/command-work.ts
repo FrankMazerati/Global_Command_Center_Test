@@ -329,9 +329,7 @@ export async function listOrganizationalHierarchy(): Promise<OrganizationalUnit[
     .from("workforce_organizational_units")
     .select("id,organization_id,tenant_id,parent_unit_id,ou_key,name,distinguished_path")
     .eq("organization_id", profile.organization_id);
-  query = profile.tenant_id
-    ? query.eq("tenant_id", profile.tenant_id)
-    : query.is("tenant_id", null);
+  if (profile.tenant_id) query = query.eq("tenant_id", profile.tenant_id);
   const { data, error } = await query.order("distinguished_path", { ascending: true });
   if (error) throw error;
   return (data ?? []) as OrganizationalUnit[];
@@ -517,4 +515,55 @@ export async function listRecentAuditEvents(limit = 5): Promise<RecentAuditEvent
     .limit(Math.min(Math.max(limit, 1), 20));
   if (error) throw error;
   return (data ?? []) as RecentAuditEvent[];
+}
+
+
+export interface ManagementRoleTemplate {
+  role_key: string;
+  role_name: string;
+  role_family: string;
+  allowed_scopes: string[];
+  description: string;
+  requires_approval: boolean;
+  is_active: boolean;
+}
+
+export async function listManagementRoleTemplates(): Promise<ManagementRoleTemplate[]> {
+  const client = getSupabaseClient();
+  if (!client) throw new Error("Supabase is not configured.");
+  const { data, error } = await client
+    .from("governance_management_role_catalog")
+    .select("role_key,role_name,role_family,allowed_scopes,description,requires_approval,is_active")
+    .eq("is_active", true)
+    .order("role_family", { ascending: true })
+    .order("role_name", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as ManagementRoleTemplate[];
+}
+
+export interface WorkforceRoleAssignment {
+  id: string;
+  workforce_person_id: string;
+  role_id: string;
+  organization_id: string;
+  tenant_id: string;
+  assignment_scope: string;
+  is_primary: boolean;
+  is_active: boolean;
+  assigned_at: string;
+}
+
+export async function listWorkforceRoleAssignments(): Promise<WorkforceRoleAssignment[]> {
+  const client = getSupabaseClient();
+  if (!client) throw new Error("Supabase is not configured.");
+  const profile = await currentProfile(client);
+  let query = client
+    .from("workforce_role_assignments")
+    .select("id,workforce_person_id,role_id,organization_id,tenant_id,assignment_scope,is_primary,is_active,assigned_at")
+    .eq("organization_id", profile.organization_id)
+    .eq("is_active", true);
+  if (profile.tenant_id) query = query.eq("tenant_id", profile.tenant_id);
+  const { data, error } = await query.order("assigned_at", { ascending: false }).limit(500);
+  if (error) throw error;
+  return (data ?? []) as WorkforceRoleAssignment[];
 }
