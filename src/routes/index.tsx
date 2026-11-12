@@ -751,7 +751,7 @@ function CommandCenterHome() {
             >
               <Mail size={17} />
             </button>
-            <button className="cc-icon-button" aria-label="Notifications">
+            <button className="cc-icon-button" aria-label="Notifications" onClick={() => toast.info("Notification center is not connected in this workspace yet.")}>
               <Bell size={17} />
               <i />
             </button>
@@ -1402,7 +1402,7 @@ function CommandCenterHome() {
               </div>
               <div className="cc-queue-heading">
                 <span>TO-DO LIST · ORDERED BY PRIORITY</span>
-                <button>
+                <button type="button" onClick={() => setSummaryCategory("Assigned")}>
                   View all <ChevronRight size={12} />
                 </button>
               </div>
@@ -1616,7 +1616,7 @@ function CommandCenterHome() {
                     <Activity size={15} />
                     <h2>RECENT ACTIVITY</h2>
                   </div>
-                  <button className="cc-text-link">View all</button>
+                  <span className="cc-text-link">Live audit feed</span>
                 </div>
                 <ul>
                   {activityItems.length ? activityItems.map((entry) => (
