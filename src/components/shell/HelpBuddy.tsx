@@ -42,6 +42,7 @@ export function HelpBuddyPanel({ className }: { className?: string }) {
             )}
           </div>
         </div>
+        <Button type="button" size="icon" variant="ghost" aria-label="Close Chat Buddy" title="Close Chat Buddy" onClick={() => w.setHelpBuddyOpen(false)}><X className="size-4" /></Button>
       </div>
       <Tabs defaultValue={w.helpBuddyTab} key={w.helpBuddyTab} className="flex flex-1 flex-col gap-0">
         <TabsList className="mx-3 mt-3 grid h-auto grid-cols-5">
