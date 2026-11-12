@@ -37,6 +37,7 @@ import { IntelliSphereToolsWorkspace } from "@/components/workspace/IntelliSpher
 import { EmployeeProfileWorkspace } from "@/components/workspace/EmployeeProfileWorkspace";
 import { GroupMembershipWorkspace } from "@/components/workspace/GroupMembershipWorkspace";
 import { OperationalPageWorkspace } from "@/components/workspace/OperationalPageWorkspace";
+import { PlatformAdministrationWorkspace } from "@/components/workspace/PlatformAdministrationWorkspace";
 import { IdentityAccessWorkspace } from "@/components/workspace/IdentityAccessWorkspace";
 import { PublicSiteManagementWorkspace } from "@/components/workspace/PublicSiteManagementWorkspace";
 import { findPage, toneVar } from "@/lib/nav";
@@ -1301,6 +1302,7 @@ function PageFoundation() {
     "intellistudio",
     "intellitext",
   ].includes(page.slug);
+  const platformAdministration = section.slug === "platform-administration-center";
   const helpBuddy = section.slug === "help-buddy";
   const helpBuddyManagement = helpBuddy && group.slug === "intelligence-management";
   const identityAccessSlugs = new Set([
@@ -1410,7 +1412,9 @@ function PageFoundation() {
           </Link>
         </div>
       )}
-      {publicSiteView ? (
+      {platformAdministration ? (
+        <PlatformAdministrationWorkspace title={page.title} pageSlug={page.slug} groupSlug={group.slug} />
+      ) : publicSiteView ? (
         <PublicSiteManagementWorkspace view={publicSiteView} />
       ) : officeTool ? (
         <IntelliOfficeWorkspace pageSlug={page.slug} />
