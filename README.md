@@ -39,6 +39,7 @@ CEO, CFO, CIO, and CTO experiences are separate executive workspaces with role- 
 ## Platform administration architecture
 
 - [Platform Administration Center — unified implementation sequence](docs/platform-administration/PLATFORM_ADMINISTRATION_CENTER_IMPLEMENTATION.md)
+- [Platform Administration Center — live Supabase data reuse and gap matrix](docs/platform-administration/PLATFORM_ADMINISTRATION_DATA_REUSE_MATRIX.md)
 
 ## Commercial, organizational, and security architecture
 
