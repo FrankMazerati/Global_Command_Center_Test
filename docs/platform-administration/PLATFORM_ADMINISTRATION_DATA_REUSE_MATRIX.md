@@ -111,3 +111,47 @@ Before any migration:
 6. Produce a reviewed migration plan and rollback strategy.
 
 **Status:** Read-only inventory completed. No migration proposed or applied.
+
+
+## Privileged-function source review — first pass
+
+The 16 authenticated-executable SECURITY DEFINER functions were inspected at source level. This is a first-pass code review, not a complete security certification.
+
+### Confirmed positive controls
+
+- `private.is_org_admin_scope` checks an active role assignment against the requested organization and permits either an organization-wide grant or a matching tenant grant.
+- Workforce identity linking checks the target profile and workforce person are active, real, and in the same organization and tenant before linking.
+- Workforce management approval rejects self-approval, requires a proposed assignment, verifies the relevant management-role approval policy, and writes an audit event.
+- Workforce management request/approve/revoke operations use the private organization-scope helper and record reasons/audit events.
+- Ticket acceptance derives the actor's organization/tenant from the active profile and constrains the ticket to that scope before claiming it.
+- Chat Buddy welcome-message creation verifies session ownership and active assistant/profile state.
+- The marketplace deal-quote request constrains the cart to the authenticated user and their organization/tenant and requires approved active pricing.
+
+### High-priority scope issue to resolve before enabling platform-admin writes
+
+Both `public.is_global_admin()` and `private.is_global_admin()` check that the active profile has an active, unexpired `super_admin` or `global_admin` role assignment, but neither requires the assignment's `organization_id` and `tenant_id` to be NULL.
+
+The `profile_roles` table has organization and tenant foreign keys plus an expiry-order check, but no constraint enforcing that global roles must be unscoped. The current active `super_admin` assignment is unscoped, so the observed record is consistent with the intended model; however, the database does not enforce that invariant for future assignments.
+
+**Required correction before privileged UI mutations:** define and enforce that global roles can only be granted at global scope, and that tenant/company/department-scoped roles cannot satisfy global-admin helpers. Add database constraints and/or guarded grant procedures as appropriate, then test a deliberately scoped `super_admin` and `global_admin` assignment is denied global authority. Do not simply add a UI check.
+
+### Additional function review items
+
+- `public.holds_role` checks role presence and assignment dates but does not evaluate organization/tenant scope. Confirm every caller uses it only for truly global role-presence checks or replace scope-sensitive call sites with scoped helpers.
+- `public.is_org_admin` uses the profile's organization and a broad role-key list. Confirm that each listed role is intended to grant organization administration and that assignment scope is checked.
+- `public.kb_can_manage` checks the `knowledge.manage` permission mapping but does not explicitly constrain the role assignment by organization/tenant. Confirm the intended global-versus-organization knowledge-management model.
+- `public.kb_is_super_admin` also does not require unscoped global role assignment.
+- `public.accept_ticket` checks the role key and ticket organization/tenant but does not match the role assignment's own organization/tenant scope.
+- `public.request_workforce_management_assignment` validates the person is active and non-synthetic but does not visibly compare the person's organization/tenant with the requested assignment scope.
+- `public.set_workforce_management_assignment_locations` checks assignment ownership and the proposed location-set lifecycle but does not visibly verify every submitted location belongs to the assignment's authorized organization/tenant.
+- `public.marketplace_request_deal_quote` is a user-owned cart operation rather than a platform-admin grant path; retain its cart ownership, organization/tenant and approved-pricing checks.
+
+These findings require call-site, trigger and constraint review before changing any function. No function, grant, role assignment, policy or database record was modified.
+
+## Revised next gate
+
+1. Trace all policy and RPC call sites for `is_global_admin`, `holds_role`, `is_org_admin`, `kb_can_manage` and `kb_is_super_admin`.
+2. Confirm intended global role semantics and enforce unscoped global grants at the database boundary.
+3. Verify workforce assignment person/scope and location/scope checks.
+4. Add negative tests for scoped global roles, cross-tenant role use, cross-organization workforce assignment, and foreign location IDs.
+5. Only after those tests pass, connect the Platform Administration Center's privileged operations through narrow server-side procedures.
