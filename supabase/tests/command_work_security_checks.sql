@@ -64,6 +64,34 @@ begin
     raise exception 'A required organization/tenant-scoped work or approval policy is missing.';
   end if;
 
+  if not exists (
+    select 1 from pg_policies
+    where schemaname='public'
+      and tablename='workflow_step_runs'
+      and policyname='workflow_step_runs_insert_owner_scope'
+  ) then
+    raise exception 'Workflow step creation policy is missing.';
+  end if;
+
+  if not exists (
+    select 1 from pg_policies
+    where schemaname='public'
+      and tablename='governance_management_role_catalog'
+      and policyname='governance_management_role_catalog_authenticated_read'
+  ) or not exists (
+    select 1 from pg_policies
+    where schemaname='public'
+      and tablename='workforce_organizational_units'
+      and policyname='workforce_organizational_units_read_scope'
+  ) or not exists (
+    select 1 from pg_policies
+    where schemaname='public'
+      and tablename='workforce_role_assignments'
+      and policyname='workforce_role_assignments_read_admin_scope'
+  ) then
+    raise exception 'A required role catalog or workforce hierarchy read policy is missing.';
+  end if;
+
   if not has_table_privilege('anon', 'public.site_pages', 'select')
     or not has_table_privilege('anon', 'public.site_social_links', 'select')
     or not has_table_privilege('anon', 'public.site_contact_submissions', 'insert') then
