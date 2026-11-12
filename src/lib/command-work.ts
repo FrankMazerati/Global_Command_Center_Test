@@ -46,6 +46,18 @@ interface ProfileContext {
   tenant_id: string | null;
 }
 
+async function isGlobalAdmin(client: SupabaseClient): Promise<boolean> {
+  const { data, error } = await client.rpc("is_global_admin");
+  if (error) throw error;
+  return data === true;
+}
+
+async function isOrganizationAdmin(client: SupabaseClient, organizationId: string): Promise<boolean> {
+  const { data, error } = await client.rpc("is_org_admin", { p_organization_id: organizationId });
+  if (error) throw error;
+  return data === true;
+}
+
 async function currentProfile(client: SupabaseClient): Promise<ProfileContext> {
   const { data: auth, error: authError } = await client.auth.getUser();
   if (authError || !auth.user) throw new Error("Sign in is required to access workspace data.");
@@ -173,13 +185,15 @@ export async function listCommandWorkItems(): Promise<CommandWorkItem[]> {
   const client = getSupabaseClient();
   if (!client) throw new Error("Supabase is not configured.");
   const profile = await currentProfile(client);
-  const { data, error } = await client
-    .from("command_work_items")
-    .select("*")
-    .eq("organization_id", profile.organization_id)
+  const globalAdmin = await isGlobalAdmin(client);
+  const orgAdmin = globalAdmin || await isOrganizationAdmin(client, profile.organization_id);
+  let query = client.from("command_work_items").select("*");
+  if (!globalAdmin) query = query.eq("organization_id", profile.organization_id);
+  if (!globalAdmin && !orgAdmin && profile.tenant_id) query = query.eq("tenant_id", profile.tenant_id);
+  const { data, error } = await query
     .order("sort_order", { ascending: true })
     .order("due_at", { ascending: true, nullsFirst: false })
-    .limit(200);
+    .limit(500);
   if (error) throw error;
   return (data ?? []) as CommandWorkItem[];
 }
@@ -325,11 +339,13 @@ export async function listOrganizationalHierarchy(): Promise<OrganizationalUnit[
   const client = getSupabaseClient();
   if (!client) throw new Error("Supabase is not configured.");
   const profile = await currentProfile(client);
+  const globalAdmin = await isGlobalAdmin(client);
+  const orgAdmin = globalAdmin || await isOrganizationAdmin(client, profile.organization_id);
   let query = client
     .from("workforce_organizational_units")
-    .select("id,organization_id,tenant_id,parent_unit_id,ou_key,name,distinguished_path")
-    .eq("organization_id", profile.organization_id);
-  if (profile.tenant_id) query = query.eq("tenant_id", profile.tenant_id);
+    .select("id,organization_id,tenant_id,parent_unit_id,ou_key,name,distinguished_path");
+  if (!globalAdmin) query = query.eq("organization_id", profile.organization_id);
+  if (!globalAdmin && !orgAdmin && profile.tenant_id) query = query.eq("tenant_id", profile.tenant_id);
   const { data, error } = await query.order("distinguished_path", { ascending: true });
   if (error) throw error;
   return (data ?? []) as OrganizationalUnit[];
@@ -484,13 +500,13 @@ export async function listIntegrationConnections(): Promise<IntegrationConnectio
   const client = getSupabaseClient();
   if (!client) throw new Error("Supabase is not configured.");
   const profile = await currentProfile(client);
+  const globalAdmin = await isGlobalAdmin(client);
+  const orgAdmin = globalAdmin || await isOrganizationAdmin(client, profile.organization_id);
   let query = client
     .from("integration_connections")
-    .select("provider_key,display_name,connection_status,last_checked_at,last_successful_sync_at,last_error_summary")
-    .eq("organization_id", profile.organization_id);
-  query = profile.tenant_id
-    ? query.eq("tenant_id", profile.tenant_id)
-    : query.is("tenant_id", null);
+    .select("provider_key,display_name,connection_status,last_checked_at,last_successful_sync_at,last_error_summary");
+  if (!globalAdmin) query = query.eq("organization_id", profile.organization_id);
+  if (!globalAdmin && !orgAdmin && profile.tenant_id) query = query.eq("tenant_id", profile.tenant_id);
   const { data, error } = await query.order("display_name", { ascending: true });
   if (error) throw error;
   return (data ?? []) as IntegrationConnectionSummary[];
@@ -510,10 +526,16 @@ export async function listRecentAuditEvents(limit = 5): Promise<RecentAuditEvent
   const client = getSupabaseClient();
   if (!client) throw new Error("Supabase is not configured.");
   const profile = await currentProfile(client);
-  const { data, error } = await client
+  const globalAdmin = await isGlobalAdmin(client);
+  const orgAdmin = globalAdmin || await isOrganizationAdmin(client, profile.organization_id);
+  let query = client
     .from("audit_events")
-    .select("id,action,resource_type,resource_id,outcome,created_at")
-    .eq("organization_id", profile.organization_id)
+    .select("id,action,resource_type,resource_id,outcome,created_at");
+  if (!globalAdmin) query = query.eq("organization_id", profile.organization_id);
+  if (!globalAdmin && !orgAdmin && profile.tenant_id) {
+    query = query.or(`tenant_id.is.null,tenant_id.eq.${profile.tenant_id}`);
+  }
+  const { data, error } = await query
     .order("created_at", { ascending: false })
     .limit(Math.min(Math.max(limit, 1), 20));
   if (error) throw error;
@@ -560,12 +582,14 @@ export async function listWorkforceRoleAssignments(): Promise<WorkforceRoleAssig
   const client = getSupabaseClient();
   if (!client) throw new Error("Supabase is not configured.");
   const profile = await currentProfile(client);
+  const globalAdmin = await isGlobalAdmin(client);
+  const orgAdmin = globalAdmin || await isOrganizationAdmin(client, profile.organization_id);
   let query = client
     .from("workforce_role_assignments")
     .select("id,workforce_person_id,role_id,organization_id,tenant_id,assignment_scope,is_primary,is_active,assigned_at")
-    .eq("organization_id", profile.organization_id)
     .eq("is_active", true);
-  if (profile.tenant_id) query = query.eq("tenant_id", profile.tenant_id);
+  if (!globalAdmin) query = query.eq("organization_id", profile.organization_id);
+  if (!globalAdmin && !orgAdmin && profile.tenant_id) query = query.eq("tenant_id", profile.tenant_id);
   const { data, error } = await query.order("assigned_at", { ascending: false }).limit(500);
   if (error) throw error;
   return (data ?? []) as WorkforceRoleAssignment[];
@@ -586,11 +610,15 @@ export async function listPendingWorkItemApprovals(): Promise<PendingWorkItemApp
   const client = getSupabaseClient();
   if (!client) throw new Error("Supabase is not configured.");
   const profile = await currentProfile(client);
-  const { data: approvals, error } = await client
+  const globalAdmin = await isGlobalAdmin(client);
+  const orgAdmin = globalAdmin || await isOrganizationAdmin(client, profile.organization_id);
+  let query = client
     .from("command_work_item_approvals")
     .select("id,work_item_id,requested_by_profile_id,reason,requested_at")
-    .eq("organization_id", profile.organization_id)
-    .eq("status", "pending")
+    .eq("status", "pending");
+  if (!globalAdmin) query = query.eq("organization_id", profile.organization_id);
+  if (!globalAdmin && !orgAdmin && profile.tenant_id) query = query.eq("tenant_id", profile.tenant_id);
+  const { data: approvals, error } = await query
     .order("requested_at", { ascending: false })
     .limit(100);
   if (error) throw error;
@@ -640,10 +668,14 @@ export async function listWorkforceManagementAssignments(): Promise<WorkforceMan
   const client = getSupabaseClient();
   if (!client) throw new Error("Supabase is not configured.");
   const profile = await currentProfile(client);
-  const { data, error } = await client
+  const globalAdmin = await isGlobalAdmin(client);
+  const orgAdmin = globalAdmin || await isOrganizationAdmin(client, profile.organization_id);
+  let query = client
     .from("workforce_management_assignments")
-    .select("id,workforce_person_id,management_role_key,organization_id,scope_type,region_id,tenant_id,department_id,status,authorization_enabled,starts_at,ends_at,approved_by_profile_id,approved_at,created_by_profile_id,assignment_reason")
-    .eq("organization_id", profile.organization_id)
+    .select("id,workforce_person_id,management_role_key,organization_id,scope_type,region_id,tenant_id,department_id,status,authorization_enabled,starts_at,ends_at,approved_by_profile_id,approved_at,created_by_profile_id,assignment_reason");
+  if (!globalAdmin) query = query.eq("organization_id", profile.organization_id);
+  if (!globalAdmin && !orgAdmin && profile.tenant_id) query = query.eq("tenant_id", profile.tenant_id);
+  const { data, error } = await query
     .order("starts_at", { ascending: false })
     .limit(500);
   if (error) throw error;
