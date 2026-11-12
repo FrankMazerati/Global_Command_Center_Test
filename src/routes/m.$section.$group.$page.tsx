@@ -35,6 +35,7 @@ import { IntelliSphereToolsWorkspace } from "@/components/workspace/IntelliSpher
 import { EmployeeProfileWorkspace } from "@/components/workspace/EmployeeProfileWorkspace";
 import { GroupMembershipWorkspace } from "@/components/workspace/GroupMembershipWorkspace";
 import { OperationalPageWorkspace } from "@/components/workspace/OperationalPageWorkspace";
+import { IdentityAccessWorkspace } from "@/components/workspace/IdentityAccessWorkspace";
 import { PublicSiteManagementWorkspace } from "@/components/workspace/PublicSiteManagementWorkspace";
 import { findPage, toneVar } from "@/lib/nav";
 import { getSupabaseClient } from "@/lib/supabase";
@@ -1290,6 +1291,15 @@ function PageFoundation() {
   ].includes(page.slug);
   const helpBuddy = section.slug === "help-buddy";
   const helpBuddyManagement = helpBuddy && group.slug === "intelligence-management";
+  const identityAccessSlugs = new Set([
+    "directory-dashboard", "global-directory", "directory-health", "directory-activity",
+    "user-accounts", "global-user-id", "employee-accounts", "contractor-accounts",
+    "business-accounts", "tenant-user-accounts", "external-users", "identity-verification",
+    "account-status", "departments", "teams", "security-groups", "group-objects",
+    "roles-and-permissions", "access-management", "application-access", "access-requests",
+    "access-audit", "directory-audit-history",
+  ]);
+  const identityAccess = section.slug === "new-active-directory" && identityAccessSlugs.has(page.slug);
   const publicSiteView =
     page.slug === "website-content-management"
       ? "pages"
@@ -1393,6 +1403,8 @@ function PageFoundation() {
         <EmployeeProfileWorkspace />
       ) : page.slug === "group-membership" ? (
         <GroupMembershipWorkspace />
+      ) : identityAccess ? (
+        <IdentityAccessWorkspace title={page.title} pageSlug={page.slug} />
       ) : directory === "tickets" ? (
         <TicketManagementWorkspace title={page.title} pageSlug={page.slug} />
       ) : directory ? (
