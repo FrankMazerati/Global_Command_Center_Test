@@ -5340,3 +5340,309 @@ body:has(.login-screen)::before {
     margin-left: 0;
   }
 }
+
+
+/* Refined login typography, hierarchy and brand presentation */
+.login-hero {
+  min-height: 390px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 22px 20px 30px;
+  background:
+    linear-gradient(180deg, rgba(2, 8, 20, .28), rgba(2, 10, 25, .28) 45%, rgba(2, 9, 22, .78)),
+    linear-gradient(90deg, rgba(1, 8, 22, .22), rgba(1, 10, 28, .04) 50%, rgba(1, 8, 22, .22)),
+    url("/assets/command-center-operations.jpg") center 43% / cover;
+  text-align: center;
+}
+.login-brand-line {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  text-align: center;
+}
+.login-brand-present {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  color: #f4fbff;
+  text-align: center;
+}
+.login-brand-present img {
+  width: 66px;
+  height: 66px;
+  padding: 3px;
+  border: 1px solid rgba(96, 220, 255, .85);
+  border-radius: 15px;
+  box-shadow: 0 0 25px rgba(34, 186, 255, .26);
+  background: rgba(2, 15, 34, .88);
+}
+.login-brand-present span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .2em;
+}
+.login-brand-present small {
+  color: #8fdfff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .34em;
+}
+.login-tagline {
+  max-width: 850px;
+  margin: 10px auto 0;
+  color: #f4f9ff;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: clamp(18px, 2.15vw, 27px);
+  font-weight: 750;
+  letter-spacing: .015em;
+  line-height: 1.48;
+  text-align: center;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, .65);
+}
+.login-tagline i {
+  color: #51d8ff;
+  font-style: normal;
+  font-weight: 900;
+  text-shadow: 0 0 16px rgba(62, 204, 255, .42);
+}
+.login-hero-copy {
+  width: 100%;
+  margin: 22px auto 0;
+  padding: 0 12px;
+  text-align: center;
+}
+.login-hero-copy h1 {
+  margin: 0;
+  color: #f7fbff;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: clamp(48px, 7.1vw, 86px);
+  font-weight: 900;
+  letter-spacing: .075em;
+  line-height: 1.02;
+  text-align: center;
+  text-shadow: 0 4px 25px rgba(0, 0, 0, .75), 0 0 25px rgba(37, 171, 255, .22);
+}
+.login-hero-copy h1 span {
+  color: #f7fbff;
+}
+.login-hero-copy h1 em {
+  color: #56d9ff;
+  font-style: normal;
+}
+.login-hero-copy strong {
+  display: block;
+  margin: 12px auto 0;
+  color: #e8f6ff;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: clamp(17px, 2vw, 24px);
+  font-weight: 800;
+  letter-spacing: .25em;
+  text-align: center;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, .8);
+}
+.login-hero-copy .login-world-line {
+  margin: 19px auto 0;
+  color: #f0f8ff;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: clamp(15px, 1.65vw, 21px);
+  font-weight: 650;
+  letter-spacing: .055em;
+  text-align: center;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, .8);
+}
+.login-hero-copy .login-world-line i {
+  color: #5cddff;
+  font-style: normal;
+  font-weight: 900;
+}
+.login-quick-links {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 11px;
+  margin-top: 18px;
+}
+.login-quick-links a {
+  min-height: 82px;
+  align-content: center;
+  padding: 14px 13px;
+  border-color: rgba(81, 195, 245, .38);
+  background: linear-gradient(145deg, rgba(6, 37, 72, .94), rgba(2, 16, 38, .96));
+}
+.login-quick-links b {
+  color: #f1faff;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .025em;
+}
+.login-quick-links small {
+  color: #a7c8da;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 10px;
+  line-height: 1.45;
+}
+.login-security,
+.login-card,
+.login-footer {
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+.login-card-heading small,
+.login-security .security-title b {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .1em;
+}
+.login-card-heading p,
+.login-security .security-title span {
+  font-size: 11px;
+  line-height: 1.5;
+}
+.login-environments b,
+.login-form > label > span,
+.login-footer-group b {
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-weight: 800;
+}
+.login-form > label > span {
+  font-size: 11px;
+}
+.login-input-wrap input {
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 13px;
+}
+.login-form-options,
+.login-help-links,
+.login-form-options button,
+.login-help-links button {
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 10px;
+}
+.login-submit {
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 850;
+  letter-spacing: .1em;
+}
+.login-footer {
+  grid-template-columns: 1.15fr repeat(4, minmax(0, 1fr));
+  gap: 22px;
+  padding-top: 28px;
+  padding-bottom: 24px;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+}
+.login-footer-group {
+  gap: 9px;
+}
+.login-footer-group b {
+  color: #57d9ff;
+  font-size: 12px;
+  letter-spacing: .09em;
+}
+.login-footer-group a {
+  color: #c1d5e1;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.login-footer-group a:hover {
+  color: #6be2ff;
+}
+.login-footer .login-brand {
+  align-self: start;
+}
+.login-footer .login-brand span {
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+}
+.login-footer .login-brand small {
+  font-size: 7px;
+}
+.login-copyright {
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 10px;
+}
+.security-bottom b {
+  color: #b9d6e7;
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+@media (max-width: 900px) {
+  .login-quick-links {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .login-hero {
+    min-height: 345px;
+    padding: 18px 12px 23px;
+  }
+  .login-brand-present img {
+    width: 54px;
+    height: 54px;
+  }
+  .login-brand-present span {
+    font-size: 10px;
+  }
+  .login-tagline {
+    margin-top: 9px;
+    font-size: clamp(15px, 4.5vw, 20px);
+  }
+  .login-hero-copy {
+    margin-top: 27px;
+  }
+  .login-hero-copy h1 {
+    font-size: clamp(34px, 10vw, 54px);
+    letter-spacing: .035em;
+  }
+  .login-hero-copy strong {
+    margin-top: 10px;
+    font-size: 13px;
+    letter-spacing: .14em;
+  }
+  .login-hero-copy .login-world-line {
+    margin-top: 15px;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .login-quick-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+    padding: 0 10px;
+  }
+  .login-quick-links a {
+    min-height: 76px;
+    padding: 10px;
+  }
+  .login-quick-links b {
+    font-size: 10px;
+  }
+  .login-quick-links small {
+    font-size: 9px;
+  }
+  .login-footer {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 19px 13px;
+    padding: 22px 13px;
+  }
+  .login-footer .login-brand {
+    grid-column: 1 / -1;
+  }
+  .login-footer-group b {
+    font-size: 10px;
+  }
+  .login-footer-group a {
+    font-size: 10px;
+  }
+}

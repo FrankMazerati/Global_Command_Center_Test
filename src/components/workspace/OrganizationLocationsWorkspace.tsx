@@ -86,7 +86,7 @@ export function OrganizationLocationsWorkspace({ title }: { title: string }) {
     ]);
 
     let rows = locationResult.data as LocationRow[] | null;
-    let migrationAvailable = !locationResult.error && !adminResult.error && !localEntitlement.error && !multiEntitlement.error;
+    const migrationAvailable = !locationResult.error && !adminResult.error && !localEntitlement.error && !multiEntitlement.error;
 
     if (locationResult.error) {
       const fallback = await supabase

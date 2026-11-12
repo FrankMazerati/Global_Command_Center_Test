@@ -112,12 +112,11 @@ const businessProducts = [
 ];
 
 const loginQuickLinks = [
-  { label: "24/7 Support", detail: "Service desk & support", href: "/m/intellidesk-command-center/service-desk-dashboard/open-tickets" },
-  { label: "Help Center", detail: "Knowledge & guidance", href: "/m/intellibase/training-and-certification/learning-paths" },
-  { label: "System Security", detail: "Security operations", href: "/m/soc-security-operations-center/soc-dashboard/security-posture" },
-  { label: "People Directory", detail: "Find people & teams", href: "/m/new-active-directory/people-and-accounts/employees" },
-  { label: "Calendar", detail: "Meetings & schedules", href: "/m/calendar-and-scheduling-center/personal-calendar/meetings" },
-  { label: "Products & Services", detail: "Explore the platform", href: "/p/products" },
+  { label: "24/7 Support", detail: "Service desk and assistance", href: "/m/intellidesk-command-center/service-desk-dashboard/open-tickets" },
+  { label: "IntelliBase", detail: "Knowledge base, learning and documentation", href: "/m/intellibase/knowledge-dashboard/featured-knowledge" },
+  { label: "Security & Compliance", detail: "Security operations and governance", href: "/m/soc-security-operations-center/soc-dashboard/security-posture" },
+  { label: "Global Infrastructure", detail: "Network, systems and infrastructure operations", href: "/m/network-operations-center/noc-dashboard/network-health" },
+  { label: "Platform Overview", detail: "Explore the IntelliStack platform", href: "/p/products" },
 ];
 
 function LoginPage() {
@@ -247,17 +246,17 @@ function LoginPage() {
     <main className="login-screen">
       <div className="login-hero">
         <div className="login-brand-line">
-          <div className="login-brand">
-            <img src="/assets/intellistack-shield.jpg" alt="IntelliStack Systems" />
+          <div className="login-brand login-brand-present">
+            <img src="/assets/intellistack-shield.jpg" alt="IntelliStack Systems shield" />
             <span>
-              INTELLISTACK
-              <br />
-              <b>SYSTEMS</b>
-              <small>SECURED · TRUSTED · COMPLIANT</small>
+              <b>INTELLISTACK SYSTEMS</b>
+              <small>PRESENTS</small>
             </span>
           </div>
           <div className="login-tagline">
-            See Everything. Connect Everything. <b>Work Smarter.</b>
+            See Everything <i>Locally</i>. Connect Everything <i>Globally</i>.
+            <br />
+            Powered by <i>Intelligence</i>.
           </div>
         </div>
         <div className="login-hero-copy">
@@ -265,7 +264,9 @@ function LoginPage() {
             <span>MAXIMUS</span> <em>OPTIMUS</em>
           </h1>
           <strong>GLOBAL OPERATIONS CENTER</strong>
-          <p>One <i>World</i>. One <i>System</i>. One Intelligent <i>Network</i>.</p>
+          <p className="login-world-line">
+            One <i>World</i>. One <i>System</i>. One Intelligent <i>Network</i>.
+          </p>
         </div>
         <div className="login-hero-glow" />
       </div>
@@ -512,13 +513,7 @@ function LoginPage() {
           ))}
           <div className="security-bottom">
             <Globe2 size={22} />
-            <b>
-              Think Beyond <i>Locally</i>.
-              <br />
-              Connect Everything <i>Globally</i>.
-              <br />
-              Powered by <span>Intelligence</span>.
-            </b>
+            <b>One connected command environment for your people, systems and operations.</b>
           </div>
         </aside>
       </div>
