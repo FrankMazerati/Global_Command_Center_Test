@@ -205,26 +205,9 @@ const connectorChoices = [
 ];
 type ProfileEditor = "photo" | "background" | "bio" | "linkedin" | "payment" | "status" | null;
 
-const defaultNewsFeeds = [
-  ["AI Brief", "Maximus and Optimus systems are operating normally."],
-  ["Security", "No critical threat activity is open for review."],
-  ["Network", "Global infrastructure health remains within target."],
-  ["Product", "IntelliStack connector review is scheduled today."],
-  ["Company", "Quarterly planning materials are ready in Knowledge Vault."],
-  ["People", "Two access requests are waiting for approval."],
-  ["Learning", "New Command Center training content is available."],
-  ["Operations", "Service desk workload is tracking to plan."],
-  ["Governance", "Compliance checklist review is due this week."],
-  ["Build", "Project completion review remains the active focus."],
-] as const;
+const defaultNewsFeeds: Array<readonly [string, string]> = [];
 
-const defaultTickers = [
-  ["NASDAQ", "+0.87%"],
-  ["S&P 500", "+0.42%"],
-  ["DOW", "+0.19%"],
-  ["BTC", "-0.18%"],
-  ["ETH", "+1.12%"],
-] as const;
+const defaultTickers: Array<readonly [string, string]> = [];
 
 const availableNewsFeeds = [
   "Reuters World",
@@ -336,13 +319,7 @@ function CommandCenterHome() {
   const [quickPickEditorOpen, setQuickPickEditorOpen] = useState(false);
   const [quickPickItems, setQuickPickItems] = useState([...quickPicks]);
   const [draggedQuickPick, setDraggedQuickPick] = useState<string | null>(null);
-  const [connectedConnectors, setConnectedConnectors] = useState([
-    "Microsoft 365",
-    "Microsoft Entra ID",
-    "AWS",
-    "GitHub",
-    "Google Workspace",
-  ]);
+  const [connectedConnectors] = useState<string[]>([]);
   const [profilePhoto, setProfilePhoto] = useState("/assets/frank-mazerati.png");
   const [backgroundPhoto, setBackgroundPhoto] = useState<string | null>(null);
   const [bio, setBio] = useState("Founder and Global Administrator");
@@ -461,7 +438,7 @@ function CommandCenterHome() {
 
   const items = [...liveItems, ...commandItems];
   const availability = work.availability;
-  const managerName = String(managerRecord?.["display_name"] ?? [managerRecord?.["first_name"], managerRecord?.["last_name"]].filter(Boolean).join(" ") ?? "Profile not configured");
+  const managerName = String(managerRecord?.["display_name"] || [managerRecord?.["first_name"], managerRecord?.["last_name"]].filter(Boolean).join(" ") || "Profile not configured");
   const managerEmail = String(managerRecord?.["work_email"] ?? "Work email not configured");
   const managerUserId = String(managerRecord?.["employee_global_id"] ?? "ID not assigned");
   const managerCompany = String(managerRecord?.["company_global_id"] ?? "Organization not linked");
@@ -571,26 +548,11 @@ function CommandCenterHome() {
   };
 
   const toggleConnector = (connector: string) => {
-    setConnectedConnectors((current) =>
-      current.includes(connector)
-        ? current.filter((entry) => entry !== connector)
-        : [...current, connector],
-    );
-    toast.success(
-      connectedConnectors.includes(connector)
-        ? `${connector} disconnected.`
-        : `${connector} connected for this workspace.`,
-    );
+    toast.info(`${connector} is listed in the catalog. Its authorization flow is not connected here, so no connection was changed.`);
   };
 
   const addConnector = () => {
-    const next = connectorChoices.find((connector) => !connectedConnectors.includes(connector));
-    if (!next) {
-      toast.info("All available connectors are already listed.");
-      return;
-    }
-    setConnectedConnectors((current) => [...current, next]);
-    toast.success(`${next} added to connectors.`);
+    toast.info("The connector catalog is available, but an authorization flow must be configured before a connection can be created.");
   };
 
   const addQuickPick = (pick: QuickPick) => {
