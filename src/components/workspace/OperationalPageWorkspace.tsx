@@ -96,7 +96,6 @@ const PAGE_TABLES: Record<string, string> = {
   "conversation-history": "assistant_messages",
   "unanswered-questions": "help_buddy_unanswered_questions",
   "calendar-events": "calendar_events",
-  "intellicalend ar": "calendar_events",
   "service-catalog": "service_catalog",
   "service-status": "integration_connections",
   "integration-management": "integration_connections",
@@ -154,7 +153,7 @@ export function OperationalPageWorkspace({ title, pageSlug }: { title: string; p
       setLoading(false);
       return;
     }
-    const { data, error: resultError } = await supabase.from(table).select("*").limit(100);
+    const { data, error: resultError } = await supabase.from(table as never).select("*").limit(100);
     if (resultError) {
       setError(resultError.message);
       setRows([]);
