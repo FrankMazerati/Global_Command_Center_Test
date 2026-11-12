@@ -34,6 +34,7 @@ import { IntelliOfficeWorkspace } from "@/components/workspace/IntelliOfficeWork
 import { IntelliSphereToolsWorkspace } from "@/components/workspace/IntelliSphereToolsWorkspace";
 import { EmployeeProfileWorkspace } from "@/components/workspace/EmployeeProfileWorkspace";
 import { GroupMembershipWorkspace } from "@/components/workspace/GroupMembershipWorkspace";
+import { OperationalPageWorkspace } from "@/components/workspace/OperationalPageWorkspace";
 import { PublicSiteManagementWorkspace } from "@/components/workspace/PublicSiteManagementWorkspace";
 import { findPage, toneVar } from "@/lib/nav";
 import { getSupabaseClient } from "@/lib/supabase";
@@ -1397,22 +1398,7 @@ function PageFoundation() {
       ) : directory ? (
         <SupabaseDirectory kind={directory} title={page.title} />
       ) : (
-        <section className="rounded-xl border bg-card p-5 shadow-card">
-          <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-600">
-            Awaiting configuration · no live workflow connected
-          </div>
-          <h2 className="text-xl font-semibold">{page.title}</h2>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            This navigation destination exists, but its operational workflow and authorized data
-            source have not been implemented yet. It is not being presented as a completed
-            workspace.
-          </p>
-          <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-            Before activation, this page needs its real database records, server-enforced
-            permissions, search and drill-down behavior, audit history, and automated tests. No
-            invented counts, sample activity, or nonfunctional action buttons are displayed.
-          </p>
-        </section>
+        <OperationalPageWorkspace title={page.title} pageSlug={page.slug} />
       )}
     </div>
   );
