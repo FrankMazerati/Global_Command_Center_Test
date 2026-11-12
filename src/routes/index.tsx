@@ -38,6 +38,13 @@ import {
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { getSupabaseClient } from "@/lib/supabase";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { AVAILABILITY, useWork } from "@/lib/work-context";
 import { NAV } from "@/lib/nav";
 
@@ -61,37 +68,39 @@ type WorkItem = {
 };
 
 type QuickPick = { label: string; detail: string; icon: LucideIcon; href: string };
+type SummaryCategory =
+  "Assigned" | "Needs Your Attention" | "High Priority" | "Medium Priority" | "Low Priority";
 
 const quickPicks: QuickPick[] = [
   {
     label: "Tickets",
     detail: "Create & track",
     icon: Ticket,
-    href: "/m/service-desk-and-enterprise-operations/ticket-management/active-ticket-workspace",
+    href: "/m/intellidesk-command-center/service-desk-dashboard/open-tickets",
   },
   {
     label: "Directory",
     detail: "Find people",
     icon: Users,
-    href: "/m/identity-and-access-management/directory-overview/global-directory",
+    href: "/m/new-active-directory/people-and-accounts/employees",
   },
   {
     label: "Calendar",
     detail: "Schedule work",
     icon: CalendarDays,
-    href: "/m/productivity-and-collaboration/intellistack-collaboration-tools/intellicalendar",
+    href: "/m/calendar-and-scheduling-center/personal-calendar/meetings",
   },
   {
     label: "Knowledge",
     detail: "Find answers",
     icon: BookOpen,
-    href: "/m/account-and-administration/training-and-learning/learning-paths",
+    href: "/m/intellibase/training-and-certification/learning-paths",
   },
   {
     label: "Security",
     detail: "Monitor & respond",
     icon: ShieldCheck,
-    href: "/m/security-risk-and-governance/security-overview/security-operations-dashboard",
+    href: "/m/soc-security-operations-center/soc-dashboard/security-posture",
   },
 ];
 
@@ -112,6 +121,23 @@ const clockChoices = [
   ["Los Angeles", "America/Los_Angeles"],
   ["Sydney", "Australia/Sydney"],
   ["Singapore", "Asia/Singapore"],
+  ["Anchorage", "America/Anchorage"],
+  ["Honolulu", "Pacific/Honolulu"],
+  ["Vancouver", "America/Vancouver"],
+  ["Denver", "America/Denver"],
+  ["Mexico City", "America/Mexico_City"],
+  ["Sao Paulo", "America/Sao_Paulo"],
+  ["Buenos Aires", "America/Argentina/Buenos_Aires"],
+  ["Reykjavik", "Atlantic/Reykjavik"],
+  ["Paris", "Europe/Paris"],
+  ["Berlin", "Europe/Berlin"],
+  ["Moscow", "Europe/Moscow"],
+  ["Johannesburg", "Africa/Johannesburg"],
+  ["Cairo", "Africa/Cairo"],
+  ["Mumbai", "Asia/Kolkata"],
+  ["Bangkok", "Asia/Bangkok"],
+  ["Seoul", "Asia/Seoul"],
+  ["Auckland", "Pacific/Auckland"],
 ] as const;
 
 const availableQuickPicks: QuickPick[] = [
@@ -119,37 +145,37 @@ const availableQuickPicks: QuickPick[] = [
     label: "Missions",
     detail: "Run the queue",
     icon: Activity,
-    href: "/m/home-and-command-center/command-center/bring-the-work-to-you",
+    href: "/m/my-workspace/my-work/work-queue",
   },
   {
     label: "Email",
     detail: "Open inbox",
     icon: Mail,
-    href: "/m/productivity-and-collaboration/intellistack-collaboration-tools/email",
+    href: "/m/collaboration-and-productivity/communication/internal-messaging",
   },
   {
     label: "Help Buddy",
     detail: "Ask for help",
     icon: Bot,
-    href: "/m/ai-business-intelligence/help-buddy/help-buddy-overview",
+    href: "/m/help-buddy/conversations/new-conversation",
   },
   {
     label: "NOC",
     detail: "View operations",
     icon: Globe2,
-    href: "/m/service-desk-and-enterprise-operations/noc-center/network-operations-dashboard",
+    href: "/m/noc-network-operations-center/noc-dashboard/network-health",
   },
   {
     label: "Payments",
     detail: "Manage billing",
     icon: CreditCard,
-    href: "/m/business-products/financial-center/financial-overview",
+    href: "/m/my-business-center/finance-and-accounting/financial-statements",
   },
   {
     label: "Integrations",
     detail: "Connected apps",
     icon: LayoutGrid,
-    href: "/m/account-and-administration/account-and-system-administration/system-settings",
+    href: "/m/intellistack-configuration-center/platform-configuration/global-settings",
   },
 ];
 
@@ -198,6 +224,47 @@ const defaultTickers = [
   ["BTC", "-0.18%"],
   ["ETH", "+1.12%"],
 ] as const;
+
+const availableNewsFeeds = [
+  "Reuters World",
+  "Associated Press",
+  "BBC World News",
+  "MSNBC",
+  "CNN World",
+  "Al Jazeera",
+  "Dark Reading",
+  "The Hacker News",
+  "Krebs on Security",
+  "Network World",
+  "The Register",
+  "Ars Technica",
+  "Wired",
+  "TechCrunch",
+  "Infrastructure & Cloud",
+];
+
+const availableTickers = [
+  "AAPL",
+  "MSFT",
+  "NVDA",
+  "AMZN",
+  "GOOGL",
+  "META",
+  "TSLA",
+  "BRK.B",
+  "JPM",
+  "AMD",
+  "ORCL",
+  "CRM",
+  "NFLX",
+  "INTC",
+  "AVGO",
+  "SPY",
+  "QQQ",
+  "DIA",
+  "VTI",
+  "IWM",
+];
 
 const workItems: WorkItem[] = [
   {
@@ -370,15 +437,16 @@ function CommandCenterHome() {
   const [newsManagerOpen, setNewsManagerOpen] = useState(false);
   const [tickerManagerOpen, setTickerManagerOpen] = useState(false);
   const [expandedFeed, setExpandedFeed] = useState<string | null>(null);
-  const [newNewsLabel, setNewNewsLabel] = useState("");
-  const [newNewsText, setNewNewsText] = useState("");
-  const [newTickerSymbol, setNewTickerSymbol] = useState("");
-  const [newTickerChange, setNewTickerChange] = useState("");
+  const [newsFeedToAdd, setNewsFeedToAdd] = useState("");
+  const [tickerToAdd, setTickerToAdd] = useState("");
+  const [draggedClock, setDraggedClock] = useState<string | null>(null);
   const [liveItems, setLiveItems] = useState<WorkItem[]>([]);
   const [ticketSource, setTicketSource] = useState<"supabase" | "project">("project");
   const [managerRecord, setManagerRecord] = useState<Record<string, unknown> | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [summaryCategory, setSummaryCategory] = useState<SummaryCategory | null>(null);
+  const [selectedWorkItem, setSelectedWorkItem] = useState<WorkItem | null>(null);
   const [message, setMessage] = useState("");
   const [conversation, setConversation] = useState<string[]>([]);
 
@@ -487,7 +555,16 @@ function CommandCenterHome() {
   };
 
   const openItem = (item: WorkItem) => {
-    toast.info(`${item.id} opened. This item remains active until the work is verified.`);
+    setSummaryCategory(null);
+    setSelectedWorkItem(item);
+  };
+
+  const summaryItems: Record<SummaryCategory, WorkItem[]> = {
+    Assigned: items,
+    "Needs Your Attention": items.filter((item) => item.tone === "urgent"),
+    "High Priority": items.filter((item) => item.tone === "high"),
+    "Medium Priority": items.filter((item) => item.tone === "medium"),
+    "Low Priority": items.filter((item) => item.tone === "low"),
   };
 
   const sendMessage = (event: FormEvent<HTMLFormElement>) => {
@@ -514,8 +591,39 @@ function CommandCenterHome() {
   const addClock = () => {
     const choice = clockChoices.find(([city]) => city === clockToAdd);
     if (!choice || clockEntries.some(([city]) => city === choice[0])) return;
+    if (clockEntries.length >= 10) {
+      toast.info("Global Clocks can show up to ten cities.");
+      return;
+    }
     setClockEntries((current) => [...current, choice]);
     setClockToAdd("");
+  };
+
+  const reorderClock = (targetCity: string) => {
+    if (!draggedClock || draggedClock === targetCity) return;
+    setClockEntries((current) => {
+      const sourceIndex = current.findIndex(([city]) => city === draggedClock);
+      const targetIndex = current.findIndex(([city]) => city === targetCity);
+      if (sourceIndex < 0 || targetIndex < 0) return current;
+      const reordered = [...current];
+      const source = reordered[sourceIndex];
+      if (!source) return current;
+      reordered.splice(sourceIndex, 1);
+      reordered.splice(targetIndex, 0, source);
+      return reordered;
+    });
+    setDraggedClock(null);
+  };
+
+  const moveClock = (city: string, direction: -1 | 1) => {
+    setClockEntries((current) => {
+      const index = current.findIndex(([entryCity]) => entryCity === city);
+      const targetIndex = index + direction;
+      if (index < 0 || targetIndex < 0 || targetIndex >= current.length) return current;
+      const reordered = [...current];
+      [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
+      return reordered;
+    });
   };
 
   const removeClock = (city: string) => {
@@ -581,20 +689,26 @@ function CommandCenterHome() {
   };
 
   const addNewsFeed = () => {
-    if (!newNewsLabel.trim() || !newNewsText.trim()) return;
-    setNewsItems((current) => [...current, [newNewsLabel.trim(), newNewsText.trim()]]);
-    setNewNewsLabel("");
-    setNewNewsText("");
+    if (!newsFeedToAdd || newsItems.some(([label]) => label === newsFeedToAdd)) return;
+    if (newsItems.length >= 10) {
+      toast.info("Global News is limited to five additional feeds.");
+      return;
+    }
+    setNewsItems((current) => [
+      ...current,
+      [newsFeedToAdd, "Live headlines require a connected feed."],
+    ]);
+    setNewsFeedToAdd("");
   };
 
   const addTicker = () => {
-    if (!newTickerSymbol.trim() || !newTickerChange.trim()) return;
-    setTickers((current) => [
-      ...current,
-      [newTickerSymbol.trim().toUpperCase(), newTickerChange.trim()],
-    ]);
-    setNewTickerSymbol("");
-    setNewTickerChange("");
+    if (!tickerToAdd || tickers.some(([symbol]) => symbol === tickerToAdd)) return;
+    if (tickers.length >= 10) {
+      toast.info("Stock Picker is limited to five additional symbols.");
+      return;
+    }
+    setTickers((current) => [...current, [tickerToAdd, "—"]]);
+    setTickerToAdd("");
   };
 
   return (
@@ -627,8 +741,7 @@ function CommandCenterHome() {
         <nav aria-label="Command navigation" className="cc-nav">
           {NAV.map((section) => {
             const sectionOpen = expandedSections[section.slug] ?? section.number === "01";
-            const sectionLabel =
-              section.title === "Business Products" ? "My Business Center" : section.title;
+            const sectionLabel = section.title;
             return (
               <div className="cc-nav-section" key={section.slug}>
                 <button
@@ -956,7 +1069,7 @@ function CommandCenterHome() {
           </section>
 
           <section className="cc-micro-toolbar cc-global-clocks">
-            <div className="cc-micro-label">WORLD CLOCK</div>
+            <div className="cc-micro-label">GLOBAL CLOCKS</div>
             <div className="cc-micro-items">
               {clockEntries.slice(0, 5).map(([city, zone]) => (
                 <button
@@ -980,7 +1093,16 @@ function CommandCenterHome() {
             {clockMoreOpen && (
               <div className="cc-micro-more-panel">
                 {clockEntries.map(([city, zone]) => (
-                  <div className="cc-micro-edit-row" key={city}>
+                  <div
+                    className="cc-micro-edit-row"
+                    key={city}
+                    draggable
+                    onDragStart={() => setDraggedClock(city)}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={() => reorderClock(city)}
+                    onDragEnd={() => setDraggedClock(null)}
+                    title="Drag to reorder"
+                  >
                     <select
                       value={city}
                       onChange={(event) => updateClock(city, event.target.value)}
@@ -991,6 +1113,22 @@ function CommandCenterHome() {
                       ))}
                     </select>
                     <span>{timeFor(zone, now)}</span>
+                    <button
+                      type="button"
+                      className="cc-clock-reorder"
+                      onClick={() => moveClock(city, -1)}
+                      aria-label={`Move ${city} up`}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      className="cc-clock-reorder"
+                      onClick={() => moveClock(city, 1)}
+                      aria-label={`Move ${city} down`}
+                    >
+                      ↓
+                    </button>
                     <button
                       type="button"
                       onClick={() => removeClock(city)}
@@ -1022,7 +1160,7 @@ function CommandCenterHome() {
           </section>
 
           <section className="cc-micro-toolbar cc-news-strip">
-            <div className="cc-micro-label">NEWS</div>
+            <div className="cc-micro-label">GLOBAL NEWS</div>
             <div className="cc-micro-items">
               {newsItems.slice(0, 5).map(([label, text], index) => (
                 <div
@@ -1036,6 +1174,18 @@ function CommandCenterHome() {
                     <b>{label}</b>
                     <span>{text}</span>
                   </button>
+                  {newsItems.length > 1 && (
+                    <button
+                      type="button"
+                      className="cc-feed-remove"
+                      aria-label={`Remove ${label} news feed`}
+                      onClick={() =>
+                        setNewsItems((current) => current.filter((item) => item[0] !== label))
+                      }
+                    >
+                      <X size={10} />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -1088,28 +1238,29 @@ function CommandCenterHome() {
                       addNewsFeed();
                     }}
                   >
-                    <input
-                      value={newNewsLabel}
-                      onChange={(event) => setNewNewsLabel(event.target.value)}
-                      placeholder="Feed name"
-                      aria-label="New news feed name"
-                    />
-                    <input
-                      value={newNewsText}
-                      onChange={(event) => setNewNewsText(event.target.value)}
-                      placeholder="Feed headline"
-                      aria-label="New news feed headline"
-                    />
-                    <button type="submit">
+                    <select
+                      value={newsFeedToAdd}
+                      onChange={(event) => setNewsFeedToAdd(event.target.value)}
+                      aria-label="Choose a news feed"
+                    >
+                      <option value="">Choose a news source…</option>
+                      {availableNewsFeeds
+                        .filter((feed) => !newsItems.some(([label]) => label === feed))
+                        .map((feed) => (
+                          <option key={feed}>{feed}</option>
+                        ))}
+                    </select>
+                    <button type="submit" disabled={!newsFeedToAdd || newsItems.length >= 10}>
                       <Plus size={12} /> Add feed
                     </button>
+                    <small>Source choices need a feed connection for live headlines.</small>
                   </form>
                 )}
               </div>
             )}
           </section>
           <section className="cc-micro-toolbar cc-market-strip">
-            <div className="cc-micro-label">STOCKS</div>
+            <div className="cc-micro-label">STOCK PICKER</div>
             <div className="cc-micro-items">
               {tickers.slice(0, 5).map(([symbol, change], index) => (
                 <div className="cc-ticker-item cc-stock-micro" key={`${symbol}-${index}`}>
@@ -1119,6 +1270,18 @@ function CommandCenterHome() {
                       {change}
                     </span>
                   </button>
+                  {tickers.length > 1 && (
+                    <button
+                      type="button"
+                      className="cc-feed-remove"
+                      aria-label={`Remove ${symbol} ticker`}
+                      onClick={() =>
+                        setTickers((current) => current.filter((item) => item[0] !== symbol))
+                      }
+                    >
+                      <X size={10} />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -1174,21 +1337,22 @@ function CommandCenterHome() {
                       addTicker();
                     }}
                   >
-                    <input
-                      value={newTickerSymbol}
-                      onChange={(event) => setNewTickerSymbol(event.target.value)}
-                      placeholder="Ticker"
-                      aria-label="New stock ticker"
-                    />
-                    <input
-                      value={newTickerChange}
-                      onChange={(event) => setNewTickerChange(event.target.value)}
-                      placeholder="Change e.g. +1.20%"
-                      aria-label="New stock ticker change"
-                    />
-                    <button type="submit">
+                    <select
+                      value={tickerToAdd}
+                      onChange={(event) => setTickerToAdd(event.target.value)}
+                      aria-label="Choose a stock ticker"
+                    >
+                      <option value="">Choose a stock or index…</option>
+                      {availableTickers
+                        .filter((symbol) => !tickers.some(([existing]) => existing === symbol))
+                        .map((symbol) => (
+                          <option key={symbol}>{symbol}</option>
+                        ))}
+                    </select>
+                    <button type="submit" disabled={!tickerToAdd || tickers.length >= 10}>
                       <Plus size={12} /> Add ticker
                     </button>
+                    <small>Live quotes require a connected market-data source.</small>
                   </form>
                 )}
               </div>
@@ -1300,32 +1464,31 @@ function CommandCenterHome() {
                   </div>
                 </div>
               </div>
-              <div className="cc-metrics cc-work-statuses">
-                <div>
-                  <span>Assigned</span>
-                  <b>{items.length}</b>
-                  <small>Open work</small>
-                </div>
-                <div>
-                  <span>Active</span>
-                  <b>3</b>
-                  <small>In progress</small>
-                </div>
-                <div>
-                  <span>Pending</span>
-                  <b>{items.filter((item) => item.tone === "medium").length}</b>
-                  <small>Awaiting action</small>
-                </div>
-                <div>
-                  <span>Review</span>
-                  <b>{items.filter((item) => item.tone === "high").length}</b>
-                  <small className="warning">Needs review</small>
-                </div>
-                <div>
-                  <span>Overdue</span>
-                  <b>{items.filter((item) => item.tone === "urgent").length}</b>
-                  <small className="warning">Priority</small>
-                </div>
+              <div className="cc-metrics cc-work-statuses" aria-label="Work summary">
+                {(
+                  [
+                    ["Assigned", "All assigned work"],
+                    ["Needs Your Attention", "Urgent priority"],
+                    ["High Priority", "High priority"],
+                    ["Medium Priority", "Medium priority"],
+                    ["Low Priority", "Lower priority"],
+                  ] as const
+                ).map(([category, caption]) => (
+                  <button
+                    key={category}
+                    type="button"
+                    className="cc-summary-card"
+                    aria-label={`${category}: ${summaryItems[category].length} items. Open list`}
+                    onClick={() => {
+                      setSelectedWorkItem(null);
+                      setSummaryCategory(category);
+                    }}
+                  >
+                    <span>{category}</span>
+                    <b>{summaryItems[category].length}</b>
+                    <small>{caption}</small>
+                  </button>
+                ))}
               </div>
               <div className="cc-queue-heading">
                 <span>TO-DO LIST · ORDERED BY PRIORITY</span>
@@ -1359,17 +1522,17 @@ function CommandCenterHome() {
                 )}
               </div>
               <div className="cc-module-row">
-                <a href="/m/business-products/business-overview/business-overview-dashboard">
+                <a href="/m/ai-systems-and-intelligence/maximus/business-analysis">
                   <Bot size={16} />
                   <b>Maximus AI</b>
                   <span>Launch assistant →</span>
                 </a>
-                <a href="/m/security-risk-and-governance/security-overview/security-operations-dashboard">
+                <a href="/m/soc-security-operations-center/soc-dashboard/security-posture">
                   <ShieldCheck size={16} />
                   <b>Threat Matrix</b>
                   <span>Open →</span>
                 </a>
-                <a href="/m/account-and-administration/training-and-learning/learning-paths">
+                <a href="/m/intellibase/training-and-certification/learning-paths">
                   <BookOpen size={16} />
                   <b>Knowledge Vault</b>
                   <span>Search →</span>
@@ -1521,6 +1684,71 @@ function CommandCenterHome() {
           </span>
         </footer>
       </div>
+      <Dialog
+        open={summaryCategory !== null || selectedWorkItem !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSummaryCategory(null);
+            setSelectedWorkItem(null);
+          }
+        }}
+      >
+        <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-2xl">
+          {selectedWorkItem ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>{selectedWorkItem.title}</DialogTitle>
+                <DialogDescription>
+                  {selectedWorkItem.id} · {selectedWorkItem.tone.toUpperCase()} priority
+                </DialogDescription>
+              </DialogHeader>
+              <p className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+                {selectedWorkItem.detail}
+              </p>
+              {summaryCategory && (
+                <button
+                  type="button"
+                  className="w-fit rounded-md border px-3 py-2 text-sm hover:bg-accent"
+                  onClick={() => setSelectedWorkItem(null)}
+                >
+                  Back to {summaryCategory}
+                </button>
+              )}
+            </>
+          ) : summaryCategory ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>{summaryCategory}</DialogTitle>
+                <DialogDescription>
+                  {summaryItems[summaryCategory].length} matching work item(s). Select an item to
+                  view its details.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid max-h-[55dvh] gap-2 overflow-y-auto pr-1">
+                {summaryItems[summaryCategory].map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className="rounded-lg border p-3 text-left transition hover:border-primary/50 hover:bg-accent/40"
+                    onClick={() => setSelectedWorkItem(item)}
+                  >
+                    <span className="text-xs font-semibold text-primary">
+                      {item.id} · {item.tone.toUpperCase()}
+                    </span>
+                    <strong className="mt-1 block text-sm">{item.title}</strong>
+                    <span className="mt-1 block text-xs text-muted-foreground">{item.detail}</span>
+                  </button>
+                ))}
+                {summaryItems[summaryCategory].length === 0 && (
+                  <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                    There are no items in this category.
+                  </p>
+                )}
+              </div>
+            </>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

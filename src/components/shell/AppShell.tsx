@@ -27,7 +27,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useWork } from "@/lib/work-context";
 import { getSupabaseClient } from "@/lib/supabase";
-import { NAV, slugify } from "@/lib/nav";
+import { ALL_DESTINATIONS, NAV, slugify } from "@/lib/nav";
 import { GlobalSearch } from "./GlobalSearch";
 import { HelpBuddyLauncher, HelpBuddySheet } from "./HelpBuddy";
 import { NavMenu } from "./NavMenu";
@@ -80,69 +80,29 @@ const FOOTER_COLUMNS = [
 ];
 
 const FOOTER_DESTINATIONS: Record<string, [string, string, string]> = {
-  "Partner With Us": ["business-products", "intellisphere-marketplace", "products-and-services"],
-  "Become a Client": ["business-products", "business-overview", "business-overview-dashboard"],
-  "Looking for Work Marketplace": [
-    "employee-and-manager-workspace",
-    "workforce-experiences",
-    "intellihire-overview",
-  ],
-  "Become a Vendor": ["business-products", "intellisphere-marketplace", "products-and-services"],
-  "Technology & Integration Partners": [
-    "business-products",
-    "business-overview",
-    "business-integrations",
-  ],
-  "About IntelliStack": [
-    "business-products",
-    "company-and-organization-management",
-    "intellistack-systems",
-  ],
-  "Our Ecosystem": [
-    "business-products",
-    "company-and-organization-management",
-    "intellistack-systems",
-  ],
-  Contact: ["help-buddy", "help-buddy-workspace", "conversation-workspace"],
-  "Bring the Work to You": ["home-and-command-center", "command-center", "bring-the-work-to-you"],
-  IntelliDesk: [
-    "service-desk-and-enterprise-operations",
-    "intellidesk-overview",
-    "intellidesk-dashboard",
-  ],
-  IntelliChat: [
-    "productivity-and-collaboration",
-    "intellistack-collaboration-tools",
-    "intellichat",
-  ],
-  IntelliCalendar: [
-    "productivity-and-collaboration",
-    "intellistack-collaboration-tools",
-    "intellicalendar",
-  ],
-  IntelliStaff: [
-    "employee-and-manager-workspace",
-    "workforce-experiences",
-    "intellistaff-overview",
-  ],
-  IntelliHire: ["employee-and-manager-workspace", "workforce-experiences", "intellihire-overview"],
-  IntelliWork: ["employee-and-manager-workspace", "workforce-experiences", "intelliwork-overview"],
-  Employees: ["employee-and-manager-workspace", "people-and-organization", "employees"],
-  Contractors: ["employee-and-manager-workspace", "people-and-organization", "contractors"],
-  "Security Center": [
-    "security-risk-and-governance",
-    "security-overview",
-    "security-operations-dashboard",
-  ],
-  Compliance: ["security-risk-and-governance", "compliance-management", "compliance-overview"],
-  "Audit & Approvals": ["security-risk-and-governance", "audit-management", "audit-overview"],
-  Policies: ["security-risk-and-governance", "policies-and-procedures", "policies"],
-  "Service Status": [
-    "account-and-administration",
-    "account-and-system-administration",
-    "service-status",
-  ],
-  "Knowledge Center": ["knowledge-spaces", "knowledge-space-overview", "all-knowledge-spaces"],
+  "Partner With Us": ["intellistack-marketplace", "applications", "business-applications"],
+  "Become a Client": ["my-business-center", "business-overview", "company-profile"],
+  "Looking for Work Marketplace": ["intellistaff", "intellihire", "job-requisitions"],
+  "Become a Vendor": ["intellistack-marketplace", "applications", "business-applications"],
+  "Technology & Integration Partners": ["connector-hub", "connector-marketplace", "connector-catalog"],
+  "About IntelliStack": ["my-business-center", "business-overview", "company-profile"],
+  "Our Ecosystem": ["intellistack-marketplace", "marketplace-dashboard", "featured-applications"],
+  Contact: ["help-buddy", "conversations", "new-conversation"],
+  "Bring the Work to You": ["my-workspace", "my-work", "work-queue"],
+  IntelliDesk: ["intellidesk-command-center", "service-desk-dashboard", "open-tickets"],
+  IntelliChat: ["collaboration-and-productivity", "intellichat", "direct-messages"],
+  IntelliCalendar: ["calendar-and-scheduling-center", "personal-calendar", "meetings"],
+  IntelliStaff: ["intellistaff", "workforce-dashboard", "workforce-overview"],
+  IntelliHire: ["intellistaff", "intellihire", "job-requisitions"],
+  IntelliWork: ["intellistaff", "intelliwork", "employee-workspace"],
+  Employees: ["new-active-directory", "people-and-accounts", "employees"],
+  Contractors: ["new-active-directory", "people-and-accounts", "contractors"],
+  "Security Center": ["soc-security-operations-center", "soc-dashboard", "security-posture"],
+  Compliance: ["reports-governance-audit-and-administration", "compliance", "compliance-frameworks"],
+  "Audit & Approvals": ["reports-governance-audit-and-administration", "audit-management", "audit-plans"],
+  Policies: ["reports-governance-audit-and-administration", "policies-and-standards", "corporate-policies"],
+  "Service Status": ["intellistack-configuration-center", "system-monitoring", "platform-health"],
+  "Knowledge Center": ["intellibase", "getting-started", "welcome"],
 };
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -186,14 +146,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     if (destination) go(...destination);
     else {
       const page = slugify(label);
-      const match = NAV.flatMap((section) =>
-        section.groups.flatMap((group) =>
-          group.pages
-            .filter((item) => item.slug === page)
-            .map((item) => [section.slug, group.slug, item.slug] as [string, string, string]),
-        ),
-      )[0];
-      if (match) go(...match);
+      const match = ALL_DESTINATIONS.find(({ page: item }) => item.slug === page);
+      if (match) go(match.section.slug, match.group.slug, match.page.slug);
     }
   };
 
@@ -281,7 +235,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               aria-label="Email"
               title="Email"
               onClick={() =>
-                go("productivity-and-collaboration", "intellistack-collaboration-tools", "email")
+                go("collaboration-and-productivity", "communication", "internal-messaging")
               }
               className={utilityClass + " hidden sm:grid"}
             >
@@ -293,9 +247,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               title="Messages"
               onClick={() =>
                 go(
-                  "productivity-and-collaboration",
-                  "intellistack-collaboration-tools",
+                  "collaboration-and-productivity",
                   "intellichat",
+                  "direct-messages",
                 )
               }
               className={utilityClass}
@@ -308,9 +262,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               title="Calendar"
               onClick={() =>
                 go(
-                  "productivity-and-collaboration",
-                  "intellistack-collaboration-tools",
-                  "intellicalendar",
+                  "calendar-and-scheduling-center",
+                  "personal-calendar",
+                  "meetings",
                 )
               }
               className={utilityClass + " hidden sm:grid"}
@@ -323,9 +277,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               title="Settings"
               onClick={() =>
                 go(
-                  "account-and-administration",
-                  "account-and-system-administration",
-                  "system-settings",
+                  "intellistack-configuration-center",
+                  "platform-configuration",
+                  "global-settings",
                 )
               }
               className={utilityClass + " hidden md:grid"}
@@ -354,7 +308,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuSeparator className="bg-slate-700" />
                 <DropdownMenuItem
                   onSelect={() =>
-                    go("identity-and-access-management", "users-and-identity", "user-profiles")
+                    go("my-workspace", "my-profile", "personal-information")
                   }
                 >
                   <UserRound className="mr-2 size-4" />
@@ -364,8 +318,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                   onSelect={() =>
                     go(
                       "identity-and-access-management",
-                      "groups-and-organization",
-                      "group-membership",
+                      "user-access",
+                      "group-based-access",
                     )
                   }
                 >
@@ -375,9 +329,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuItem
                   onSelect={() =>
                     go(
-                      "employee-and-manager-workspace",
-                      "workforce-performance-and-recognition",
-                      "badges-and-achievements",
+                      "my-workspace",
+                      "my-learning",
+                      "achievements",
                     )
                   }
                 >
@@ -387,9 +341,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuItem
                   onSelect={() =>
                     go(
-                      "employee-and-manager-workspace",
-                      "workforce-performance-and-recognition",
-                      "stars-and-recognition",
+                      "my-workspace",
+                      "my-learning",
+                      "achievements",
                     )
                   }
                 >
@@ -399,9 +353,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuItem
                   onSelect={() =>
                     go(
-                      "account-and-administration",
-                      "account-and-system-administration",
-                      "security-settings",
+                      "identity-and-access-management",
+                      "authentication",
+                      "mfa",
                     )
                   }
                 >
@@ -411,9 +365,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuItem
                   onSelect={() =>
                     go(
-                      "account-and-administration",
-                      "account-and-system-administration",
-                      "notification-settings",
+                      "notification-center",
+                      "preferences",
+                      "user-preferences",
                     )
                   }
                 >
@@ -423,9 +377,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuItem
                   onSelect={() =>
                     go(
-                      "account-and-administration",
-                      "account-and-system-administration",
-                      "preferences",
+                      "my-workspace",
+                      "my-profile",
+                      "personal-information",
                     )
                   }
                 >
@@ -435,9 +389,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <DropdownMenuItem
                   onSelect={() =>
                     go(
-                      "account-and-administration",
-                      "account-and-system-administration",
-                      "system-settings",
+                      "intellistack-configuration-center",
+                      "platform-configuration",
+                      "global-settings",
                     )
                   }
                 >
@@ -504,7 +458,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </footer>
 
-      <NavMenu open={menuOpen} onOpenChange={setMenuOpen} />
+      <NavMenu open={menuOpen} onOpenChange={setMenuOpen} onLogout={() => void signOut()} />
       <GlobalSearch />
       <HelpBuddySheet />
       {location.pathname !== "/" && <HelpBuddyLauncher />}

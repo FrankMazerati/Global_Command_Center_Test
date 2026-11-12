@@ -13,7 +13,7 @@ import { HelpBuddyConversation } from "@/components/workspace/KnowledgeAndHelpWo
 import { useWork } from "@/lib/work-context";
 import { cn } from "@/lib/utils";
 
-const KNOWLEDGE = ALL_DESTINATIONS.filter((d) => d.section.slug === "knowledge-spaces");
+const KNOWLEDGE = ALL_DESTINATIONS.filter((d) => d.section.slug === "intellibase");
 const WORK_VIEWS = ["Open work", "Pending work", "Closed work", "Transferred work", "Follow-ups", "Manager sign-off"];
 
 export function HelpBuddyPanel({ className }: { className?: string }) {

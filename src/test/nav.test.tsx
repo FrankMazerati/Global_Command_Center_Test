@@ -6,39 +6,73 @@ import { ALL_DESTINATIONS, findPage, findSection, NAV } from "@/lib/nav";
 import { routeTree } from "@/routeTree.gen";
 
 describe("hamburger navigation", () => {
-  it("has the eleven approved primary areas in order", () => {
+  it("has the 30 PDF workspaces in the documented order", () => {
     expect(NAV.map((s) => s.title)).toEqual([
-      "Home & Command Center",
-      "Business Products",
+      "My Business Center",
+      "My Workspace",
+      "Global ID Center",
       "Identity & Access Management",
-      "Productivity & Collaboration",
-      "Service Desk & Enterprise Operations",
-      "Security, Risk & Governance",
-      "AI & Business Intelligence",
-      "Employee & Manager Workspace",
-      "Account & Administration",
-      "Knowledge Spaces",
+      "New Active Directory",
+      "IntelliStack Configuration Center",
+      "IntelliDesk Command Center",
+      "IntelliBase",
+      "IntelliStack Marketplace",
       "Help Buddy",
+      "Collaboration & Productivity",
+      "AI Systems & Intelligence",
+      "IntelliStaff",
+      "NOC — Network Operations Center",
+      "SOC — Security Operations Center",
+      "Reports, Governance, Audit & Administration",
+      "Tenant Desk",
+      "Connector Hub",
+      "IntelliSync",
+      "Automation Center",
+      "API & Developer Center",
+      "Data Management Center",
+      "Workflow Center",
+      "Notification Center",
+      "Command & Control Center",
+      "Global Search",
+      "Calendar & Scheduling Center",
+      "War Room & Emergency Operations Center",
+      "AI Model & Provider Management",
+      "Global Reporting & Analytics",
     ]);
   });
 
-  it("keeps legacy New Active Directory links resolving to Identity & Access Management", () => {
-    expect(findSection("new-active-directory")?.slug).toBe("identity-and-access-management");
-    expect(
-      findPage("new-active-directory", "users-and-identity", "user-accounts")?.page.title,
-    ).toBe("User Accounts");
+  it("keeps navigation to three levels and gives every new page a unique route", () => {
+    expect(NAV).toHaveLength(30);
+    expect(NAV.every((section) => section.groups.length > 0)).toBe(true);
+    expect(NAV.every((section) => section.groups.every((group) => group.pages.length > 0))).toBe(
+      true,
+    );
+    const urls = NAV.flatMap((section) =>
+      section.groups.flatMap((group) =>
+        group.pages.map((page) => `/m/${section.slug}/${group.slug}/${page.slug}`),
+      ),
+    );
+    expect(new Set(urls).size).toBe(urls.length);
   });
 
-  it("exposes Workflow Center, Knowledge Spaces, and a dedicated Help Buddy category", () => {
-    const home = NAV.find((section) => section.title === "Home & Command Center");
-    const workflow = home?.groups.find((group) => group.title === "Workflow Center");
-    expect(workflow?.pages.map((page) => page.title)).toContain("Workflow Templates");
-    expect(workflow?.pages.map((page) => page.title)).toContain("Template Builder");
-    const knowledge = NAV.find((section) => section.title === "Knowledge Spaces");
-    expect(knowledge?.groups.find((group) => group.title === "Workflow Knowledge Library")?.pages.map((page) => page.title)).toContain("Workflow Library");
-    const helpBuddy = NAV.find((section) => section.title === "Help Buddy");
-    expect(helpBuddy?.groups.find((group) => group.title === "Help Buddy Workspace")?.pages.map((page) => page.title)).toContain("Conversational Library");
-    expect(helpBuddy?.groups.flatMap((group) => group.pages.map((page) => page.title))).not.toContain("Workflow Companion");
+  it("resolves only destinations from the PDF menu", () => {
+    for (const destination of ALL_DESTINATIONS) {
+      expect(findPage(destination.section.slug, destination.group.slug, destination.page.slug)).toEqual(destination);
+    }
+    expect(findSection("business-products")).toBeUndefined();
+    expect(findSection("knowledge-spaces")).toBeUndefined();
+  });
+
+  it("includes the required Help Buddy, IntelliBase, and Workflow destinations", () => {
+    expect(NAV.find((section) => section.title === "Help Buddy")).toBeDefined();
+    expect(
+      NAV.find((section) => section.title === "IntelliBase")?.groups.flatMap((group) =>
+        group.pages.map((page) => page.title),
+      ),
+    ).toContain("Welcome");
+    expect(
+      NAV.find((section) => section.title === "Workflow Center")?.groups.length,
+    ).toBeGreaterThan(0);
   });
 
   it("does not include deferred Tenant Selection or Tenant Guests", () => {
@@ -47,28 +81,10 @@ describe("hamburger navigation", () => {
     expect(titles).not.toContain("Tenant Guests");
   });
 
-  it("exposes the IntelliSphere productivity suite and collaboration products", () => {
-    const productivity = NAV.find((section) => section.title === "Productivity & Collaboration");
-    const titles = productivity?.groups.flatMap((group) => group.pages.map((page) => page.title)) ?? [];
-    expect(titles).toEqual(
-      expect.arrayContaining([
-        "IntelliWord",
-        "IntelliSheets",
-        "IntelliSlides",
-        "IntelliNotes",
-        "IntelliDrive",
-        "IntelliForms",
-        "IntelliStudio",
-        "IntelliText",
-        "IntelliChat",
-      ]),
-    );
-    expect(titles).not.toContain("IntelliPay");
-    expect(titles).not.toContain("IntelliTax");
-  });
-
-  it("lists IntelliDrive only once", () => {
-    expect(ALL_DESTINATIONS.filter((d) => d.page.title === "IntelliDrive")).toHaveLength(1);
+  it("lists only the new menu destinations in search and quick picks", () => {
+    expect(ALL_DESTINATIONS.every((destination) => NAV.includes(destination.section))).toBe(true);
+    expect(ALL_DESTINATIONS.some((destination) => destination.section.slug === "knowledge-spaces")).toBe(false);
+    expect(ALL_DESTINATIONS.some((destination) => destination.section.slug === "business-products")).toBe(false);
   });
 
   it("gives every destination a unique URL that resolves to a page", () => {
@@ -78,6 +94,8 @@ describe("hamburger navigation", () => {
     for (const url of urls) {
       expect(router.matchRoutes(url).at(-1)?.routeId).toBe("/m/$section/$group/$page");
     }
-    expect(router.matchRoutes("/m/security-risk-and-governance").at(-1)?.routeId).not.toBe(rootRouteId);
+    expect(router.matchRoutes("/m/soc-security-operations-center").at(-1)?.routeId).not.toBe(
+      rootRouteId,
+    );
   });
 });

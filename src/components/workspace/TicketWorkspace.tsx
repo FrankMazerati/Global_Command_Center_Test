@@ -892,9 +892,9 @@ export function TicketWorkspace() {
       <Link
         to="/m/$section/$group/$page"
         params={{
-          section: "service-desk-and-enterprise-operations",
-          group: "ticket-management",
-          page: "ticket-history",
+          section: "intellidesk-command-center",
+          group: "tickets",
+          page: "incidents",
         }}
         className="inline-flex min-h-11 items-center rounded-lg border border-white/15 px-4 text-sm text-slate-200 hover:border-violet-200/40 hover:bg-violet-300/[.06]"
       >
