@@ -232,7 +232,7 @@ export function SubscriptionPlansWorkspace({ title }: { title: string }) {
                 {featureList.map((feature) => (
                   <div key={feature.key} className="flex items-start gap-2 text-sm">
                     <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600" />
-                    <span>{feature.label}</span>
+                    <span className="min-w-0 flex-1">{feature.label}<span className="mt-0.5 block text-[11px] text-muted-foreground">{feature.state}</span></span>
                   </div>
                 ))}
               </div>
