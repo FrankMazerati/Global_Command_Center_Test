@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createCommandWorkItem, deleteCommandWorkItem, listCommandWorkItems, updateCommandWorkItem } from "@/lib/command-work";
 
-// Shared working context that survives internal navigation (active ticket, Help Buddy, notes).
-// Until the backend is connected, notes/checklists are kept on this device only and labeled as such.
+// Shared working context that survives internal navigation (active ticket, Chat Buddy, notes).
+// Authenticated checklist items persist to the scoped Command Work queue; notes remain device-local.
 
 export type Availability =
   | "Available"
