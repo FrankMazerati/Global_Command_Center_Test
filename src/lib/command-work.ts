@@ -343,7 +343,7 @@ export async function requestWorkItemApproval(input: {
     .select("id,status")
     .single();
   if (error) throw error;
-  await client.from("command_work_item_events").insert({
+  const { error: eventError } = await client.from("command_work_item_events").insert({
     work_item_id: item.id,
     organization_id: item.organization_id,
     tenant_id: item.tenant_id,
@@ -352,6 +352,7 @@ export async function requestWorkItemApproval(input: {
     to_value: { approval_id: data.id, approver_profile_id: input.approverProfileId ?? null },
     note: input.reason.trim(),
   });
+  if (eventError) throw eventError;
   return data as { id: string; status: string };
 }
 
@@ -376,7 +377,7 @@ export async function decideWorkItemApproval(
     .select("id,work_item_id,organization_id,tenant_id")
     .single();
   if (error) throw error;
-  await client.from("command_work_item_events").insert({
+  const { error: eventError } = await client.from("command_work_item_events").insert({
     work_item_id: data.work_item_id,
     organization_id: data.organization_id,
     tenant_id: data.tenant_id,
@@ -385,6 +386,7 @@ export async function decideWorkItemApproval(
     to_value: { approval_id: data.id, decision },
     note: reason.trim(),
   });
+  if (eventError) throw eventError;
 }
 
 export async function startWorkflowRun(workflowId: string): Promise<string> {
