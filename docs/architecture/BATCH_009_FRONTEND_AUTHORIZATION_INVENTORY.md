@@ -62,7 +62,7 @@ This is a useful existing pattern for identity derivation and server-side RPC ch
 
 ## 5. Live RLS inventory — read-only inspection
 
-The following existing public tables were confirmed to have RLS enabled: `profiles`, `tickets`, `devices`, `tenants`, `groups`, `group_memberships`, `marketplace_entitlements`, and `workforce_management_assignments`. The identity-link table is also RLS-enabled and has an explicit browser-deny policy. The queried management membership tables were not returned under the guessed names in this initial inventory; exact relation names need confirmation from migration definitions before any implementation.
+The following existing public tables were confirmed to have RLS enabled: `profiles`, `tickets`, `devices`, `tenants`, `groups`, `group_memberships`, `marketplace_entitlements`, and `workforce_management_assignments`. The identity-link table is also RLS-enabled and has an explicit browser-deny policy. The exact Batch 008 relation names were confirmed from the migration source: `governance_region_locations` and `workforce_management_assignment_locations`.
 
 Observed policy patterns:
 
@@ -74,11 +74,11 @@ Observed policy patterns:
 - `tenants`: tenant membership/organization-admin read plus global-admin policy.
 - `marketplace_entitlements`: organization/tenant scoped read.
 - `workforce_management_assignments`: organization-admin read policy only in the inspected policy list; no end-user management-scope read contract was observed.
-- New Batch 008 identity links: explicit deny policy for browser roles, consistent with the decision to expose controlled lifecycle operations rather than direct table access.
+- New Batch 008 identity links, region/location mappings, and assignment/location memberships: all three tables have RLS enabled, `FORCE ROW LEVEL SECURITY` is false, and each has an explicit `USING (false)` / `WITH CHECK (false)` deny policy for both `anon` and `authenticated`. Controlled lifecycle operations are exposed through the audited RPC workflow rather than direct browser table access.
 
 This confirms there are existing database authorization controls, but they are not yet a unified management-scope resolver. Existing organization/tenant and role-key rules must not be mistaken for location/regional/global management scope.
 
-RLS was enabled but not forced on the inspected tables. This inventory did not attempt to test table-owner, service-role, or function-owner behavior. It is not a complete security audit and does not clear the previously reported project-wide advisor findings.
+RLS was enabled but not forced on the inspected tables. The three new Batch 008 scope/identity tables deny both browser roles explicitly. This inventory did not attempt to test table-owner, service-role, or function-owner behavior. It is not a complete security audit and does not clear the previously reported project-wide advisor findings.
 
 ## 6. Primary gaps against the Batch 009 matrix
 
