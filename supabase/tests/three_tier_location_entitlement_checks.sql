@@ -32,6 +32,13 @@ begin
   end if;
 
   if not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename = 'organizations'
+      and policyname = 'organizations_read_child_locations'
+  ) then raise exception 'Company-scoped location metadata read policy missing'; end if;
+
+  if not exists (
     select 1 from public.marketplace_price_versions
     where price_key = 'package-essential-location-2026-v1'
       and monthly_location_price = 799
