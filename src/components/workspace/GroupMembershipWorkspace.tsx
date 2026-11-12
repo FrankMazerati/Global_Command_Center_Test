@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Plus, RefreshCw, ShieldCheck, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import { getSupabaseClient } from "@/lib/supabase";
@@ -40,7 +40,8 @@ export function GroupMembershipWorkspace() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function load() {
+  const load = useCallback(async () => {
+    setError(null);
     const supabase = getSupabaseClient();
     if (!supabase) {
       setError("Supabase is not configured.");
@@ -101,12 +102,12 @@ export function GroupMembershipWorkspace() {
       );
     else setMemberships((membershipResult.data ?? []) as unknown as Membership[]);
     setLoading(false);
-  }
+  }, [targetProfileId]);
 
   useEffect(() => {
     setLoading(true);
     void load();
-  }, [targetProfileId]);
+  }, [load]);
 
   const add = async () => {
     if (!selectedGroup || !targetProfileId) return;

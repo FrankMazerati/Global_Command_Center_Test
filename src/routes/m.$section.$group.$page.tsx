@@ -29,6 +29,8 @@ import {
 } from "@/components/workspace/KnowledgeAndHelpWorkspaces";
 import { HelpBuddyIntelligenceManagement } from "@/components/workspace/HelpBuddyIntelligenceManagement";
 import { MarketplaceHistoryWorkspace } from "@/components/workspace/MarketplaceHistoryWorkspace";
+import { SubscriptionPlansWorkspace } from "@/components/workspace/SubscriptionPlansWorkspace";
+import { OrganizationLocationsWorkspace } from "@/components/workspace/OrganizationLocationsWorkspace";
 import { WorkforceHistoryWorkspace } from "@/components/workspace/WorkforceHistoryWorkspace";
 import { IntelliOfficeWorkspace } from "@/components/workspace/IntelliOfficeWorkspace";
 import { IntelliSphereToolsWorkspace } from "@/components/workspace/IntelliSphereToolsWorkspace";
@@ -574,6 +576,7 @@ function SupabaseDirectory({ kind, title }: { kind: DirectoryKind; title: string
 }
 
 const marketplaceSlugs = [
+  "available-plans",
   "marketplace-overview",
   "products-and-services",
   "pricing-and-feature-comparisons",
@@ -966,6 +969,9 @@ function MarketplaceCatalogWorkspace({ title }: { title: string }) {
 }
 
 function MarketplaceWorkspace({ title, pageSlug }: { title: string; pageSlug: string }) {
+  if (["available-plans", "pricing-and-feature-comparisons"].includes(pageSlug)) {
+    return <SubscriptionPlansWorkspace title={title} />;
+  }
   const historyPages = [
     "marketplace-overview",
     "company-purchases",
@@ -1276,7 +1282,10 @@ function PageFoundation() {
   const { section, group, page } = findPage(params.section, params.group, params.page)!;
   const { activeTicketId } = useWork();
   const tone = toneVar[section.tone];
-  const ticketWorkspace = section.slug === "intellidesk-command-center" && group.slug === "technician-workspace" && page.slug === "work-queue";
+  const ticketWorkspace =
+    section.slug === "intellidesk-command-center" &&
+    group.slug === "technician-workspace" &&
+    page.slug === "work-queue";
   const directory = directoryKind(page.slug);
   const marketplace = marketplaceSlugs.includes(page.slug);
   const workforceHistory = workforceHistorySlugs.includes(page.slug);
@@ -1295,14 +1304,35 @@ function PageFoundation() {
   const helpBuddy = section.slug === "help-buddy";
   const helpBuddyManagement = helpBuddy && group.slug === "intelligence-management";
   const identityAccessSlugs = new Set([
-    "directory-dashboard", "global-directory", "directory-health", "directory-activity",
-    "user-accounts", "global-user-id", "employee-accounts", "contractor-accounts",
-    "business-accounts", "tenant-user-accounts", "external-users", "identity-verification",
-    "account-status", "departments", "organizational-units", "organizational-hierarchy", "teams", "security-groups", "group-objects",
-    "roles-and-permissions", "access-management", "application-access", "access-requests",
-    "access-audit", "directory-audit-history",
+    "directory-dashboard",
+    "global-directory",
+    "directory-health",
+    "directory-activity",
+    "user-accounts",
+    "global-user-id",
+    "employee-accounts",
+    "contractor-accounts",
+    "business-accounts",
+    "tenant-user-accounts",
+    "external-users",
+    "identity-verification",
+    "account-status",
+    "departments",
+    "organizational-units",
+    "organizational-hierarchy",
+    "teams",
+    "security-groups",
+    "group-objects",
+    "roles-and-permissions",
+    "access-management",
+    "application-access",
+    "access-requests",
+    "access-audit",
+    "directory-audit-history",
   ]);
-  const identityAccess = section.slug === "new-active-directory" && identityAccessSlugs.has(page.slug);
+  const identityAccess =
+    section.slug === "new-active-directory" && identityAccessSlugs.has(page.slug);
+  const organizationLocations = page.slug === "business-locations";
   const publicSiteView =
     page.slug === "website-content-management"
       ? "pages"
@@ -1406,6 +1436,8 @@ function PageFoundation() {
         <EmployeeProfileWorkspace />
       ) : page.slug === "group-membership" ? (
         <GroupMembershipWorkspace />
+      ) : organizationLocations ? (
+        <OrganizationLocationsWorkspace title={page.title} />
       ) : identityAccess ? (
         <IdentityAccessWorkspace title={page.title} pageSlug={page.slug} />
       ) : directory === "tickets" ? (

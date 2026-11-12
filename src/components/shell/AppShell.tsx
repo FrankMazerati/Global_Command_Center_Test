@@ -84,7 +84,11 @@ const FOOTER_DESTINATIONS: Record<string, [string, string, string]> = {
   "Become a Client": ["my-business-center", "business-overview", "company-profile"],
   "Looking for Work Marketplace": ["intellistaff", "intellihire", "job-requisitions"],
   "Become a Vendor": ["intellistack-marketplace", "applications", "business-applications"],
-  "Technology & Integration Partners": ["connector-hub", "connector-marketplace", "connector-catalog"],
+  "Technology & Integration Partners": [
+    "connector-hub",
+    "connector-marketplace",
+    "connector-catalog",
+  ],
   "About IntelliStack": ["my-business-center", "business-overview", "company-profile"],
   "Our Ecosystem": ["intellistack-marketplace", "marketplace-dashboard", "featured-applications"],
   Contact: ["help-buddy", "conversations", "new-conversation"],
@@ -98,9 +102,21 @@ const FOOTER_DESTINATIONS: Record<string, [string, string, string]> = {
   Employees: ["new-active-directory", "people-and-accounts", "employees"],
   Contractors: ["new-active-directory", "people-and-accounts", "contractors"],
   "Security Center": ["soc-security-operations-center", "soc-dashboard", "security-posture"],
-  Compliance: ["reports-governance-audit-and-administration", "compliance", "compliance-frameworks"],
-  "Audit & Approvals": ["reports-governance-audit-and-administration", "audit-management", "audit-plans"],
-  Policies: ["reports-governance-audit-and-administration", "policies-and-standards", "corporate-policies"],
+  Compliance: [
+    "reports-governance-audit-and-administration",
+    "compliance",
+    "compliance-frameworks",
+  ],
+  "Audit & Approvals": [
+    "reports-governance-audit-and-administration",
+    "audit-management",
+    "audit-plans",
+  ],
+  Policies: [
+    "reports-governance-audit-and-administration",
+    "policies-and-standards",
+    "corporate-policies",
+  ],
   "Service Status": ["intellistack-configuration-center", "system-monitoring", "platform-health"],
   "Knowledge Center": ["intellibase", "getting-started", "welcome"],
 };
@@ -245,13 +261,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               type="button"
               aria-label="Messages"
               title="Messages"
-              onClick={() =>
-                go(
-                  "collaboration-and-productivity",
-                  "intellichat",
-                  "direct-messages",
-                )
-              }
+              onClick={() => go("collaboration-and-productivity", "intellichat", "direct-messages")}
               className={utilityClass}
             >
               <MessageSquare className="size-[17px]" strokeWidth={1.7} />
@@ -260,13 +270,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               type="button"
               aria-label="Calendar"
               title="Calendar"
-              onClick={() =>
-                go(
-                  "calendar-and-scheduling-center",
-                  "personal-calendar",
-                  "meetings",
-                )
-              }
+              onClick={() => go("calendar-and-scheduling-center", "personal-calendar", "meetings")}
               className={utilityClass + " hidden sm:grid"}
             >
               <CalendarDays className="size-[17px]" strokeWidth={1.7} />
@@ -276,11 +280,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               aria-label="Settings"
               title="Settings"
               onClick={() =>
-                go(
-                  "intellistack-configuration-center",
-                  "platform-configuration",
-                  "global-settings",
-                )
+                go("intellistack-configuration-center", "platform-configuration", "global-settings")
               }
               className={utilityClass + " hidden md:grid"}
             >
@@ -307,81 +307,45 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-slate-700" />
                 <DropdownMenuItem
-                  onSelect={() =>
-                    go("my-workspace", "my-profile", "personal-information")
-                  }
+                  onSelect={() => go("my-workspace", "my-profile", "personal-information")}
                 >
                   <UserRound className="mr-2 size-4" />
                   My full profile
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onSelect={() =>
-                    go(
-                      "identity-and-access-management",
-                      "user-access",
-                      "group-based-access",
-                    )
+                    go("identity-and-access-management", "user-access", "group-based-access")
                   }
                 >
                   <Users className="mr-2 size-4" />
                   My group memberships
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onSelect={() =>
-                    go(
-                      "my-workspace",
-                      "my-learning",
-                      "achievements",
-                    )
-                  }
+                  onSelect={() => go("my-workspace", "my-learning", "achievements")}
                 >
                   <Award className="mr-2 size-4" />
                   Badges and achievements
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onSelect={() =>
-                    go(
-                      "my-workspace",
-                      "my-learning",
-                      "achievements",
-                    )
-                  }
+                  onSelect={() => go("my-workspace", "my-learning", "achievements")}
                 >
                   <Star className="mr-2 size-4" />
                   Stars and recognition
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onSelect={() =>
-                    go(
-                      "identity-and-access-management",
-                      "authentication",
-                      "mfa",
-                    )
-                  }
+                  onSelect={() => go("identity-and-access-management", "authentication", "mfa")}
                 >
                   <ShieldCheck className="mr-2 size-4" />
                   Security settings
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onSelect={() =>
-                    go(
-                      "notification-center",
-                      "preferences",
-                      "user-preferences",
-                    )
-                  }
+                  onSelect={() => go("notification-center", "preferences", "user-preferences")}
                 >
                   <Bell className="mr-2 size-4" />
                   Notification settings
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onSelect={() =>
-                    go(
-                      "my-workspace",
-                      "my-profile",
-                      "personal-information",
-                    )
-                  }
+                  onSelect={() => go("my-workspace", "my-profile", "personal-information")}
                 >
                   <Settings2 className="mr-2 size-4" />
                   Preferences
