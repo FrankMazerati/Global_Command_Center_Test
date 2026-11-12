@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { createCommandWorkItem, deleteCommandWorkItem, listCommandWorkItems, updateCommandWorkItem } from "@/lib/command-work";
+import { toast } from "sonner";
 
 // Shared working context that survives internal navigation (active ticket, Chat Buddy, notes).
 // Authenticated checklist items persist to the scoped Command Work queue; notes remain device-local.
@@ -162,7 +163,8 @@ export function WorkContextProvider({ children }: { children: ReactNode }) {
         const nextDone = !item.done;
         if (item.persisted) {
           void updateCommandWorkItem(id, { status: nextDone ? "completed" : "open" })
-            .then(() => setState((s) => ({ ...s, checklist: s.checklist.map((entry) => entry.id === id ? { ...entry, done: nextDone } : entry) })));
+            .then(() => setState((s) => ({ ...s, checklist: s.checklist.map((entry) => entry.id === id ? { ...entry, done: nextDone } : entry) })))
+            .catch(() => toast.error("Could not save this checklist update. Please try again."));
           return;
         }
         setState((s) => ({ ...s, checklist: s.checklist.map((entry) => (entry.id === id ? { ...entry, done: nextDone } : entry)) }));
@@ -170,7 +172,9 @@ export function WorkContextProvider({ children }: { children: ReactNode }) {
       removeChecklistItem: (id) => {
         const item = state.checklist.find((entry) => entry.id === id);
         if (item?.persisted) {
-          void deleteCommandWorkItem(id).then(() => setState((s) => ({ ...s, checklist: s.checklist.filter((entry) => entry.id !== id) })));
+          void deleteCommandWorkItem(id)
+            .then(() => setState((s) => ({ ...s, checklist: s.checklist.filter((entry) => entry.id !== id) })))
+            .catch(() => toast.error("Could not remove this checklist item. Please try again."));
           return;
         }
         setState((s) => ({ ...s, checklist: s.checklist.filter((entry) => entry.id !== id) }));
