@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
   Building2,
+  Apple,
+  Github,
   Check,
   Eye,
   EyeOff,
@@ -68,17 +70,54 @@ const providers: Array<{
 ];
 const directoryProviders = [
   "Okta",
+  "Microsoft Entra ID",
+  "Google Workspace",
   "Auth0",
   "Ping Identity",
   "OneLogin",
-  "SAML Enterprise SSO",
-  "OIDC Enterprise SSO",
+  "AWS IAM Identity Center",
+  "JumpCloud",
+  "Duo SSO",
+  "CyberArk Identity",
+  "IBM Security Verify",
+  "Oracle Cloud Identity",
+  "ForgeRock",
+  "Keycloak",
+  "Cisco Identity Services",
+  "RSA SecurID",
+  "SecureAuth",
+  "SailPoint Identity Security",
+  "WorkOS",
+  "Descope",
+  "Clerk",
+  "Salesforce Identity",
+  "VMware Workspace ONE",
+  "Rippling",
+  "miniOrange",
+  "SAML 2.0 Enterprise",
+  "OpenID Connect (OIDC)",
+  "LDAP / Active Directory Federation",
+  "Custom SAML Identity Provider",
+  "Custom OIDC Identity Provider",
 ];
 const securityFeatures: Array<[LucideIcon, string, string]> = [
-  [Globe2, "Global Infrastructure", "Worldwide, high-availability."],
-  [ShieldCheck, "Enterprise Security", "Advanced threat protection."],
-  [Check, "Compliance Ready", "SOC 2, ISO 27001, GDPR."],
-  [Headphones, "24/7 Support", "Always here when you need us."],
+  [ShieldCheck, "Enterprise Security", "Identity-first access and protection."],
+  [Check, "Compliance Ready", "Designed for accountable enterprise operations."],
+];
+
+const businessProducts = [
+  { id: "IntelliStaff", detail: "Workforce, people operations & staffing" },
+  { id: "IntelliHire", detail: "Recruiting, applicants & talent acquisition" },
+  { id: "IntelliWork", detail: "Business workflows, tasks & collaboration" },
+];
+
+const loginQuickLinks = [
+  { label: "24/7 Support", detail: "Service desk & support", href: "/m/intellidesk-command-center/service-desk-dashboard/open-tickets" },
+  { label: "Help Center", detail: "Knowledge & guidance", href: "/m/intellibase/training-and-certification/learning-paths" },
+  { label: "System Security", detail: "Security operations", href: "/m/soc-security-operations-center/soc-dashboard/security-posture" },
+  { label: "People Directory", detail: "Find people & teams", href: "/m/new-active-directory/people-and-accounts/employees" },
+  { label: "Calendar", detail: "Meetings & schedules", href: "/m/calendar-and-scheduling-center/personal-calendar/meetings" },
+  { label: "Products & Services", detail: "Explore the platform", href: "/p/products" },
 ];
 
 function LoginPage() {
@@ -92,42 +131,69 @@ function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [directoryProvider, setDirectoryProvider] = useState("");
+  const [providerSearch, setProviderSearch] = useState("");
+  const [businessProduct, setBusinessProduct] = useState("IntelliStaff");
+  const [phoneOtpSent, setPhoneOtpSent] = useState(false);
+  const [phoneOtp, setPhoneOtp] = useState("");
 
   async function signIn(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
     if (!identifier.trim()) {
-      setMessage(
-        phoneMode
-          ? "Enter your phone number to continue."
-          : "Enter your email address to continue.",
-      );
-      return;
-    }
-    if (phoneMode) {
-      setMessage(
-        "Phone sign-in is ready for the connected identity provider. Use email sign-in for this test build.",
-      );
+      setMessage(phoneMode ? "Enter your phone number to continue." : "Enter your email address to continue.");
       return;
     }
     const supabase = getSupabaseClient(remember);
     if (!supabase) {
-      setMessage(
-        "Secure sign-in is not configured. Add the Supabase project URL and publishable key to the deployment environment.",
-      );
+      setMessage("Secure sign-in is not configured. Add the Supabase project URL and publishable key to the deployment environment.");
       return;
     }
     setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: identifier.trim(),
-      password,
-    });
-    setBusy(false);
-    if (error) {
-      setMessage(error.message);
-      return;
+    if (phoneMode) {
+      if (!phoneOtpSent) {
+        const { error } = await supabase.auth.signInWithOtp({ phone: identifier.trim() });
+        setBusy(false);
+        if (error) {
+          setMessage(error.message);
+          return;
+        }
+        setPhoneOtpSent(true);
+        setMessage("A verification code was sent if this phone number is registered and SMS sign-in is enabled.");
+        return;
+      }
+      if (!phoneOtp.trim()) {
+        setBusy(false);
+        setMessage("Enter the verification code sent to your phone.");
+        return;
+      }
+      const { error } = await supabase.auth.verifyOtp({
+        phone: identifier.trim(),
+        token: phoneOtp.trim(),
+        type: "sms",
+      });
+      setBusy(false);
+      if (error) {
+        setMessage(error.message);
+        return;
+      }
+    } else {
+      if (!password) {
+        setBusy(false);
+        setMessage("Enter your password to continue.");
+        return;
+      }
+      const { error } = await supabase.auth.signInWithPassword({
+        email: identifier.trim(),
+        password,
+      });
+      setBusy(false);
+      if (error) {
+        setMessage(error.message);
+        return;
+      }
     }
     sessionStorage.setItem("mo:requested-environment", environment);
+    if (environment === "business") sessionStorage.setItem("mo:requested-business-product", businessProduct);
     toast.success("Identity verified. Opening your command center.");
     navigate({ to: "/", replace: true });
   }
@@ -187,7 +253,7 @@ function LoginPage() {
               INTELLISTACK
               <br />
               <b>SYSTEMS</b>
-              <small>SECURE · TRUSTED · COMPLIANT</small>
+              <small>SECURED · TRUSTED · COMPLIANT</small>
             </span>
           </div>
           <div className="login-tagline">
@@ -196,10 +262,10 @@ function LoginPage() {
         </div>
         <div className="login-hero-copy">
           <h1>
-            <span>MAXIMUS</span> OPTIMUS
+            <span>MAXIMUS</span> <em>OPTIMUS</em>
           </h1>
           <strong>GLOBAL OPERATIONS CENTER</strong>
-          <p>One World. One System. One Intelligent Network.</p>
+          <p>One <i>World</i>. One <i>System</i>. One Intelligent <i>Network</i>.</p>
         </div>
         <div className="login-hero-glow" />
       </div>
@@ -227,6 +293,23 @@ function LoginPage() {
               </button>
             ))}
           </div>
+          {environment === "business" && (
+            <div className="login-business-products" aria-label="Business and employer products">
+              {businessProducts.map((product) => (
+                <button
+                  type="button"
+                  key={product.id}
+                  className={businessProduct === product.id ? "selected" : ""}
+                  aria-pressed={businessProduct === product.id}
+                  onClick={() => setBusinessProduct(product.id)}
+                >
+                  <b>{product.id}</b>
+                  <small>{product.detail}</small>
+                  {businessProduct === product.id && <Check size={14} />}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="login-card-grid">
             <form onSubmit={signIn} className="login-form">
               <div className="login-card-heading compact">
@@ -237,14 +320,22 @@ function LoginPage() {
                 <button
                   type="button"
                   className={!phoneMode ? "selected" : ""}
-                  onClick={() => setPhoneMode(false)}
+                  onClick={() => {
+                    setPhoneMode(false);
+                    setPhoneOtpSent(false);
+                    setPhoneOtp("");
+                  }}
                 >
                   <Mail size={13} /> Email
                 </button>
                 <button
                   type="button"
                   className={phoneMode ? "selected" : ""}
-                  onClick={() => setPhoneMode(true)}
+                  onClick={() => {
+                    setPhoneMode(true);
+                    setPhoneOtpSent(false);
+                    setPhoneOtp("");
+                  }}
                 >
                   <Phone size={13} /> Phone Number
                 </button>
@@ -252,38 +343,57 @@ function LoginPage() {
               <label>
                 <span>{phoneMode ? "Phone number" : "Email address"}</span>
                 <div className="login-input-wrap">
-                  <Mail size={14} />
+                  {phoneMode ? <Phone size={14} /> : <Mail size={14} />}
                   <input
                     value={identifier}
                     onChange={(event) => setIdentifier(event.target.value)}
                     type={phoneMode ? "tel" : "email"}
                     placeholder={phoneMode ? "+1 (555) 000-0000" : "name@company.com"}
-                    autoComplete="username"
+                    autoComplete={phoneMode ? "tel" : "username"}
                     required
                   />
                 </div>
               </label>
-              <label>
-                <span>Password</span>
-                <div className="login-input-wrap">
-                  <LockKeyhole size={14} />
-                  <input
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    autoComplete="current-password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    onClick={() => setShowPassword((value) => !value)}
-                  >
-                    {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-                  </button>
-                </div>
-              </label>
+              {!phoneMode ? (
+                <label>
+                  <span>Password</span>
+                  <div className="login-input-wrap">
+                    <LockKeyhole size={14} />
+                    <input
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      autoComplete="current-password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      onClick={() => setShowPassword((value) => !value)}
+                    >
+                      {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                </label>
+              ) : phoneOtpSent ? (
+                <label>
+                  <span>SMS verification code</span>
+                  <div className="login-input-wrap">
+                    <ShieldCheck size={14} />
+                    <input
+                      value={phoneOtp}
+                      onChange={(event) => setPhoneOtp(event.target.value)}
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      placeholder="Enter your verification code"
+                      required
+                    />
+                  </div>
+                </label>
+              ) : (
+                <p className="login-phone-note">We’ll send a one-time verification code by SMS.</p>
+              )}
               <div className="login-form-options">
                 <label className="login-check">
                   <input
@@ -293,9 +403,15 @@ function LoginPage() {
                   />
                   <span /> Remember me
                 </label>
-                <button type="button" onClick={resetPassword}>
-                  Forgot password?
-                </button>
+                {!phoneMode ? (
+                  <button type="button" onClick={resetPassword}>Forgot password?</button>
+                ) : (
+                  <button type="button" onClick={() => {
+                    setPhoneOtpSent(false);
+                    setPhoneOtp("");
+                    setMessage("Enter your phone number and request a new verification code.");
+                  }}>Resend / change number</button>
+                )}
               </div>
               {message && (
                 <p className="login-message" role="alert">
@@ -304,7 +420,7 @@ function LoginPage() {
               )}
               <button className="login-submit" disabled={busy} type="submit">
                 <ShieldCheck size={15} />
-                {busy ? "Verifying identity…" : "Sign In"}
+                {busy ? "Verifying identity…" : phoneMode ? (phoneOtpSent ? "Verify Code & Sign In" : "Send Secure Code") : "Sign In"}
               </button>
               <div className="login-help-links">
                 <span>Something else?</span>
@@ -333,36 +449,47 @@ function LoginPage() {
                     disabled={busy}
                     onClick={() => void startConnector(provider, label, note)}
                   >
-                    <span className="provider-mark">
-                      {label === "GitHub" ? "◉" : label === "Apple" ? "●" : label.slice(0, 1)}
+                    <span className={`provider-mark provider-${label.toLowerCase().replaceAll(" ", "-")}`}>
+                      {label === "Google Workspace" ? <b className="provider-google">G</b>
+                        : label === "Microsoft 365" || label === "Microsoft Entra ID" ? <span className="provider-microsoft"><i /><i /><i /><i /></span>
+                        : label === "AWS" ? <b className="provider-aws">aws</b>
+                        : label === "GitHub" ? <Github size={17} />
+                        : <Apple size={17} />}
                     </span>
                     {label}
                   </button>
                 ))}
               </div>
-              <label className="provider-more">
-                <span>⠿</span>
-                <select
-                  value={directoryProvider}
-                  onChange={(event) => {
-                    const value = event.target.value;
-                    setDirectoryProvider(value);
-                    if (value) {
-                      setMessage(
-                        `${value} is selected from the 100+ provider directory. Complete its Supabase SSO connection to enable sign-in.`,
-                      );
-                    }
-                  }}
-                >
-                  <option value="">Other identity providers (100+)</option>
-                  {directoryProviders.map((provider) => (
-                    <option key={provider} value={provider}>
-                      {provider}
-                    </option>
-                  ))}
-                </select>
-                <small>Search and select from additional connected providers</small>
-              </label>
+              <div className="provider-more">
+                <label htmlFor="provider-directory-search">Other identity providers</label>
+                <input
+                  id="provider-directory-search"
+                  value={providerSearch}
+                  onChange={(event) => setProviderSearch(event.target.value)}
+                  placeholder="Search SSO providers and protocols…"
+                  autoComplete="off"
+                />
+                <small>Popular providers are listed first. Selection does not imply a live connection.</small>
+                <div className="provider-directory-list" role="listbox" aria-label="Additional identity providers">
+                  {directoryProviders
+                    .filter((provider) => provider.toLowerCase().includes(providerSearch.toLowerCase()))
+                    .map((provider) => (
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={directoryProvider === provider}
+                        className={directoryProvider === provider ? "selected" : ""}
+                        key={provider}
+                        onClick={() => {
+                          setDirectoryProvider(provider);
+                          setMessage(`${provider} selected. An administrator must configure and verify this connection before it can be used to sign in.`);
+                        }}
+                      >
+                        {provider}
+                      </button>
+                    ))}
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -370,8 +497,8 @@ function LoginPage() {
           <div className="security-title">
             <ShieldCheck size={23} />
             <div>
-              <b>Secure Access</b>
-              <span>Your data, your organization, your priority.</span>
+              <b>Global Infrastructure</b>
+              <span>Enterprise Security · Compliance Ready</span>
             </div>
           </div>
           {securityFeatures.map(([Icon, title, detail]) => (
@@ -386,15 +513,23 @@ function LoginPage() {
           <div className="security-bottom">
             <Globe2 size={22} />
             <b>
-              Think Beyond Locally.
+              Think Beyond <i>Locally</i>.
               <br />
-              Connect Everything Globally.
+              Connect Everything <i>Globally</i>.
               <br />
-              <span>Powered by Intelligence.</span>
+              Powered by <span>Intelligence</span>.
             </b>
           </div>
         </aside>
       </div>
+      <nav className="login-quick-links" aria-label="Command Center quick links">
+        {loginQuickLinks.map((link) => (
+          <a key={link.label} href={link.href}>
+            <b>{link.label}</b>
+            <small>{link.detail}</small>
+          </a>
+        ))}
+      </nav>
       <footer className="login-footer">
         <div className="login-brand mini">
           <img src="/assets/intellistack-shield.jpg" alt="" />
@@ -402,24 +537,36 @@ function LoginPage() {
             INTELLISTACK
             <br />
             <b>SYSTEMS</b>
-            <small>SECURE · TRUSTED · COMPLIANT</small>
+            <small>SECURED · TRUSTED · COMPLIANT</small>
           </span>
         </div>
-        <div>
+        <div className="login-footer-group">
           <b>About Us</b>
-          <span>Our Story · Leadership · Careers · News &amp; Media</span>
+          <a href="/p/about">Our Story</a>
+          <a href="/p/about">Leadership</a>
+          <a href="/p/careers">Careers</a>
+          <a href="/p/social">News &amp; Media</a>
         </div>
-        <div>
+        <div className="login-footer-group">
           <b>Products &amp; Services</b>
-          <span>Platform Overview · Solutions · Integrations · Pricing</span>
+          <a href="/p/products">Platform Overview</a>
+          <a href="/p/solutions">Solutions</a>
+          <a href="/p/partners">Integrations &amp; Partners</a>
+          <a href="/p/contact">Pricing &amp; Sales</a>
         </div>
-        <div>
+        <div className="login-footer-group">
           <b>Resources</b>
-          <span>Help Center · Documentation · System Status</span>
+          <a href="/m/intellibase/training-and-certification/learning-paths">Help Center</a>
+          <a href="/m/intellibase/training-and-certification/learning-paths">Documentation</a>
+          <a href="/m/soc-security-operations-center/soc-dashboard/security-posture">System Security</a>
+          <a href="/p/contact">Contact Support</a>
         </div>
-        <div>
+        <div className="login-footer-group">
           <b>Legal &amp; Policies</b>
-          <span>Privacy · Terms · Accessibility</span>
+          <a href="/p/privacy">Privacy</a>
+          <a href="/p/terms">Terms</a>
+          <a href="/p/accessibility">Accessibility</a>
+          <a href="/p/security">Security &amp; Compliance</a>
         </div>
         <div className="login-footer-status">
           <span>
