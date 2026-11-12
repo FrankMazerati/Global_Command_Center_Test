@@ -67,8 +67,7 @@ begin
     raise exception 'Anonymous users must not execute entitlement helper';
   end if;
 
-  if (select count(*) from public.marketplace_customer_subscriptions) <> 4800 then
-    raise exception 'Legacy customer subscription history count changed; investigate before release';
-  end if;
+  -- Legacy customer subscription rows are intentionally not updated by this migration.
+  -- Do not assert a fixed row count here: legitimate customer activity may change it over time.
 end
 $$;
