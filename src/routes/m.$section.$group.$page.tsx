@@ -23,12 +23,18 @@ import { StatusBadge } from "@/components/shell/StatusBadge";
 import { TicketManagementWorkspace } from "@/components/workspace/TicketManagementWorkspace";
 import { TicketWorkspace } from "@/components/workspace/TicketWorkspace";
 import { WorkflowCenter } from "@/components/workspace/WorkflowCenter";
-import { HelpBuddyWorkspace, KnowledgeSpacesWorkspace } from "@/components/workspace/KnowledgeAndHelpWorkspaces";
+import {
+  HelpBuddyWorkspace,
+  KnowledgeSpacesWorkspace,
+} from "@/components/workspace/KnowledgeAndHelpWorkspaces";
 import { HelpBuddyIntelligenceManagement } from "@/components/workspace/HelpBuddyIntelligenceManagement";
 import { MarketplaceHistoryWorkspace } from "@/components/workspace/MarketplaceHistoryWorkspace";
 import { WorkforceHistoryWorkspace } from "@/components/workspace/WorkforceHistoryWorkspace";
 import { IntelliOfficeWorkspace } from "@/components/workspace/IntelliOfficeWorkspace";
 import { IntelliSphereToolsWorkspace } from "@/components/workspace/IntelliSphereToolsWorkspace";
+import { EmployeeProfileWorkspace } from "@/components/workspace/EmployeeProfileWorkspace";
+import { GroupMembershipWorkspace } from "@/components/workspace/GroupMembershipWorkspace";
+import { PublicSiteManagementWorkspace } from "@/components/workspace/PublicSiteManagementWorkspace";
 import { findPage, toneVar } from "@/lib/nav";
 import { getSupabaseClient } from "@/lib/supabase";
 import { useWork } from "@/lib/work-context";
@@ -43,6 +49,7 @@ export const Route = createFileRoute("/m/$section/$group/$page")({
     meta: loaderData
       ? [
           { title: `${loaderData.title} · ${loaderData.section} · Maximus Optimus` },
+          { name: "robots", content: "noindex,nofollow" },
           {
             name: "description",
             content: `${loaderData.title} in ${loaderData.group}, part of ${loaderData.section}.`,
@@ -54,7 +61,7 @@ export const Route = createFileRoute("/m/$section/$group/$page")({
 });
 
 type Row = Record<string, unknown>;
-type DirectoryKind = "users" | "devices" | "tenants" | "tickets";
+type DirectoryKind = "users" | "devices" | "tenants" | "tickets" | "groups" | "group_memberships";
 const directorySlugs: Record<DirectoryKind, string[]> = {
   users: [
     "global-directory",
@@ -86,6 +93,8 @@ const directorySlugs: Record<DirectoryKind, string[]> = {
     "infrastructure-inventory",
   ],
   tenants: ["tenants", "tenant-business-records", "tenant-membership", "tenant-administration"],
+  groups: ["groups", "security-groups", "group-objects"],
+  group_memberships: ["group-membership"],
   tickets: [
     "command-queue",
     "create-ticket",
@@ -139,16 +148,21 @@ function SupabaseDirectory({ kind, title }: { kind: DirectoryKind; title: string
         live = false;
       };
     }
-    supabase
-      .from(kind)
-      .select("*")
-      .limit(500)
-      .then(({ data, error: queryError }) => {
-        if (!live) return;
-        if (queryError) setError(queryError.message);
-        else setRows((data ?? []) as Row[]);
-        setLoading(false);
-      });
+    const directoryQuery =
+      kind === "users"
+        ? supabase
+            .from("profiles")
+            .select(
+              "id,organization_id,tenant_id,department_id,organizational_unit_id,employee_global_id,company_global_id,first_name,last_name,display_name,work_email,work_phone,job_title,manager_profile_id,member_status,location_city,location_region,country_code,timezone,avatar_url,created_at,updated_at",
+            )
+            .limit(500)
+        : supabase.from(kind).select("*").limit(500);
+    directoryQuery.then(({ data, error: queryError }) => {
+      if (!live) return;
+      if (queryError) setError(queryError.message);
+      else setRows((data ?? []) as Row[]);
+      setLoading(false);
+    });
     return () => {
       live = false;
     };
@@ -157,12 +171,33 @@ function SupabaseDirectory({ kind, title }: { kind: DirectoryKind; title: string
   const columns = useMemo(() => {
     const preferred =
       kind === "users"
-        ? ["name", "full_name", "email", "role", "company_id", "tenant_id", "status"]
+        ? [
+            "display_name",
+            "work_email",
+            "job_title",
+            "employee_global_id",
+            "member_status",
+            "department_id",
+            "organization_id",
+            "tenant_id",
+          ]
         : kind === "devices"
           ? ["name", "device_name", "serial_number", "type", "assigned_to", "status"]
           : kind === "tenants"
             ? ["name", "tenant_name", "company_id", "owner", "status"]
-            : ["ticket_id", "title", "summary", "priority", "status", "assignee"];
+            : kind === "groups"
+              ? [
+                  "name",
+                  "group_key",
+                  "group_type",
+                  "description",
+                  "is_privileged",
+                  "organization_id",
+                  "tenant_id",
+                ]
+              : kind === "group_memberships"
+                ? ["group_id", "profile_id", "added_by", "expires_at", "created_at"]
+                : ["ticket_id", "title", "summary", "priority", "status", "assignee"];
     const keys = new Set(rows.flatMap((row) => Object.keys(row)));
     return [
       ...preferred.filter((key) => keys.has(key)),
@@ -179,6 +214,12 @@ function SupabaseDirectory({ kind, title }: { kind: DirectoryKind; title: string
 
   const createRecord = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (kind === "users") {
+      setError(
+        "User provisioning is not available here. Create identities through the approved authentication and invitation workflow.",
+      );
+      return;
+    }
     const supabase = getSupabaseClient();
     if (!supabase) return;
     const payload: Row =
@@ -264,14 +305,20 @@ function SupabaseDirectory({ kind, title }: { kind: DirectoryKind; title: string
           </div>
           <h2 className="text-xl font-semibold">{title}</h2>
           <p className="text-sm text-muted-foreground">
-            Authenticated records from the `{kind}` table.
+            {kind === "users"
+              ? "Employee identity and organization fields from the canonical profiles table; account provisioning is handled separately."
+              : kind === "groups"
+                ? "Organization-scoped directory groups. Membership changes require the approved access workflow."
+                : kind === "group_memberships"
+                  ? "Membership records from the canonical group_memberships relation. This view is read-only."
+                  : "Authenticated records from the selected table."}
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span>
             {filtered.length} visible · {rows.length} loaded
           </span>
-          {(kind === "users" || kind === "devices" || kind === "tickets") && (
+          {(kind === "devices" || kind === "tickets") && (
             <button
               type="button"
               className="inline-flex items-center gap-1 rounded-md border px-2 py-1 font-medium text-primary hover:bg-accent"
@@ -1227,12 +1274,29 @@ function PageFoundation() {
   const directory = directoryKind(page.slug);
   const marketplace = marketplaceSlugs.includes(page.slug);
   const workforceHistory = workforceHistorySlugs.includes(page.slug);
-  const workflowCenter = section.slug === "home-and-command-center" && group.slug === "workflow-center";
+  const workflowCenter =
+    section.slug === "home-and-command-center" && group.slug === "workflow-center";
   const knowledgeSpaces = section.slug === "knowledge-spaces";
-  const officeTool = ["intelliword", "intellisheets", "intellislides", "intellichat"].includes(page.slug);
-  const suiteTools = ["intellinotes", "intellidrive", "intelliforms", "intellistudio", "intellitext"].includes(page.slug);
+  const officeTool = ["intelliword", "intellisheets", "intellislides", "intellichat"].includes(
+    page.slug,
+  );
+  const suiteTools = [
+    "intellinotes",
+    "intellidrive",
+    "intelliforms",
+    "intellistudio",
+    "intellitext",
+  ].includes(page.slug);
   const helpBuddy = section.slug === "help-buddy";
   const helpBuddyManagement = helpBuddy && group.slug === "intelligence-management";
+  const publicSiteView =
+    page.slug === "website-content-management"
+      ? "pages"
+      : page.slug === "social-media-management"
+        ? "social"
+        : page.slug === "public-contact-inquiries"
+          ? "inquiries"
+          : null;
   return (
     <div className="space-y-4">
       <nav
@@ -1262,15 +1326,25 @@ function PageFoundation() {
             <p className="text-sm text-muted-foreground">{group.title}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {(officeTool || suiteTools || helpBuddy || workflowCenter || ticketWorkspace || workforceHistory || directory === "tickets") && (
-              <StatusBadge status="Built" />
-            )}
+            {(officeTool ||
+              suiteTools ||
+              helpBuddy ||
+              workflowCenter ||
+              ticketWorkspace ||
+              workforceHistory ||
+              directory === "tickets") && <StatusBadge status="Built" />}
             {((directory && directory !== "tickets") || marketplace || knowledgeSpaces) && (
               <StatusBadge status="Connected" />
             )}
-            {(!officeTool && !suiteTools && !helpBuddy && !workflowCenter && !ticketWorkspace && !workforceHistory && !directory && !marketplace && !knowledgeSpaces) && (
-              <StatusBadge status="Awaiting configuration" />
-            )}
+            {!officeTool &&
+              !suiteTools &&
+              !helpBuddy &&
+              !workflowCenter &&
+              !ticketWorkspace &&
+              !workforceHistory &&
+              !directory &&
+              !marketplace &&
+              !knowledgeSpaces && <StatusBadge status="Awaiting configuration" />}
           </div>
         </div>
       </div>
@@ -1292,7 +1366,9 @@ function PageFoundation() {
           </Link>
         </div>
       )}
-      {officeTool ? (
+      {publicSiteView ? (
+        <PublicSiteManagementWorkspace view={publicSiteView} />
+      ) : officeTool ? (
         <IntelliOfficeWorkspace pageSlug={page.slug} />
       ) : suiteTools ? (
         <IntelliSphereToolsWorkspace pageSlug={page.slug} />
@@ -1310,6 +1386,12 @@ function PageFoundation() {
         <MarketplaceWorkspace title={page.title} pageSlug={page.slug} />
       ) : workforceHistory ? (
         <WorkforceHistoryWorkspace title={page.title} pageSlug={page.slug} />
+      ) : ["user-profiles", "badges-and-achievements", "stars-and-recognition"].includes(
+          page.slug,
+        ) ? (
+        <EmployeeProfileWorkspace />
+      ) : page.slug === "group-membership" ? (
+        <GroupMembershipWorkspace />
       ) : directory === "tickets" ? (
         <TicketManagementWorkspace title={page.title} pageSlug={page.slug} />
       ) : directory ? (
@@ -1321,12 +1403,14 @@ function PageFoundation() {
           </div>
           <h2 className="text-xl font-semibold">{page.title}</h2>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            This navigation destination exists, but its operational workflow and authorized data source have not been implemented yet.
-            It is not being presented as a completed workspace.
+            This navigation destination exists, but its operational workflow and authorized data
+            source have not been implemented yet. It is not being presented as a completed
+            workspace.
           </p>
           <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-            Before activation, this page needs its real database records, server-enforced permissions, search and drill-down behavior,
-            audit history, and automated tests. No invented counts, sample activity, or nonfunctional action buttons are displayed.
+            Before activation, this page needs its real database records, server-enforced
+            permissions, search and drill-down behavior, audit history, and automated tests. No
+            invented counts, sample activity, or nonfunctional action buttons are displayed.
           </p>
         </section>
       )}

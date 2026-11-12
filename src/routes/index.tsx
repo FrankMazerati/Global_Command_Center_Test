@@ -45,6 +45,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Maximus Optimus · Global Command Center" },
+      { name: "robots", content: "noindex,nofollow" },
       { name: "description", content: "IntelliStack Systems Global Command Center." },
     ],
   }),

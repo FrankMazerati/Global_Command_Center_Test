@@ -1,0 +1,64 @@
+name: Production Readiness - Branch Validation
+
+on:
+  push:
+    branches:
+      - work/production-readiness-baseline
+  pull_request:
+    branches:
+      - main
+      - work/production-readiness-baseline
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-readiness-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Lint, tests, and production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install locked dependencies
+        id: install
+        run: pnpm install --frozen-lockfile
+      - name: Lint profile and public-site feature files
+        run: >-
+          pnpm exec eslint
+          src/components/public-site/OfficialSocialLinks.tsx
+          src/components/public-site/PublicSitePage.tsx
+          src/components/workspace/PublicSiteManagementWorkspace.tsx
+          src/components/workspace/EmployeeProfileWorkspace.tsx
+          src/components/workspace/GroupMembershipWorkspace.tsx
+          src/components/shell/AppShell.tsx
+          src/lib/nav.ts
+          src/routes/__root.tsx
+          src/routes/index.tsx
+          src/routes/login.tsx
+          'src/routes/m.$section.$group.$page.tsx'
+          'src/routes/p.$slug.tsx'
+      - name: Repository-wide lint baseline (existing backlog, non-blocking)
+        run: pnpm lint
+        continue-on-error: true
+      - name: Run automated tests
+        if: steps.install.outcome == 'success'
+        run: pnpm test
+      - name: Build production application
+        if: steps.install.outcome == 'success'
+        run: pnpm build

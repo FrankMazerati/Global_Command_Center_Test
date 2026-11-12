@@ -1,0 +1,59 @@
+name: Format Feature Files
+
+on:
+  push:
+    branches:
+      - work/production-readiness-baseline
+
+permissions:
+  contents: write
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: work/production-readiness-baseline
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.25.0
+          run_install: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Format touched application files
+        run: |
+          pnpm exec prettier --write \
+            src/components/public-site/OfficialSocialLinks.tsx \
+            src/components/public-site/PublicSitePage.tsx \
+            src/components/workspace/PublicSiteManagementWorkspace.tsx \
+            src/components/workspace/EmployeeProfileWorkspace.tsx \
+            src/components/workspace/GroupMembershipWorkspace.tsx \
+            src/components/shell/AppShell.tsx \
+            src/lib/nav.ts \
+            src/routes/__root.tsx \
+            src/routes/index.tsx \
+            src/routes/login.tsx \
+            'src/routes/m.$section.$group.$page.tsx' \
+            'src/routes/p.$slug.tsx'
+      - name: Commit formatted files
+        run: |
+          if git diff --quiet; then
+            echo "No formatting changes required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/components/public-site src/components/workspace/PublicSiteManagementWorkspace.tsx src/components/workspace/EmployeeProfileWorkspace.tsx src/components/workspace/GroupMembershipWorkspace.tsx src/components/shell/AppShell.tsx src/lib/nav.ts src/routes
+          git commit -m "chore: format profile and public website features"
+          git push origin HEAD:work/production-readiness-baseline
