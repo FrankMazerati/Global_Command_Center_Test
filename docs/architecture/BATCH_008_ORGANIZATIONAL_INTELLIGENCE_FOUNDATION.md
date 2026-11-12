@@ -366,3 +366,48 @@ This is a useful foundation, but it is not yet the requested complete CEO/CFO/CO
 6. Add approved assignment lifecycle RPCs and audit writes only after the resolver and negative tests are validated in an isolated database branch.
 
 No assignment rows were seeded. No location or region mappings were invented. The zero-assignment baseline is preserved.
+
+
+## 18. Production implementation update — 2026-11-12
+
+The user authorized using the main Supabase project and the existing repository/PR #7 instead of creating a paid isolated Supabase branch. The first additive Batch 008 database foundation has now been applied to the main project.
+
+### Applied migrations
+
+- `20261112180312_batch_008_management_scope_membership.sql`
+- `20261112180358_batch_008_management_scope_fk_indexes.sql`
+
+Both migration versions were confirmed in Supabase migration history. The repository migration filenames were aligned to those exact applied versions.
+
+### Database changes now present
+
+- Extended the existing governance management-role scope constraint to permit a future `location` scope value without granting that scope to existing role records.
+- Extended the existing workforce management assignment scope model with `location_set`, preserving existing global, region, tenant and department scopes.
+- Added `workforce_profile_identity_links` for an explicit, reviewable profile-to-workforce-person identity bridge.
+- Added `governance_region_locations` for tenant-bound region-to-location membership.
+- Added `workforce_management_assignment_locations` for explicit, non-contiguous location assignment membership.
+- Added internal trigger guards to validate tenant ancestry, location organization type/status, assignment/person tenant consistency, and exact tenant/organization identity consistency for profile links.
+- Enabled RLS on all three new public tables and deliberately granted no browser access to `anon` or `authenticated`. Service-role access is available for controlled server-side operations only.
+- Added indexes for the new membership and identity-link foreign keys.
+
+### Post-apply verification
+
+Read-only verification confirmed:
+
+- All three new tables exist.
+- The updated scope constraints are installed.
+- RLS is enabled on all three new tables.
+- `authenticated` has no SELECT or INSERT table privileges on the new tables.
+- `service_role` has the intended controlled table privileges.
+- All three new tables contain zero rows; no customer or workforce records were fabricated or remapped.
+- Both migration versions appear in Supabase migration history.
+
+### What is not complete yet
+
+This is the database foundation, not the finished management-scope feature. No profile identity links, region/location mappings, or management assignment memberships have been seeded. The authenticated profile-to-workforce link currently remains zero. No client-facing assignment mutation API or dashboard scope resolver has been enabled. The new tables are intentionally closed to browser roles until those server-side contracts and their negative authorization tests are implemented.
+
+### Advisor observations
+
+Post-change Supabase advisors still report existing project-wide security/performance findings. The new tables appear in the RLS-enabled/no-policy informational category by design: they have no authenticated grants or policies and are not browser-accessible. Existing project warnings include other SECURITY DEFINER RPCs and disabled leaked-password protection; this Batch 008 change does not resolve those unrelated findings. The new private trigger functions are not exposed as public RPCs.
+
+**Next Batch 008 implementation step:** build the controlled server-side identity-link and assignment lifecycle operations, then a scope resolver that combines verified identity, active assignment, tenant/location membership, role permissions and subscription entitlements. Only after that should dashboard queries consume these scopes.
