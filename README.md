@@ -36,6 +36,10 @@ The employee directory and profiles belong under **New Active Directory → User
 
 CEO, CFO, CIO, and CTO experiences are separate executive workspaces with role- and tenant-scoped data. Executive titles do not imply Global Admin / Super Admin access.
 
+## Platform administration architecture
+
+- [Platform Administration Center — unified implementation sequence](docs/platform-administration/PLATFORM_ADMINISTRATION_CENTER_IMPLEMENTATION.md)
+
 ## Commercial, organizational, and security architecture
 
 - [Three subscription plans, location licensing, and Local / Regional / Global Operations](docs/commercial/INTELLISTACK_SUBSCRIPTION_AND_LOCATION_LICENSING.md)
