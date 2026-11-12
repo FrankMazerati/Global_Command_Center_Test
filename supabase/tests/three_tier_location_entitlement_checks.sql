@@ -66,6 +66,12 @@ begin
   if has_function_privilege('anon', 'public.has_marketplace_entitlement(uuid,text,uuid)', 'execute') then
     raise exception 'Anonymous users must not execute entitlement helper';
   end if;
+  if has_function_privilege('anon', 'public.create_organization_location(uuid,text,text,text,text,text,jsonb)', 'execute') then
+    raise exception 'Anonymous users must not register organization locations';
+  end if;
+  if not has_function_privilege('authenticated', 'public.create_organization_location(uuid,text,text,text,text,text,jsonb)', 'execute') then
+    raise exception 'Authenticated users must be able to call the guarded location registration RPC';
+  end if;
 
   -- Legacy customer subscription rows are intentionally not updated by this migration.
   -- Do not assert a fixed row count here: legitimate customer activity may change it over time.
