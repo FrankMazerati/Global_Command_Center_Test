@@ -106,6 +106,14 @@ export function IdentityAccessWorkspace({ title, pageSlug }: { title: string; pa
   const submitRequest = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!requestReason.trim() || !requestResource.trim()) return;
+    if (temporary && !expiry) {
+      setError("Temporary access requests require an expiry date.");
+      return;
+    }
+    if (temporary && new Date(expiry).getTime() <= Date.now()) {
+      setError("The requested expiry must be in the future.");
+      return;
+    }
     const supabase = getSupabaseClient();
     if (!supabase) return;
     setSaving(true);
@@ -191,8 +199,8 @@ export function IdentityAccessWorkspace({ title, pageSlug }: { title: string; pa
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" checked={temporary} onChange={(event) => setTemporary(event.target.checked)} /> Temporary access
           </label>
-          {temporary && <label className="grid gap-1 text-sm">Requested expiry
-            <input type="datetime-local" value={expiry} onChange={(event) => setExpiry(event.target.value)} className="rounded-md border bg-background px-3 py-2" />
+          {temporary && <label className="grid gap-1 text-sm">Expiry date (required for temporary access)
+            <input required={temporary} min={new Date().toISOString().slice(0, 16)} type="datetime-local" value={expiry} onChange={(event) => setExpiry(event.target.value)} className="rounded-md border bg-background px-3 py-2" />
           </label>}
           <div className="sm:col-span-2">
             <button disabled={saving} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">{saving ? "Submitting…" : "Submit access request"}</button>
