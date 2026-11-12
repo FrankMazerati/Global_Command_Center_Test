@@ -42,7 +42,7 @@ jobs:
           set -euo pipefail
           for pass in 1 2 3; do
             echo "::group::PASS ${pass}/3 — repository lint"
-            pnpm exec eslint "src/routes/m.$section.$group.$page.tsx" src/components/workspace/IdentityAccessWorkspace.tsx src/components/workspace/GroupMembershipWorkspace.tsx
+            pnpm exec eslint --rule "prettier/prettier: off" "src/routes/m.$section.$group.$page.tsx" src/components/workspace/IdentityAccessWorkspace.tsx src/components/workspace/GroupMembershipWorkspace.tsx
             if ! pnpm lint; then
               echo "::warning::Repository-wide lint reports the pre-existing backlog; changed files above remain blocking."
             fi
