@@ -227,23 +227,24 @@ const MENU: RawSection[] = [
     ],
   ],
   [
-    "IntelliStack Configuration Center",
-    "Platform-wide system administration and operations.",
+    "Platform Administration Center",
+    "The centralized control plane for platform governance, configuration, security, release management and diagnostics.",
     "primary",
     [
-      ["Configuration Dashboard", ["Platform Overview", "System Status"]],
-      ["Platform Configuration", ["Global Settings", "System Defaults", "Platform Policies"]],
-      [
-        "Application Administration",
-        ["Application Configuration", "Module Activation", "Application Settings"],
-      ],
-      ["Environment Management", ["Development", "Testing", "Staging", "Production"]],
-      ["System Monitoring", ["Platform Health", "Performance", "Errors", "Capacity"]],
-      ["Release Management", ["Releases", "Deployments", "Rollbacks", "Version History"]],
-      ["Feature Management", ["Feature Flags", "Feature Rollouts"]],
-      ["Licensing & Entitlements", ["Licenses", "Subscriptions", "Entitlements"]],
-      ["Backup & Recovery", ["Backup Policies", "Recovery Operations", "Restoration History"]],
-      ["Administrative Audit", ["Configuration Changes", "Administrator Activity"]],
+      ["Platform Studio", ["Overview","Template Library","Configuration","Permissions & Scope","Testing & Publishing","Version History & Audit"]],
+      ["Dashboard & Template Management", ["Overview","Template Library","Configuration","Permissions & Scope","Testing & Publishing","Version History & Audit"]],
+      ["Organization & Hierarchy", ["Overview","Template Library","Configuration","Permissions & Scope","Testing & Publishing","Version History & Audit"]],
+      ["Identity & Authorization", ["Overview","Template Library","Configuration","Permissions & Scope","Testing & Publishing","Version History & Audit"]],
+      ["Platform Configuration", ["Overview","Template Library","Configuration","Permissions & Scope","Testing & Publishing","Version History & Audit"]],
+      ["Navigation & Service Registry", ["Overview","Template Library","Configuration","Permissions & Scope","Testing & Publishing","Version History & Audit"]],
+      ["Chat Buddy Administration", ["Overview","Template Library","Configuration","Permissions & Scope","Testing & Publishing","Version History & Audit"]],
+      ["Help Center Administration", ["Overview","Template Library","Configuration","Permissions & Scope","Testing & Publishing","Version History & Audit"]],
+      ["Connectivity & Integrations", ["Overview","Template Library","Configuration","Permissions & Scope","Testing & Publishing","Version History & Audit"]],
+      ["Data & Database Administration", ["Overview","Template Library","Configuration","Permissions & Scope","Testing & Publishing","Version History & Audit"]],
+      ["Workflow & Automation", ["Overview","Template Library","Configuration","Permissions & Scope","Testing & Publishing","Version History & Audit"]],
+      ["Security, Audit & Compliance", ["Overview","Template Library","Configuration","Permissions & Scope","Testing & Publishing","Version History & Audit"]],
+      ["Release & Change Management", ["Overview","Template Library","Configuration","Permissions & Scope","Testing & Publishing","Version History & Audit"]],
+      ["Monitoring & Diagnostics", ["Overview","Template Library","Configuration","Permissions & Scope","Testing & Publishing","Version History & Audit"]]
     ],
   ],
   [
@@ -763,9 +764,32 @@ export function findSection(slug: string) {
 }
 
 export function findPage(sectionSlug: string, groupSlug: string, pageSlug: string) {
-  const section = NAV.find((item) => item.slug === sectionSlug);
-  const group = section?.groups.find((item) => item.slug === groupSlug);
-  const page = group?.pages.find((item) => item.slug === pageSlug);
+  // Preserve the former Configuration Center URL while moving its menu entry
+  // into the unified Platform Administration Center.
+  const normalizedSectionSlug =
+    sectionSlug === "intellistack-configuration-center"
+      ? "platform-administration-center"
+      : sectionSlug;
+  const section = NAV.find((item) => item.slug === normalizedSectionSlug);
+  const legacyGroups: Record<string, string> = {
+    "configuration-dashboard": "platform-studio",
+    "application-administration": "platform-studio",
+    "platform-configuration": "platform-configuration",
+    "environment-management": "release-and-change-management",
+    "system-monitoring": "monitoring-and-diagnostics",
+    "release-management": "release-and-change-management",
+    "feature-management": "platform-studio",
+    "licensing-and-entitlements": "platform-configuration",
+    "backup-and-recovery": "data-and-database-administration",
+    "administrative-audit": "security-audit-and-compliance",
+  };
+  const normalizedGroupSlug = legacyGroups[groupSlug] ?? groupSlug;
+  const group = section?.groups.find((item) => item.slug === normalizedGroupSlug);
+  const page =
+    group?.pages.find((item) => item.slug === pageSlug) ??
+    (sectionSlug === "intellistack-configuration-center"
+      ? group?.pages.find((item) => item.slug === "overview")
+      : undefined);
   return section && group && page ? { section, group, page } : undefined;
 }
 
