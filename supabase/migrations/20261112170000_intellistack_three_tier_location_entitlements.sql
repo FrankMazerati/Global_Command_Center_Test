@@ -120,6 +120,37 @@ create unique index if not exists marketplace_subscription_locations_one_active_
   on public.marketplace_subscription_locations(location_organization_id)
   where status = 'active';
 
+
+create or replace function public.validate_marketplace_subscription_location()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $function$
+begin
+  if not exists (
+    select 1
+    from public.organizations o
+    where o.id = new.location_organization_id
+      and o.parent_organization_id = new.organization_id
+      and o.organization_type = 'location'
+  ) then
+    raise exception 'Subscription coverage must reference a location belonging directly to the contracted organization'
+      using errcode = '23514';
+  end if;
+  return new;
+end;
+$function$;
+
+revoke all on function public.validate_marketplace_subscription_location() from public, anon, authenticated;
+
+drop trigger if exists marketplace_subscription_locations_validate_location
+  on public.marketplace_subscription_locations;
+create trigger marketplace_subscription_locations_validate_location
+  before insert or update of organization_id, location_organization_id
+  on public.marketplace_subscription_locations
+  for each row execute function public.validate_marketplace_subscription_location();
+
 create index if not exists marketplace_subscription_locations_org_status_idx
   on public.marketplace_subscription_locations(organization_id, status);
 
