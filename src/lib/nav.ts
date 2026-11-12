@@ -631,9 +631,33 @@ const MENU: RawSection[] = [
     "Executive-level operational coordination across the enterprise.",
     "maximus",
     [
-      ["Global Operations Dashboard", ["Enterprise Overview", "Company & Business Unit Portfolio", "Regional Performance", "Location Performance"]],
-      ["Regional Operations Dashboard", ["Assigned Regions", "Assigned Location Portfolio", "Regional Performance", "Workforce & Service Health"]],
-      ["Location Operations Dashboard", ["Location Overview", "Local Workforce & Departments", "Local Service & Security", "Location Action Register"]],
+      [
+        "Global Operations Dashboard",
+        [
+          "Enterprise Overview",
+          "Company & Business Unit Portfolio",
+          "Regional Performance",
+          "Location Performance",
+        ],
+      ],
+      [
+        "Regional Operations Dashboard",
+        [
+          "Assigned Regions",
+          "Assigned Location Portfolio",
+          "Regional Performance",
+          "Workforce & Service Health",
+        ],
+      ],
+      [
+        "Location Operations Dashboard",
+        [
+          "Location Overview",
+          "Local Workforce & Departments",
+          "Local Service & Security",
+          "Location Action Register",
+        ],
+      ],
       ["Cross-Department Operations", ["Department Status", "Coordination"]],
       ["Critical Events", ["Critical Event Register", "Active Response"]],
       ["Incident Coordination", ["Incident Overview", "Escalations"]],
