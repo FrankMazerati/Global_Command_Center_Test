@@ -30,6 +30,7 @@ import {
 import { HelpBuddyIntelligenceManagement } from "@/components/workspace/HelpBuddyIntelligenceManagement";
 import { MarketplaceHistoryWorkspace } from "@/components/workspace/MarketplaceHistoryWorkspace";
 import { SubscriptionPlansWorkspace } from "@/components/workspace/SubscriptionPlansWorkspace";
+import { OrganizationLocationsWorkspace } from "@/components/workspace/OrganizationLocationsWorkspace";
 import { WorkforceHistoryWorkspace } from "@/components/workspace/WorkforceHistoryWorkspace";
 import { IntelliOfficeWorkspace } from "@/components/workspace/IntelliOfficeWorkspace";
 import { IntelliSphereToolsWorkspace } from "@/components/workspace/IntelliSphereToolsWorkspace";
@@ -1331,6 +1332,7 @@ function PageFoundation() {
   ]);
   const identityAccess =
     section.slug === "new-active-directory" && identityAccessSlugs.has(page.slug);
+  const organizationLocations = page.slug === "business-locations";
   const publicSiteView =
     page.slug === "website-content-management"
       ? "pages"
@@ -1434,6 +1436,8 @@ function PageFoundation() {
         <EmployeeProfileWorkspace />
       ) : page.slug === "group-membership" ? (
         <GroupMembershipWorkspace />
+      ) : organizationLocations ? (
+        <OrganizationLocationsWorkspace title={page.title} />
       ) : identityAccess ? (
         <IdentityAccessWorkspace title={page.title} pageSlug={page.slug} />
       ) : directory === "tickets" ? (
