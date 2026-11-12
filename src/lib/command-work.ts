@@ -372,7 +372,10 @@ export async function requestWorkItemApproval(input: {
     to_value: { approval_id: data.id, approver_profile_id: input.approverProfileId ?? null },
     note: input.reason.trim(),
   });
-  if (eventError) throw eventError;
+  if (eventError) {
+    await client.from("command_work_item_approvals").update({ status: "cancelled" }).eq("id", data.id);
+    throw eventError;
+  }
   return data as { id: string; status: string };
 }
 
