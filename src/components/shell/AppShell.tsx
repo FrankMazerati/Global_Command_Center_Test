@@ -313,7 +313,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                   My full profile
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onSelect={() => go("identity-and-access-management", "user-access", "group-based-access")}
+                  onSelect={() =>
+                    go("identity-and-access-management", "user-access", "group-based-access")
+                  }
                 >
                   <Users className="mr-2 size-4" />
                   My group memberships
@@ -325,13 +327,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   Badges and achievements
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onSelect={() =>
-                    go(
-                      "my-workspace",
-                      "my-learning",
-                      "achievements",
-                    )
-                  }
+                  onSelect={() => go("my-workspace", "my-learning", "achievements")}
                 >
                   <Star className="mr-2 size-4" />
                   Stars and recognition
