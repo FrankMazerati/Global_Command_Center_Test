@@ -575,6 +575,7 @@ function SupabaseDirectory({ kind, title }: { kind: DirectoryKind; title: string
 }
 
 const marketplaceSlugs = [
+  "available-plans",
   "marketplace-overview",
   "products-and-services",
   "pricing-and-feature-comparisons",
