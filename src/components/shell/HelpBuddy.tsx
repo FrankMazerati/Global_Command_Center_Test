@@ -86,6 +86,7 @@ export function HelpBuddyPanel({ className }: { className?: string }) {
                 <li key={c.id} className="group flex items-center gap-2 rounded-md px-1 py-1 hover:bg-muted">
                   <Checkbox checked={c.done} onCheckedChange={() => w.toggleChecklistItem(c.id)} aria-label={c.label} />
                   <span className={cn("flex-1 text-sm", c.done && "text-muted-foreground line-through")}>{c.label}</span>
+                  {c.persisted === false && <small className="text-[10px] text-muted-foreground">This device only</small>}
                   <button type="button" onClick={() => w.removeChecklistItem(c.id)} aria-label={`Remove ${c.label}`} className="text-muted-foreground opacity-60 hover:text-destructive">
                     <Trash2 className="size-3.5" />
                   </button>
