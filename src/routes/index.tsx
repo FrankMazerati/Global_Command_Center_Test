@@ -1547,7 +1547,7 @@ function CommandCenterHome() {
                 <div className="cc-panel-heading">
                   <div>
                     <Bot size={17} />
-                    <h2>HELP BUDDY</h2>
+                    <h2>CHAT BUDDY</h2>
                     <p>Your AI Help Desk Assistant</p>
                   </div>
                   <button
@@ -1564,7 +1564,7 @@ function CommandCenterHome() {
                 {!assistantCollapsed && (
                   <>
                 <div className="cc-buddy-card">
-                  <img src="/assets/help-buddy.png" alt="Help Buddy" />
+                  <img src="/assets/help-buddy.png" alt="Chat Buddy" />
                   <div>
                     <b>Help Buddy</b>
                     <span>Ask. Find. Connect. Get it done.</span>
@@ -1662,8 +1662,8 @@ function CommandCenterHome() {
                   <input
                     value={message}
                     onChange={(event) => setMessage(event.target.value)}
-                    placeholder="Type your question…"
-                    aria-label="Ask Help Buddy"
+                    placeholder="Ask Chat Buddy…"
+                    aria-label="Ask Chat Buddy"
                   />
                   <button type="submit" aria-label="Send message">
                     <ChevronRight size={15} />
