@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/dialog";
 import { AVAILABILITY, useWork } from "@/lib/work-context";
 import { NAV } from "@/lib/nav";
+import { loadChatBuddyMessages, saveChatBuddyMessage, listCommandWorkItems, type ChatBuddyMessage } from "@/lib/command-work";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -266,90 +267,6 @@ const availableTickers = [
   "IWM",
 ];
 
-const workItems: WorkItem[] = [
-  {
-    id: "PROJ-0001",
-    title: "Finish the complete Global Command Center project",
-    detail:
-      "Complete every destination page, workflow, connector, and review item in the test repository.",
-    tone: "urgent",
-    action: "Open",
-  },
-  {
-    id: "BUILD-0024",
-    title: "Complete all hamburger navigation pages",
-    detail:
-      "Replace placeholder destination surfaces with finished page content and validated actions.",
-    tone: "high",
-    action: "Open",
-  },
-  {
-    id: "BUILD-0025",
-    title: "Verify page-to-page navigation and access rules",
-    detail: "Check every route, breadcrumb, permission boundary, and back-navigation path.",
-    tone: "high",
-    action: "Open",
-  },
-  {
-    id: "BUILD-0026",
-    title: "Finish Help Buddy workflow integration",
-    detail:
-      "Connect assistant context, missions, knowledge, activity, and handoff behavior to real work.",
-    tone: "high",
-    action: "Open",
-  },
-  {
-    id: "BUILD-0027",
-    title: "Complete tablet and phone QA",
-    detail:
-      "Validate the closed and open hamburger states, independently scrolling work areas, and touch controls.",
-    tone: "medium",
-    action: "Open",
-  },
-  {
-    id: "SEC-4860",
-    title: "Suspicious login attempt",
-    detail: "Multiple failed sign-ins detected on finance-portal",
-    tone: "urgent",
-    action: "View",
-  },
-  {
-    id: "INC-4582",
-    title: "Client Support Ticket #45872",
-    detail: "User experiencing VPN connection issues",
-    tone: "high",
-    action: "Resolve",
-  },
-  {
-    id: "REQ-1047",
-    title: "Review new user access request",
-    detail: "Pending approval for Sarah Johnson (Marketing)",
-    tone: "high",
-    action: "Approve",
-  },
-  {
-    id: "OPS-2204",
-    title: "System update available",
-    detail: "Windows security patch for 3 servers",
-    tone: "medium",
-    action: "Review",
-  },
-  {
-    id: "KB-1098",
-    title: "Knowledge Vault update",
-    detail: "New documentation available: Network Troubleshooting",
-    tone: "medium",
-    action: "Open",
-  },
-  {
-    id: "GOV-0902",
-    title: "Compliance checklist",
-    detail: "Quarterly audit items are due this week",
-    tone: "low",
-    action: "Open",
-  },
-];
-
 const toneStyles = {
   urgent: "border-rose-400/40 bg-rose-500/10 text-rose-200",
   high: "border-amber-300/40 bg-amber-400/10 text-amber-100",
@@ -450,7 +367,8 @@ function CommandCenterHome() {
   const [summaryCategory, setSummaryCategory] = useState<SummaryCategory | null>(null);
   const [selectedWorkItem, setSelectedWorkItem] = useState<WorkItem | null>(null);
   const [message, setMessage] = useState("");
-  const [conversation, setConversation] = useState<string[]>([]);
+  const [conversation, setConversation] = useState<ChatBuddyMessage[]>([]);
+  const [commandItems, setCommandItems] = useState<WorkItem[]>([]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 15000);
@@ -502,43 +420,52 @@ function CommandCenterHome() {
   useEffect(() => {
     let active = true;
     const supabase = getSupabaseClient();
-    if (!supabase)
-      return () => {
-        active = false;
-      };
-    Promise.all([supabase.auth.getUser(), supabase.from("users").select("*").limit(100)]).then(
-      ([authResult, usersResult]) => {
-        if (!active || usersResult.error || !usersResult.data?.length) return;
-        const email = authResult.data.user?.email?.toLowerCase();
-        const rows = usersResult.data as Array<Record<string, unknown>>;
-        const match =
-          rows.find((row) => email && String(row["email"] ?? "").toLowerCase() === email) ??
-          rows.find((row) =>
-            /manager|admin|owner/i.test(String(row["role"] ?? row["title"] ?? "")),
-          ) ??
-          rows[0] ??
-          null;
-        setManagerRecord(match);
-      },
-    );
-    return () => {
-      active = false;
-    };
+    if (!supabase) return () => { active = false; };
+    supabase.auth.getUser().then(async ({ data: authData, error: authError }) => {
+      if (!active || authError || !authData.user) return;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id,display_name,first_name,last_name,work_email,employee_global_id,company_global_id,location_city,location_region")
+        .eq("id", authData.user.id)
+        .maybeSingle();
+      if (!active || error || !data) return;
+      setManagerRecord(data as Record<string, unknown>);
+    });
+    return () => { active = false; };
   }, []);
 
-  const items = liveItems.length ? liveItems : workItems;
+  useEffect(() => {
+    let active = true;
+    listCommandWorkItems()
+      .then((rows) => {
+        if (!active) return;
+        setCommandItems(rows.map((row) => ({
+          id: row.id,
+          title: row.title,
+          detail: row.description ?? row.status.replaceAll("_", " "),
+          tone: row.priority === "critical" ? "urgent" : row.priority,
+          action: row.status === "completed" ? "View" : "Open",
+        })));
+      })
+      .catch(() => { if (active) setCommandItems([]); });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    loadChatBuddyMessages()
+      .then((rows) => { if (active) setConversation(rows); })
+      .catch(() => { if (active) setConversation([]); });
+    return () => { active = false; };
+  }, []);
+
+  const items = [...liveItems, ...commandItems];
   const availability = work.availability;
-  const managerName = String(
-    managerRecord?.["full_name"] ?? managerRecord?.["name"] ?? "Frank Mazerati",
-  );
-  const managerEmail = String(managerRecord?.["email"] ?? "Work email");
-  const managerUserId = String(managerRecord?.["user_id"] ?? managerRecord?.["id"] ?? "001");
-  const managerCompany = String(
-    managerRecord?.["company_id"] ?? managerRecord?.["company"] ?? "INTELLISTACK",
-  );
-  const managerWorkplace = String(
-    managerRecord?.["workplace"] ?? managerRecord?.["location"] ?? "Downtown Chicago",
-  );
+  const managerName = String(managerRecord?.["display_name"] ?? [managerRecord?.["first_name"], managerRecord?.["last_name"]].filter(Boolean).join(" ") ?? "Profile not configured");
+  const managerEmail = String(managerRecord?.["work_email"] ?? "Work email not configured");
+  const managerUserId = String(managerRecord?.["employee_global_id"] ?? "ID not assigned");
+  const managerCompany = String(managerRecord?.["company_global_id"] ?? "Organization not linked");
+  const managerWorkplace = [managerRecord?.["location_city"], managerRecord?.["location_region"]].filter(Boolean).join(", ") || "Location not configured";
   const quickPickLibrary = [...availableQuickPicks, ...menuQuickPickOptions].filter(
     (pick, index, all) => all.findIndex((candidate) => candidate.label === pick.label) === index,
   );
@@ -569,16 +496,18 @@ function CommandCenterHome() {
     "Low Priority": items.filter((item) => item.tone === "low"),
   };
 
-  const sendMessage = (event: FormEvent<HTMLFormElement>) => {
+  const sendMessage = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const trimmed = message.trim();
     if (!trimmed) return;
-    setConversation((current) => [
-      ...current,
-      trimmed,
-      "I’m on it. I’ll keep this in your working context.",
-    ]);
-    setMessage("");
+    try {
+      const saved = await saveChatBuddyMessage(trimmed);
+      setConversation((current) => [...current, saved]);
+      setMessage("");
+      toast.info("Message saved to Chat Buddy history. AI response generation is not connected yet.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to save your Chat Buddy message.");
+    }
   };
 
   const readImage = (file: File | undefined, setter: (value: string) => void) => {
@@ -1651,9 +1580,9 @@ function CommandCenterHome() {
                 )}
                 {conversation.length > 0 && (
                   <div className="cc-conversation">
-                    {conversation.slice(-4).map((entry, index) => (
-                      <p className={index % 2 === 0 ? "user" : "buddy"} key={`${entry}-${index}`}>
-                        {entry}
+                    {conversation.slice(-8).map((entry) => (
+                      <p className={entry.sender_type === "user" ? "user" : "buddy"} key={entry.id}>
+                        {entry.content}
                       </p>
                     ))}
                   </div>
