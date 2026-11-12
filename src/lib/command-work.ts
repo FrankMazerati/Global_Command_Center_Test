@@ -117,26 +117,10 @@ export async function getChatBuddySessionId(): Promise<string> {
     sessionId = created.id as string;
   }
 
-  const { data: welcome, error: welcomeLookupError } = await client
-    .from("assistant_messages")
-    .select("id")
-    .eq("session_id", sessionId)
-    .eq("intent_key", "chat_buddy_welcome_v1")
-    .limit(1)
-    .maybeSingle();
-  if (welcomeLookupError) throw welcomeLookupError;
-  if (!welcome) {
-    const { error: welcomeInsertError } = await client.from("assistant_messages").insert({
-      session_id: sessionId,
-      sender_type: "assistant",
-      content:
-        "Hi, I’m Chat Buddy. I can help organize your work and prepare next steps within your access. Your messages and checklists can be saved here. Live AI response generation is not connected in this workspace yet.",
-      message_kind: "chat",
-      intent_key: "chat_buddy_welcome_v1",
-      sensitivity: "standard",
-    });
-    if (welcomeInsertError && welcomeInsertError.code !== "23505") throw welcomeInsertError;
-  }
+  const { error: welcomeError } = await client.rpc("ensure_chat_buddy_welcome_message", {
+    p_session_id: sessionId,
+  });
+  if (welcomeError) throw welcomeError;
   return sessionId;
 }
 
