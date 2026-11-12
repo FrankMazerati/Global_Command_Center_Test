@@ -1,5 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { createCommandWorkItem, deleteCommandWorkItem, listCommandWorkItems, updateCommandWorkItem } from "@/lib/command-work";
+import {
+  createCommandWorkItem,
+  deleteCommandWorkItem,
+  listCommandWorkItems,
+  updateCommandWorkItem,
+} from "@/lib/command-work";
 import { toast } from "sonner";
 
 // Shared working context that survives internal navigation (active ticket, Chat Buddy, notes).
@@ -108,17 +113,29 @@ export function WorkContextProvider({ children }: { children: ReactNode }) {
         if (!active) return;
         const persistedItems = rows
           .filter((row) => row.source_type === "chat_buddy" && row.status !== "cancelled")
-          .map((row) => ({ id: row.id, label: row.title, done: row.status === "completed", persisted: true }));
+          .map((row) => ({
+            id: row.id,
+            label: row.title,
+            done: row.status === "completed",
+            persisted: true,
+          }));
         setState((current) => {
           const persistedIds = new Set(persistedItems.map((item) => item.id));
           return {
             ...current,
-            checklist: [...persistedItems, ...current.checklist.filter((item) => !persistedIds.has(item.id))],
+            checklist: [
+              ...persistedItems,
+              ...current.checklist.filter((item) => !persistedIds.has(item.id)),
+            ],
           };
         });
       })
-      .catch(() => { /* Keep locally saved checklist entries available when signed out or offline. */ });
-    return () => { active = false; };
+      .catch(() => {
+        /* Keep locally saved checklist entries available when signed out or offline. */
+      });
+    return () => {
+      active = false;
+    };
   }, [loaded]);
 
   const value = useMemo<WorkContextValue>(
@@ -154,8 +171,24 @@ export function WorkContextProvider({ children }: { children: ReactNode }) {
         const trimmed = label.trim();
         if (!trimmed) return;
         void createCommandWorkItem({ title: trimmed, sourceType: "chat_buddy" })
-          .then((item) => setState((s) => ({ ...s, checklist: [...s.checklist, { id: item.id, label: item.title, done: false, persisted: true }] })))
-          .catch(() => setState((s) => ({ ...s, checklist: [...s.checklist, { id: uid(), label: trimmed, done: false, persisted: false }] })));
+          .then((item) =>
+            setState((s) => ({
+              ...s,
+              checklist: [
+                ...s.checklist,
+                { id: item.id, label: item.title, done: false, persisted: true },
+              ],
+            })),
+          )
+          .catch(() =>
+            setState((s) => ({
+              ...s,
+              checklist: [
+                ...s.checklist,
+                { id: uid(), label: trimmed, done: false, persisted: false },
+              ],
+            })),
+          );
       },
       toggleChecklistItem: (id) => {
         const item = state.checklist.find((entry) => entry.id === id);
@@ -163,17 +196,34 @@ export function WorkContextProvider({ children }: { children: ReactNode }) {
         const nextDone = !item.done;
         if (item.persisted) {
           void updateCommandWorkItem(id, { status: nextDone ? "completed" : "open" })
-            .then(() => setState((s) => ({ ...s, checklist: s.checklist.map((entry) => entry.id === id ? { ...entry, done: nextDone } : entry) })))
+            .then(() =>
+              setState((s) => ({
+                ...s,
+                checklist: s.checklist.map((entry) =>
+                  entry.id === id ? { ...entry, done: nextDone } : entry,
+                ),
+              })),
+            )
             .catch(() => toast.error("Could not save this checklist update. Please try again."));
           return;
         }
-        setState((s) => ({ ...s, checklist: s.checklist.map((entry) => (entry.id === id ? { ...entry, done: nextDone } : entry)) }));
+        setState((s) => ({
+          ...s,
+          checklist: s.checklist.map((entry) =>
+            entry.id === id ? { ...entry, done: nextDone } : entry,
+          ),
+        }));
       },
       removeChecklistItem: (id) => {
         const item = state.checklist.find((entry) => entry.id === id);
         if (item?.persisted) {
           void deleteCommandWorkItem(id)
-            .then(() => setState((s) => ({ ...s, checklist: s.checklist.filter((entry) => entry.id !== id) })))
+            .then(() =>
+              setState((s) => ({
+                ...s,
+                checklist: s.checklist.filter((entry) => entry.id !== id),
+              })),
+            )
             .catch(() => toast.error("Could not remove this checklist item. Please try again."));
           return;
         }

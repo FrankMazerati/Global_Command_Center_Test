@@ -47,7 +47,17 @@ import {
 } from "@/components/ui/dialog";
 import { AVAILABILITY, useWork } from "@/lib/work-context";
 import { NAV } from "@/lib/nav";
-import { loadChatBuddyMessages, saveChatBuddyMessage, listCommandWorkItems, listPendingWorkItemApprovals, listIntegrationConnections, listRecentAuditEvents, decideWorkItemApproval, type ChatBuddyMessage, type RecentAuditEvent } from "@/lib/command-work";
+import {
+  loadChatBuddyMessages,
+  saveChatBuddyMessage,
+  listCommandWorkItems,
+  listPendingWorkItemApprovals,
+  listIntegrationConnections,
+  listRecentAuditEvents,
+  decideWorkItemApproval,
+  type ChatBuddyMessage,
+  type RecentAuditEvent,
+} from "@/lib/command-work";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -328,7 +338,9 @@ function CommandCenterHome() {
   const [quickPickItems, setQuickPickItems] = useState([...quickPicks]);
   const [draggedQuickPick, setDraggedQuickPick] = useState<string | null>(null);
   const [connectionStatuses, setConnectionStatuses] = useState<Record<string, string>>({});
-  const connectedConnectors = Object.entries(connectionStatuses).filter(([, status]) => status === "connected").map(([name]) => name);
+  const connectedConnectors = Object.entries(connectionStatuses)
+    .filter(([, status]) => status === "connected")
+    .map(([name]) => name);
   const [activityItems, setActivityItems] = useState<RecentAuditEvent[]>([]);
   const [profilePhoto, setProfilePhoto] = useState("/assets/frank-mazerati.png");
   const [backgroundPhoto, setBackgroundPhoto] = useState<string | null>(null);
@@ -407,59 +419,78 @@ function CommandCenterHome() {
   useEffect(() => {
     let active = true;
     const supabase = getSupabaseClient();
-    if (!supabase) return () => { active = false; };
+    if (!supabase)
+      return () => {
+        active = false;
+      };
     supabase.auth.getUser().then(async ({ data: authData, error: authError }) => {
       if (!active || authError || !authData.user) return;
       const { data, error } = await supabase
         .from("profiles")
-        .select("id,display_name,first_name,last_name,work_email,employee_global_id,company_global_id,location_city,location_region")
+        .select(
+          "id,display_name,first_name,last_name,work_email,employee_global_id,company_global_id,location_city,location_region",
+        )
         .eq("id", authData.user.id)
         .maybeSingle();
       if (!active || error || !data) return;
       setManagerRecord(data as Record<string, unknown>);
     });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
     let active = true;
-    Promise.allSettled([listCommandWorkItems(), listPendingWorkItemApprovals()]).then(([workResult, approvalResult]) => {
-      if (!active) return;
-      const workItems = workResult.status === "fulfilled"
-        ? workResult.value
-            .filter((row) => row.status !== "completed" && row.status !== "cancelled")
-            .map((row) => ({
-              id: row.id,
-              title: row.title,
-              detail: row.description ?? row.status.replaceAll("_", " "),
-              tone: row.priority === "critical" ? "urgent" as const : row.priority,
-              action: "Open",
-              createdAt: row.created_at,
-            }))
-        : [];
-      const approvals = approvalResult.status === "fulfilled"
-        ? approvalResult.value.map((approval) => ({
-            id: `approval:${approval.id}`,
-            approvalId: approval.id,
-            canDecide: approval.participant_role === "approver",
-            title: approval.work_item_title,
-            detail: `${approval.participant_role === "approver" ? "Approval needed from you" : "Waiting for approval"} · ${approval.reason}`,
-            tone: approval.priority === "critical" ? "urgent" as const : approval.priority,
-            action: approval.participant_role === "approver" ? "Review" : "Track",
-            createdAt: approval.requested_at,
-          }))
-        : [];
-      setCommandItems([...workItems, ...approvals]);
-    });
-    return () => { active = false; };
+    Promise.allSettled([listCommandWorkItems(), listPendingWorkItemApprovals()]).then(
+      ([workResult, approvalResult]) => {
+        if (!active) return;
+        const workItems =
+          workResult.status === "fulfilled"
+            ? workResult.value
+                .filter((row) => row.status !== "completed" && row.status !== "cancelled")
+                .map((row) => ({
+                  id: row.id,
+                  title: row.title,
+                  detail: row.description ?? row.status.replaceAll("_", " "),
+                  tone: row.priority === "critical" ? ("urgent" as const) : row.priority,
+                  action: "Open",
+                  createdAt: row.created_at,
+                }))
+            : [];
+        const approvals =
+          approvalResult.status === "fulfilled"
+            ? approvalResult.value.map((approval) => ({
+                id: `approval:${approval.id}`,
+                approvalId: approval.id,
+                canDecide: approval.participant_role === "approver",
+                title: approval.work_item_title,
+                detail: `${approval.participant_role === "approver" ? "Approval needed from you" : "Waiting for approval"} · ${approval.reason}`,
+                tone: approval.priority === "critical" ? ("urgent" as const) : approval.priority,
+                action: approval.participant_role === "approver" ? "Review" : "Track",
+                createdAt: approval.requested_at,
+              }))
+            : [];
+        setCommandItems([...workItems, ...approvals]);
+      },
+    );
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
     let active = true;
     loadChatBuddyMessages()
-      .then((rows) => { if (active) setConversation(rows); })
-      .catch(() => { if (active) setConversation([]); });
-    return () => { active = false; };
+      .then((rows) => {
+        if (active) setConversation(rows);
+      })
+      .catch(() => {
+        if (active) setConversation([]);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
@@ -467,27 +498,46 @@ function CommandCenterHome() {
     listIntegrationConnections()
       .then((rows) => {
         if (!active) return;
-        setConnectionStatuses(Object.fromEntries(rows.map((row) => [row.display_name, row.connection_status])));
+        setConnectionStatuses(
+          Object.fromEntries(rows.map((row) => [row.display_name, row.connection_status])),
+        );
       })
-      .catch(() => { if (active) setConnectionStatuses({}); });
-    return () => { active = false; };
+      .catch(() => {
+        if (active) setConnectionStatuses({});
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   useEffect(() => {
     let active = true;
     listRecentAuditEvents(5)
-      .then((rows) => { if (active) setActivityItems(rows); })
-      .catch(() => { if (active) setActivityItems([]); });
-    return () => { active = false; };
+      .then((rows) => {
+        if (active) setActivityItems(rows);
+      })
+      .catch(() => {
+        if (active) setActivityItems([]);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const items = [...liveItems, ...commandItems];
   const availability = work.availability;
-  const managerName = String(managerRecord?.["display_name"] || [managerRecord?.["first_name"], managerRecord?.["last_name"]].filter(Boolean).join(" ") || "Profile not configured");
+  const managerName = String(
+    managerRecord?.["display_name"] ||
+      [managerRecord?.["first_name"], managerRecord?.["last_name"]].filter(Boolean).join(" ") ||
+      "Profile not configured",
+  );
   const managerEmail = String(managerRecord?.["work_email"] ?? "Work email not configured");
   const managerUserId = String(managerRecord?.["employee_global_id"] ?? "ID not assigned");
   const managerCompany = String(managerRecord?.["company_global_id"] ?? "Organization not linked");
-  const managerWorkplace = [managerRecord?.["location_city"], managerRecord?.["location_region"]].filter(Boolean).join(", ") || "Location not configured";
+  const managerWorkplace =
+    [managerRecord?.["location_city"], managerRecord?.["location_region"]]
+      .filter(Boolean)
+      .join(", ") || "Location not configured";
   const quickPickLibrary = [...availableQuickPicks, ...menuQuickPickOptions].filter(
     (pick, index, all) => all.findIndex((candidate) => candidate.label === pick.label) === index,
   );
@@ -515,12 +565,18 @@ function CommandCenterHome() {
     if (!selectedWorkItem?.approvalId || !selectedWorkItem.canDecide) return;
     try {
       await decideWorkItemApproval(selectedWorkItem.approvalId, decision, approvalDecisionReason);
-      setCommandItems((current) => current.filter((item) => item.approvalId !== selectedWorkItem.approvalId));
+      setCommandItems((current) =>
+        current.filter((item) => item.approvalId !== selectedWorkItem.approvalId),
+      );
       setSelectedWorkItem(null);
       setApprovalDecisionReason("");
-      toast.success(decision === "approved" ? "Approval recorded." : "Request denied and recorded.");
+      toast.success(
+        decision === "approved" ? "Approval recorded." : "Request denied and recorded.",
+      );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Unable to record this approval decision.");
+      toast.error(
+        error instanceof Error ? error.message : "Unable to record this approval decision.",
+      );
     }
   };
 
@@ -541,9 +597,13 @@ function CommandCenterHome() {
       const saved = await saveChatBuddyMessage(trimmed);
       setConversation((current) => [...current, saved]);
       setMessage("");
-      toast.info("Message saved to Chat Buddy history. AI response generation is not connected yet.");
+      toast.info(
+        "Message saved to Chat Buddy history. AI response generation is not connected yet.",
+      );
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Unable to save your Chat Buddy message.");
+      toast.error(
+        error instanceof Error ? error.message : "Unable to save your Chat Buddy message.",
+      );
     }
   };
 
@@ -608,7 +668,9 @@ function CommandCenterHome() {
   };
 
   const addConnector = () => {
-    toast.info("The connector catalog is available, but an authorization flow must be configured before a connection can be created.");
+    toast.info(
+      "The connector catalog is available, but an authorization flow must be configured before a connection can be created.",
+    );
   };
 
   const addQuickPick = (pick: QuickPick) => {
@@ -790,7 +852,13 @@ function CommandCenterHome() {
             >
               <Mail size={17} />
             </button>
-            <button className="cc-icon-button" aria-label="Notifications" onClick={() => toast.info("Notification center is not connected in this workspace yet.")}>
+            <button
+              className="cc-icon-button"
+              aria-label="Notifications"
+              onClick={() =>
+                toast.info("Notification center is not connected in this workspace yet.")
+              }
+            >
               <Bell size={17} />
               <i />
             </button>
@@ -1460,7 +1528,12 @@ function CommandCenterHome() {
                         <b>{item.title}</b>
                       </div>
                       <p>{item.detail}</p>
-                      <small>{item.id} · {item.createdAt ? new Date(item.createdAt).toLocaleString() : "Date unavailable"}</small>
+                      <small>
+                        {item.id} ·{" "}
+                        {item.createdAt
+                          ? new Date(item.createdAt).toLocaleString()
+                          : "Date unavailable"}
+                      </small>
                     </div>
                     <button className="cc-row-action" onClick={() => openItem(item)}>
                       {item.action}
@@ -1511,112 +1584,207 @@ function CommandCenterHome() {
                 </div>
                 {!assistantCollapsed && (
                   <>
-                <div className="cc-buddy-card">
-                  <img src="/assets/help-buddy.png" alt="Chat Buddy" />
-                  <div>
-                    <b>Chat Buddy</b>
-                    <span>Ask. Find. Connect. Get it done.</span>
-                  </div>
-                </div>
-                <div className="cc-buddy-tabs" role="tablist" aria-label="Chat Buddy scenarios">
-                  {(
-                    [
-                      ["Assist", Bot],
-                      ["Checklist", Activity],
-                      ["Prepare", CalendarDays],
-                      ["Alerts", Bell],
-                    ] as Array<[string, LucideIcon]>
-                  ).map(([label, Icon]) => (
-                    <button
-                      type="button"
-                      role="tab"
-                      aria-selected={activeBuddyTab === label}
-                      className={activeBuddyTab === label ? "active" : ""}
-                      key={label}
-                      onClick={() => setActiveBuddyTab(label)}
-                    >
-                      <Icon size={13} />
-                      <span>{label}</span>
-                    </button>
-                  ))}
-                </div>
-                {activeBuddyTab === "Checklist" ? (
-                  <div className="cc-buddy-checklist">
-                    <div className="cc-buddy-checklist-heading">
-                      <strong>MY CHECKLIST</strong>
-                      <span>{work.checklist.filter((entry) => entry.done).length}/{work.checklist.length} complete</span>
+                    <div className="cc-buddy-card">
+                      <img src="/assets/help-buddy.png" alt="Chat Buddy" />
+                      <div>
+                        <b>Chat Buddy</b>
+                        <span>Ask. Find. Connect. Get it done.</span>
+                      </div>
                     </div>
-                    {work.checklist.length ? (
-                      <ul>
-                        {work.checklist.map((entry) => (
-                          <li key={entry.id}>
-                            <label>
-                              <input
-                                type="checkbox"
-                                checked={entry.done}
-                                onChange={() => work.toggleChecklistItem(entry.id)}
-                              />
-                              <span className={entry.done ? "is-done" : ""}>{entry.label}</span>
-                            </label>
-                            <button type="button" aria-label={`Remove ${entry.label}`} onClick={() => work.removeChecklistItem(entry.id)}>×</button>
-                          </li>
-                        ))}
-                      </ul>
+                    <div className="cc-buddy-tabs" role="tablist" aria-label="Chat Buddy scenarios">
+                      {(
+                        [
+                          ["Assist", Bot],
+                          ["Checklist", Activity],
+                          ["Prepare", CalendarDays],
+                          ["Alerts", Bell],
+                        ] as Array<[string, LucideIcon]>
+                      ).map(([label, Icon]) => (
+                        <button
+                          type="button"
+                          role="tab"
+                          aria-selected={activeBuddyTab === label}
+                          className={activeBuddyTab === label ? "active" : ""}
+                          key={label}
+                          onClick={() => setActiveBuddyTab(label)}
+                        >
+                          <Icon size={13} />
+                          <span>{label}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {activeBuddyTab === "Checklist" ? (
+                      <div className="cc-buddy-checklist">
+                        <div className="cc-buddy-checklist-heading">
+                          <strong>MY CHECKLIST</strong>
+                          <span>
+                            {work.checklist.filter((entry) => entry.done).length}/
+                            {work.checklist.length} complete
+                          </span>
+                        </div>
+                        {work.checklist.length ? (
+                          <ul>
+                            {work.checklist.map((entry) => (
+                              <li key={entry.id}>
+                                <label>
+                                  <input
+                                    type="checkbox"
+                                    checked={entry.done}
+                                    onChange={() => work.toggleChecklistItem(entry.id)}
+                                  />
+                                  <span className={entry.done ? "is-done" : ""}>{entry.label}</span>
+                                </label>
+                                <button
+                                  type="button"
+                                  aria-label={`Remove ${entry.label}`}
+                                  onClick={() => work.removeChecklistItem(entry.id)}
+                                >
+                                  ×
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="cc-buddy-checklist-empty">
+                            No checklist steps yet. Add the first step below.
+                          </p>
+                        )}
+                        <form
+                          onSubmit={(event) => {
+                            event.preventDefault();
+                            if (checklistDraft.trim()) work.addChecklistItem(checklistDraft.trim());
+                            setChecklistDraft("");
+                          }}
+                        >
+                          <input
+                            value={checklistDraft}
+                            onChange={(event) => setChecklistDraft(event.target.value)}
+                            placeholder="Add a checklist step…"
+                            aria-label="New checklist step"
+                          />
+                          <button type="submit" disabled={!checklistDraft.trim()}>
+                            <Plus size={13} /> Add
+                          </button>
+                        </form>
+                        <small>
+                          Personal checklist · Saved in this browser until persistent workflow
+                          storage is connected.
+                        </small>
+                      </div>
+                    ) : activeBuddyTab === "Prepare" ? (
+                      <div className="cc-buddy-actions">
+                        <button
+                          onClick={() =>
+                            setMessage(
+                              "Help me prepare a meeting: identify the purpose, draft an agenda, suggest attendees from information I am authorized to access, and check my connected calendar. Do not send invitations without my confirmation.",
+                            )
+                          }
+                        >
+                          Schedule a Meeting
+                        </button>
+                        <button
+                          onClick={() =>
+                            setMessage(
+                              "Help me prepare a trip: organize dates, destination, approved travel requirements, itinerary, and documents. Do not book or purchase anything without explicit authorization.",
+                            )
+                          }
+                        >
+                          Prepare a Trip
+                        </button>
+                        <button
+                          onClick={() =>
+                            setMessage(
+                              "Gather the business documents relevant to my current work. Search only repositories and records I am authorized to access, and include source links.",
+                            )
+                          }
+                        >
+                          Gather Business Documents
+                        </button>
+                      </div>
+                    ) : activeBuddyTab === "Alerts" ? (
+                      <div className="cc-buddy-alerts">
+                        {liveItems.length ? (
+                          liveItems
+                            .filter((entry) => entry.tone === "urgent" || entry.tone === "high")
+                            .slice(0, 5)
+                            .map((entry) => (
+                              <button type="button" key={entry.id} onClick={() => openItem(entry)}>
+                                <strong>{entry.title}</strong>
+                                <span>
+                                  {entry.id} · {entry.tone.toUpperCase()}
+                                </span>
+                              </button>
+                            ))
+                        ) : (
+                          <p>
+                            No live alert records are connected to this view yet. Sample dashboard
+                            records are not shown as live alerts.
+                          </p>
+                        )}
+                      </div>
                     ) : (
-                      <p className="cc-buddy-checklist-empty">No checklist steps yet. Add the first step below.</p>
+                      <div className="cc-buddy-actions">
+                        <button
+                          onClick={() =>
+                            setMessage(
+                              "Create a ticket for me. First check whether I am authorized to create it and ask for any missing required details.",
+                            )
+                          }
+                        >
+                          Create a Ticket
+                        </button>
+                        <button
+                          onClick={() =>
+                            setMessage(
+                              "Find documentation I am authorized to access for my current task.",
+                            )
+                          }
+                        >
+                          Find Documentation
+                        </button>
+                        <button
+                          onClick={() =>
+                            setMessage(
+                              "Check the live system status sources available to my role. Clearly identify unavailable integrations.",
+                            )
+                          }
+                        >
+                          Check System Status
+                        </button>
+                        <button
+                          onClick={() =>
+                            setMessage(
+                              "Help me contact the appropriate human support team for my authorized scope.",
+                            )
+                          }
+                        >
+                          Talk to a Human
+                        </button>
+                      </div>
                     )}
-                    <form onSubmit={(event) => {
-                      event.preventDefault();
-                      if (checklistDraft.trim()) work.addChecklistItem(checklistDraft.trim());
-                      setChecklistDraft("");
-                    }}>
-                      <input value={checklistDraft} onChange={(event) => setChecklistDraft(event.target.value)} placeholder="Add a checklist step…" aria-label="New checklist step" />
-                      <button type="submit" disabled={!checklistDraft.trim()}><Plus size={13} /> Add</button>
-                    </form>
-                    <small>Personal checklist · Saved in this browser until persistent workflow storage is connected.</small>
-                  </div>
-                ) : activeBuddyTab === "Prepare" ? (
-                  <div className="cc-buddy-actions">
-                    <button onClick={() => setMessage("Help me prepare a meeting: identify the purpose, draft an agenda, suggest attendees from information I am authorized to access, and check my connected calendar. Do not send invitations without my confirmation.")}>Schedule a Meeting</button>
-                    <button onClick={() => setMessage("Help me prepare a trip: organize dates, destination, approved travel requirements, itinerary, and documents. Do not book or purchase anything without explicit authorization.")}>Prepare a Trip</button>
-                    <button onClick={() => setMessage("Gather the business documents relevant to my current work. Search only repositories and records I am authorized to access, and include source links.")}>Gather Business Documents</button>
-                  </div>
-                ) : activeBuddyTab === "Alerts" ? (
-                  <div className="cc-buddy-alerts">
-                    {liveItems.length ? liveItems.filter((entry) => entry.tone === "urgent" || entry.tone === "high").slice(0, 5).map((entry) => (
-                      <button type="button" key={entry.id} onClick={() => openItem(entry)}>
-                        <strong>{entry.title}</strong><span>{entry.id} · {entry.tone.toUpperCase()}</span>
+                    {conversation.length > 0 && (
+                      <div className="cc-conversation">
+                        {conversation.slice(-8).map((entry) => (
+                          <p
+                            className={entry.sender_type === "user" ? "user" : "buddy"}
+                            key={entry.id}
+                          >
+                            {entry.content}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    <form className="cc-chat-form" onSubmit={sendMessage}>
+                      <input
+                        value={message}
+                        onChange={(event) => setMessage(event.target.value)}
+                        placeholder="Ask Chat Buddy…"
+                        aria-label="Ask Chat Buddy"
+                      />
+                      <button type="submit" aria-label="Send message">
+                        <ChevronRight size={15} />
                       </button>
-                    )) : <p>No live alert records are connected to this view yet. Sample dashboard records are not shown as live alerts.</p>}
-                  </div>
-                ) : (
-                  <div className="cc-buddy-actions">
-                    <button onClick={() => setMessage("Create a ticket for me. First check whether I am authorized to create it and ask for any missing required details.")}>Create a Ticket</button>
-                    <button onClick={() => setMessage("Find documentation I am authorized to access for my current task.")}>Find Documentation</button>
-                    <button onClick={() => setMessage("Check the live system status sources available to my role. Clearly identify unavailable integrations.")}>Check System Status</button>
-                    <button onClick={() => setMessage("Help me contact the appropriate human support team for my authorized scope.")}>Talk to a Human</button>
-                  </div>
-                )}
-                {conversation.length > 0 && (
-                  <div className="cc-conversation">
-                    {conversation.slice(-8).map((entry) => (
-                      <p className={entry.sender_type === "user" ? "user" : "buddy"} key={entry.id}>
-                        {entry.content}
-                      </p>
-                    ))}
-                  </div>
-                )}
-                <form className="cc-chat-form" onSubmit={sendMessage}>
-                  <input
-                    value={message}
-                    onChange={(event) => setMessage(event.target.value)}
-                    placeholder="Ask Chat Buddy…"
-                    aria-label="Ask Chat Buddy"
-                  />
-                  <button type="submit" aria-label="Send message">
-                    <ChevronRight size={15} />
-                  </button>
-                </form>
+                    </form>
                   </>
                 )}
               </section>
@@ -1659,13 +1827,20 @@ function CommandCenterHome() {
                   <span className="cc-text-link">Live audit feed</span>
                 </div>
                 <ul>
-                  {activityItems.length ? activityItems.map((entry) => (
-                    <li key={entry.id}>
-                      <span className={`activity-dot ${entry.outcome === "success" ? "green" : "blue"}`} />
-                      {entry.action} · {entry.resource_type}{entry.resource_id ? ` ${entry.resource_id}` : ""}
-                      <small>{new Date(entry.created_at).toLocaleString()}</small>
-                    </li>
-                  )) : <li>No recent authorized activity records are available.</li>}
+                  {activityItems.length ? (
+                    activityItems.map((entry) => (
+                      <li key={entry.id}>
+                        <span
+                          className={`activity-dot ${entry.outcome === "success" ? "green" : "blue"}`}
+                        />
+                        {entry.action} · {entry.resource_type}
+                        {entry.resource_id ? ` ${entry.resource_id}` : ""}
+                        <small>{new Date(entry.created_at).toLocaleString()}</small>
+                      </li>
+                    ))
+                  ) : (
+                    <li>No recent authorized activity records are available.</li>
+                  )}
                 </ul>
               </section>
             </aside>

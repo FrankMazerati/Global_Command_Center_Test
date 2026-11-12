@@ -2,12 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@/lib/supabase";
 
 export type CommandWorkStatus =
-  | "open"
-  | "in_progress"
-  | "blocked"
-  | "waiting_approval"
-  | "completed"
-  | "cancelled";
+  "open" | "in_progress" | "blocked" | "waiting_approval" | "completed" | "cancelled";
 export type CommandWorkPriority = "critical" | "high" | "medium" | "low";
 
 export interface CommandWorkItem {
@@ -52,7 +47,10 @@ async function isGlobalAdmin(client: SupabaseClient): Promise<boolean> {
   return data === true;
 }
 
-async function isOrganizationAdmin(client: SupabaseClient, organizationId: string): Promise<boolean> {
+async function isOrganizationAdmin(
+  client: SupabaseClient,
+  organizationId: string,
+): Promise<boolean> {
   const { data, error } = await client.rpc("is_org_admin", { p_organization_id: organizationId });
   if (error) throw error;
   return data === true;
@@ -131,7 +129,8 @@ export async function getChatBuddySessionId(): Promise<string> {
     const { error: welcomeInsertError } = await client.from("assistant_messages").insert({
       session_id: sessionId,
       sender_type: "assistant",
-      content: "Hi, I’m Chat Buddy. I can help organize your work and prepare next steps within your access. Your messages and checklists can be saved here. Live AI response generation is not connected in this workspace yet.",
+      content:
+        "Hi, I’m Chat Buddy. I can help organize your work and prepare next steps within your access. Your messages and checklists can be saved here. Live AI response generation is not connected in this workspace yet.",
       message_kind: "chat",
       intent_key: "chat_buddy_welcome_v1",
       sensitivity: "standard",
@@ -159,7 +158,8 @@ export async function saveChatBuddyMessage(content: string): Promise<ChatBuddyMe
   const client = getSupabaseClient();
   if (!client) throw new Error("Supabase is not configured.");
   const trimmed = content.trim();
-  if (!trimmed || trimmed.length > 10000) throw new Error("Message must be between 1 and 10,000 characters.");
+  if (!trimmed || trimmed.length > 10000)
+    throw new Error("Message must be between 1 and 10,000 characters.");
   const sessionId = await getChatBuddySessionId();
   const { data, error } = await client
     .from("assistant_messages")
@@ -186,10 +186,11 @@ export async function listCommandWorkItems(): Promise<CommandWorkItem[]> {
   if (!client) throw new Error("Supabase is not configured.");
   const profile = await currentProfile(client);
   const globalAdmin = await isGlobalAdmin(client);
-  const orgAdmin = globalAdmin || await isOrganizationAdmin(client, profile.organization_id);
+  const orgAdmin = globalAdmin || (await isOrganizationAdmin(client, profile.organization_id));
   let query = client.from("command_work_items").select("*");
   if (!globalAdmin) query = query.eq("organization_id", profile.organization_id);
-  if (!globalAdmin && !orgAdmin && profile.tenant_id) query = query.eq("tenant_id", profile.tenant_id);
+  if (!globalAdmin && !orgAdmin && profile.tenant_id)
+    query = query.eq("tenant_id", profile.tenant_id);
   const { data, error } = await query
     .order("sort_order", { ascending: true })
     .order("due_at", { ascending: true, nullsFirst: false })
@@ -238,7 +239,11 @@ export async function createCommandWorkItem(input: {
     tenant_id: item.tenant_id,
     actor_profile_id: profile.id,
     event_type: "created",
-    to_value: { status: item.status, priority: item.priority, assignee_profile_id: item.assignee_profile_id },
+    to_value: {
+      status: item.status,
+      priority: item.priority,
+      assignee_profile_id: item.assignee_profile_id,
+    },
   });
   if (eventError) {
     await client.from("command_work_items").delete().eq("id", item.id);
@@ -249,7 +254,18 @@ export async function createCommandWorkItem(input: {
 
 export async function updateCommandWorkItem(
   id: string,
-  patch: Partial<Pick<CommandWorkItem, "title" | "description" | "status" | "priority" | "assignee_profile_id" | "due_at" | "sort_order">>,
+  patch: Partial<
+    Pick<
+      CommandWorkItem,
+      | "title"
+      | "description"
+      | "status"
+      | "priority"
+      | "assignee_profile_id"
+      | "due_at"
+      | "sort_order"
+    >
+  >,
 ): Promise<CommandWorkItem> {
   const client = getSupabaseClient();
   if (!client) throw new Error("Supabase is not configured.");
@@ -293,8 +309,16 @@ export async function updateCommandWorkItem(
     tenant_id: after.tenant_id,
     actor_profile_id: profile.id,
     event_type: eventType,
-    from_value: { status: before.status, priority: before.priority, assignee_profile_id: before.assignee_profile_id },
-    to_value: { status: after.status, priority: after.priority, assignee_profile_id: after.assignee_profile_id },
+    from_value: {
+      status: before.status,
+      priority: before.priority,
+      assignee_profile_id: before.assignee_profile_id,
+    },
+    to_value: {
+      status: after.status,
+      priority: after.priority,
+      assignee_profile_id: after.assignee_profile_id,
+    },
   });
   if (eventError) throw eventError;
   return after;
@@ -303,7 +327,6 @@ export async function updateCommandWorkItem(
 export async function deleteCommandWorkItem(id: string): Promise<void> {
   await updateCommandWorkItem(id, { status: "cancelled" });
 }
-
 
 export interface EnterpriseRoleCatalogEntry {
   id: string;
@@ -340,12 +363,13 @@ export async function listOrganizationalHierarchy(): Promise<OrganizationalUnit[
   if (!client) throw new Error("Supabase is not configured.");
   const profile = await currentProfile(client);
   const globalAdmin = await isGlobalAdmin(client);
-  const orgAdmin = globalAdmin || await isOrganizationAdmin(client, profile.organization_id);
+  const orgAdmin = globalAdmin || (await isOrganizationAdmin(client, profile.organization_id));
   let query = client
     .from("workforce_organizational_units")
     .select("id,organization_id,tenant_id,parent_unit_id,ou_key,name,distinguished_path");
   if (!globalAdmin) query = query.eq("organization_id", profile.organization_id);
-  if (!globalAdmin && !orgAdmin && profile.tenant_id) query = query.eq("tenant_id", profile.tenant_id);
+  if (!globalAdmin && !orgAdmin && profile.tenant_id)
+    query = query.eq("tenant_id", profile.tenant_id);
   const { data, error } = await query.order("distinguished_path", { ascending: true });
   if (error) throw error;
   return (data ?? []) as OrganizationalUnit[];
@@ -389,7 +413,10 @@ export async function requestWorkItemApproval(input: {
     note: input.reason.trim(),
   });
   if (eventError) {
-    await client.from("command_work_item_approvals").update({ status: "cancelled" }).eq("id", data.id);
+    await client
+      .from("command_work_item_approvals")
+      .update({ status: "cancelled" })
+      .eq("id", data.id);
     throw eventError;
   }
   return data as { id: string; status: string };
@@ -486,11 +513,11 @@ export async function addWorkflowStepRun(input: {
   return data.id as string;
 }
 
-
 export interface IntegrationConnectionSummary {
   provider_key: string;
   display_name: string;
-  connection_status: "not_configured" | "pending" | "connected" | "degraded" | "disconnected" | "error";
+  connection_status:
+    "not_configured" | "pending" | "connected" | "degraded" | "disconnected" | "error";
   last_checked_at: string | null;
   last_successful_sync_at: string | null;
   last_error_summary: string | null;
@@ -501,17 +528,19 @@ export async function listIntegrationConnections(): Promise<IntegrationConnectio
   if (!client) throw new Error("Supabase is not configured.");
   const profile = await currentProfile(client);
   const globalAdmin = await isGlobalAdmin(client);
-  const orgAdmin = globalAdmin || await isOrganizationAdmin(client, profile.organization_id);
+  const orgAdmin = globalAdmin || (await isOrganizationAdmin(client, profile.organization_id));
   let query = client
     .from("integration_connections")
-    .select("provider_key,display_name,connection_status,last_checked_at,last_successful_sync_at,last_error_summary");
+    .select(
+      "provider_key,display_name,connection_status,last_checked_at,last_successful_sync_at,last_error_summary",
+    );
   if (!globalAdmin) query = query.eq("organization_id", profile.organization_id);
-  if (!globalAdmin && !orgAdmin && profile.tenant_id) query = query.eq("tenant_id", profile.tenant_id);
+  if (!globalAdmin && !orgAdmin && profile.tenant_id)
+    query = query.eq("tenant_id", profile.tenant_id);
   const { data, error } = await query.order("display_name", { ascending: true });
   if (error) throw error;
   return (data ?? []) as IntegrationConnectionSummary[];
 }
-
 
 export interface RecentAuditEvent {
   id: string;
@@ -527,7 +556,7 @@ export async function listRecentAuditEvents(limit = 5): Promise<RecentAuditEvent
   if (!client) throw new Error("Supabase is not configured.");
   const profile = await currentProfile(client);
   const globalAdmin = await isGlobalAdmin(client);
-  const orgAdmin = globalAdmin || await isOrganizationAdmin(client, profile.organization_id);
+  const orgAdmin = globalAdmin || (await isOrganizationAdmin(client, profile.organization_id));
   let query = client
     .from("audit_events")
     .select("id,action,resource_type,resource_id,outcome,created_at");
@@ -541,7 +570,6 @@ export async function listRecentAuditEvents(limit = 5): Promise<RecentAuditEvent
   if (error) throw error;
   return (data ?? []) as RecentAuditEvent[];
 }
-
 
 export interface ManagementRoleTemplate {
   role_key: string;
@@ -583,18 +611,20 @@ export async function listWorkforceRoleAssignments(): Promise<WorkforceRoleAssig
   if (!client) throw new Error("Supabase is not configured.");
   const profile = await currentProfile(client);
   const globalAdmin = await isGlobalAdmin(client);
-  const orgAdmin = globalAdmin || await isOrganizationAdmin(client, profile.organization_id);
+  const orgAdmin = globalAdmin || (await isOrganizationAdmin(client, profile.organization_id));
   let query = client
     .from("workforce_role_assignments")
-    .select("id,workforce_person_id,role_id,organization_id,tenant_id,assignment_scope,is_primary,is_active,assigned_at")
+    .select(
+      "id,workforce_person_id,role_id,organization_id,tenant_id,assignment_scope,is_primary,is_active,assigned_at",
+    )
     .eq("is_active", true);
   if (!globalAdmin) query = query.eq("organization_id", profile.organization_id);
-  if (!globalAdmin && !orgAdmin && profile.tenant_id) query = query.eq("tenant_id", profile.tenant_id);
+  if (!globalAdmin && !orgAdmin && profile.tenant_id)
+    query = query.eq("tenant_id", profile.tenant_id);
   const { data, error } = await query.order("assigned_at", { ascending: false }).limit(500);
   if (error) throw error;
   return (data ?? []) as WorkforceRoleAssignment[];
 }
-
 
 export interface PendingWorkItemApproval {
   id: string;
@@ -611,13 +641,14 @@ export async function listPendingWorkItemApprovals(): Promise<PendingWorkItemApp
   if (!client) throw new Error("Supabase is not configured.");
   const profile = await currentProfile(client);
   const globalAdmin = await isGlobalAdmin(client);
-  const orgAdmin = globalAdmin || await isOrganizationAdmin(client, profile.organization_id);
+  const orgAdmin = globalAdmin || (await isOrganizationAdmin(client, profile.organization_id));
   let query = client
     .from("command_work_item_approvals")
     .select("id,work_item_id,requested_by_profile_id,reason,requested_at")
     .eq("status", "pending");
   if (!globalAdmin) query = query.eq("organization_id", profile.organization_id);
-  if (!globalAdmin && !orgAdmin && profile.tenant_id) query = query.eq("tenant_id", profile.tenant_id);
+  if (!globalAdmin && !orgAdmin && profile.tenant_id)
+    query = query.eq("tenant_id", profile.tenant_id);
   const { data: approvals, error } = await query
     .order("requested_at", { ascending: false })
     .limit(100);
@@ -644,7 +675,6 @@ export async function listPendingWorkItemApprovals(): Promise<PendingWorkItemApp
   });
 }
 
-
 export interface WorkforceManagementAssignment {
   id: string;
   workforce_person_id: string;
@@ -664,20 +694,23 @@ export interface WorkforceManagementAssignment {
   assignment_reason: string;
 }
 
-export async function listWorkforceManagementAssignments(): Promise<WorkforceManagementAssignment[]> {
+export async function listWorkforceManagementAssignments(): Promise<
+  WorkforceManagementAssignment[]
+> {
   const client = getSupabaseClient();
   if (!client) throw new Error("Supabase is not configured.");
   const profile = await currentProfile(client);
   const globalAdmin = await isGlobalAdmin(client);
-  const orgAdmin = globalAdmin || await isOrganizationAdmin(client, profile.organization_id);
+  const orgAdmin = globalAdmin || (await isOrganizationAdmin(client, profile.organization_id));
   let query = client
     .from("workforce_management_assignments")
-    .select("id,workforce_person_id,management_role_key,organization_id,scope_type,region_id,tenant_id,department_id,status,authorization_enabled,starts_at,ends_at,approved_by_profile_id,approved_at,created_by_profile_id,assignment_reason");
+    .select(
+      "id,workforce_person_id,management_role_key,organization_id,scope_type,region_id,tenant_id,department_id,status,authorization_enabled,starts_at,ends_at,approved_by_profile_id,approved_at,created_by_profile_id,assignment_reason",
+    );
   if (!globalAdmin) query = query.eq("organization_id", profile.organization_id);
-  if (!globalAdmin && !orgAdmin && profile.tenant_id) query = query.eq("tenant_id", profile.tenant_id);
-  const { data, error } = await query
-    .order("starts_at", { ascending: false })
-    .limit(500);
+  if (!globalAdmin && !orgAdmin && profile.tenant_id)
+    query = query.eq("tenant_id", profile.tenant_id);
+  const { data, error } = await query.order("starts_at", { ascending: false }).limit(500);
   if (error) throw error;
   return (data ?? []) as WorkforceManagementAssignment[];
 }
