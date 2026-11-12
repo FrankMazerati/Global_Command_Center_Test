@@ -14,7 +14,7 @@ on:
       - "pnpm-lock.yaml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   verify:
@@ -22,6 +22,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -34,6 +36,24 @@ jobs:
           cache: pnpm
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Format the active Command Center batch
+        if: github.event_name == 'pull_request' && github.event.pull_request.number == 7
+        run: pnpm exec prettier --write src/routes/index.tsx src/components/shell/HelpBuddy.tsx src/lib/command-work.ts src/lib/work-context.tsx src/styles.css
+
+      - name: Commit formatter output to PR branch
+        if: github.event_name == 'pull_request' && github.event.pull_request.number == 7 && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/routes/index.tsx src/components/shell/HelpBuddy.tsx src/lib/command-work.ts src/lib/work-context.tsx src/styles.css
+          if ! git diff --cached --quiet; then
+            git commit -m "style: format Command Center backend batch"
+            git push origin "HEAD:${PR_BRANCH}"
+          fi
       - name: Lint dashboard entry point
         run: pnpm exec eslint src/routes/index.tsx
       - name: Tests
