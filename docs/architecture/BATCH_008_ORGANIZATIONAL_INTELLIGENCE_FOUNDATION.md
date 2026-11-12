@@ -337,3 +337,32 @@ A read-only count found 5,000 workforce people and zero matching profile rows by
 A Supabase development branch is required to validate this migration. The branch creation quote for the connected Supabase organization is **$0.01344 per hour**. Branch creation has not been completed because the non-zero recurring cost requires the user's explicit agreement. No branch was created, no migration was applied, and no production data was modified.
 
 The repository work can continue on the existing GitHub feature branch. Database migration execution and end-to-end RLS tests remain blocked until an isolated Supabase branch is approved and available.
+
+
+## 16. Current live data baseline (read-only counts, 2026-11-12)
+
+The following counts were checked without changing records:
+
+| Existing structure | Current count |
+|---|---:|
+| Governance regions | 7 |
+| Governance management-role templates | 25 |
+| Workforce management assignments | 0 |
+| Active authorization-enabled management assignments | 0 |
+| Workforce people | 5,000 |
+| Workforce people linked to profiles by global person ID | 0 |
+
+The role catalog currently covers global, regional, tenant, service-line and collaboration role families. Its allowed scope values are currently global, region, tenant and department. The current list includes Global Finance Director, Global Operations Director, Global Security and Risk Director, Regional Director, Regional Operations Manager, Regional Service Delivery Manager, Regional Workforce and Scheduling Manager, Tenant Manager, Tenant Operations Manager, Tenant Security and Compliance Lead, and other roles.
+
+This is a useful foundation, but it is not yet the requested complete CEO/CFO/COO/CIO dashboard-template matrix at all three dashboard levels. The existing 25-role governance catalog is a management assignment/approval catalog, not proof that all dashboard layouts or executive permissions are configured.
+
+## 17. Immediate next engineering tasks
+
+1. Map the seven existing governance regions to the existing organization/location tree using a tenant-safe relation; do not assume region names or city labels establish membership.
+2. Add explicit location scope membership to existing workforce management assignments, preserving existing scope behavior and approval gates.
+3. Establish verified profile-to-workforce identity linking; current global-person matching is zero.
+4. Reconcile existing management-role catalog scope rules with the requested location-level templates without silently widening existing privileges.
+5. Implement an invoker-rights authorization resolver that combines authenticated profile, verified management assignment, explicit location membership, tenant boundary, active role permissions, and active subscription entitlement.
+6. Add approved assignment lifecycle RPCs and audit writes only after the resolver and negative tests are validated in an isolated database branch.
+
+No assignment rows were seeded. No location or region mappings were invented. The zero-assignment baseline is preserved.
