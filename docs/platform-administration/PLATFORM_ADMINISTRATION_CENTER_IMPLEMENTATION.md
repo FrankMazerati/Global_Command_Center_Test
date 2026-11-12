@@ -250,3 +250,13 @@ Inventory the existing Supabase schema, migrations, role/permission records, org
 See [PLATFORM_ADMINISTRATION_DATA_REUSE_MATRIX.md](PLATFORM_ADMINISTRATION_DATA_REUSE_MATRIX.md) for the table-by-table reuse decisions and the next verification gate.
 
 **Safety decision:** no Supabase schema changes, grants, policies, role assignments, or data mutations were made. The next step is source-review of privileged functions and exact policy predicates, followed by negative cross-tenant tests and a narrowly scoped migration proposal.
+
+
+### Gate 1 security review — first-pass findings
+
+- Read-only source inspection was completed for the 16 authenticated-executable SECURITY DEFINER functions.
+- A high-priority invariant gap was identified: the public and private global-admin helper functions do not require `profile_roles.organization_id` and `tenant_id` to be NULL for `super_admin` / `global_admin` assignments. The current active Super Admin assignment is unscoped, but the schema does not enforce this for future assignments.
+- These helpers are dependencies of multiple existing RLS policies, so any correction must include broad regression tests, not only new Platform Administration routes.
+- Additional review items were recorded for role-scope-aware helpers and workforce assignment/location validation.
+
+**Build hold:** do not connect privileged Platform Administration mutations until the global-role scope invariant and related negative tests are addressed. This is a pre-existing shared authorization concern, not a reason to bypass or weaken RLS.
