@@ -411,3 +411,42 @@ This is the database foundation, not the finished management-scope feature. No p
 Post-change Supabase advisors still report existing project-wide security/performance findings. The new tables appear in the RLS-enabled/no-policy informational category by design: they have no authenticated grants or policies and are not browser-accessible. Existing project warnings include other SECURITY DEFINER RPCs and disabled leaked-password protection; this Batch 008 change does not resolve those unrelated findings. The new private trigger functions are not exposed as public RPCs.
 
 **Next Batch 008 implementation step:** build the controlled server-side identity-link and assignment lifecycle operations, then a scope resolver that combines verified identity, active assignment, tenant/location membership, role permissions and subscription entitlements. Only after that should dashboard queries consume these scopes.
+
+
+## 19. Batch 008 completion status — 2026-11-12
+
+Batch 008's database foundation and audited management lifecycle operations are now installed in the main Supabase project and committed to the existing PR #7 branch.
+
+### Applied migration history
+- `20261112180312_batch_008_management_scope_membership`
+- `20261112180358_batch_008_management_scope_fk_indexes`
+- `20261112181352_batch_008_management_workflows`
+- `20261112181529_batch_008_explicit_browser_denials`
+
+### Management workflow delivered
+- The governance management role catalog and workforce assignment validator now agree on the `location_set` scope.
+- Regional assignments may be tenant-specific while preserving the existing multi-tenant region model.
+- Added five location-level management catalog templates: Location Operations Manager, Location Finance Manager, Location Service Delivery Manager, Location Workforce Manager, and Location Security and Compliance Manager.
+- Added authenticated, SECURITY DEFINER RPCs for administrator-reviewed identity linking and revocation, management assignment requests, explicit location-set membership, two-person approval, and assignment revocation.
+- RPCs derive the actor from `auth.uid()`; callers cannot submit a spoofed actor ID.
+- Assignment approval requires a different actor from the requester.
+- Active management authorization rejects synthetic workforce people.
+- Assignment and identity lifecycle actions write audit events.
+- Location membership validates active location organizations and verifies that each location is beneath both the tenant root and the assignment organization.
+- Region mapping validates active region status and tenant ancestry.
+- Explicit deny RLS policies are installed for browser roles on all three new mapping/identity tables; direct browser table privileges remain revoked.
+
+### Verification
+- All four Batch 008 migrations appear in the main Supabase migration history.
+- All three new tables have RLS enabled; authenticated and anonymous roles have no direct table privileges; service role retains controlled access.
+- Six management/identity lifecycle RPCs are SECURITY DEFINER, executable by authenticated users only, and not executable by anon. They enforce actor/tenant/scope checks internally.
+- Five location management templates exist in the canonical catalog and each is restricted to `location_set`.
+- Synthetic identity-link and management-assignment guard smoke tests were run using an existing synthetic workforce record; both correctly rejected the operation. No row was created.
+- Current live counts remain zero for identity links, region-location mappings, assignment-location memberships and management assignments. Existing 5,000 workforce records remain synthetic; no synthetic workforce records were linked or activated.
+- Supabase Health advisor returned no lints.
+- Security and Performance advisors still report pre-existing project-wide findings. Security currently reports 49 RLS-enabled/no-policy informational findings across the wider database, 16 authenticated SECURITY DEFINER warnings, and leaked-password protection disabled. Performance findings include uncovered foreign keys, RLS initplan warnings, unused indexes and multiple permissive policies. These are not represented as resolved by Batch 008. The new Batch 008 tables have explicit deny policies and no browser table grants.
+
+### Batch 008 boundary
+Batch 008 completes the organizational hierarchy, explicit location membership schema, identity-linking and assignment lifecycle foundation. It does **not** yet expose dashboard data or a general-purpose scope resolver. Those are the primary deliverables for Batch 009.
+
+The next scope is defined in [Batch 009 — Scoped Operations Intelligence & Dashboard Delivery](./BATCH_009_SCOPED_OPERATIONS_INTELLIGENCE_DASHBOARDS.md). It covers the unified authorization resolver, subscription-entitlement integration, role-template registry, Location/Regional/Global dashboards, shared query services, side-channel protection, and positive/negative acceptance tests.
