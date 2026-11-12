@@ -442,6 +442,13 @@ export function HelpBuddyWorkspace({ title, pageSlug }: { title: string; pageSlu
   const [syncDetail, setSyncDetail] = useState("");
   const [history, setHistory] = useState<Array<Record<string, unknown>>>([]);
   const [loading, setLoading] = useState(false);
+  const [memoryRecords, setMemoryRecords] = useState<Array<{ id: string; title: string; content: string; memory_type: string; importance: number; updated_at: string }>>([]);
+  const [memoryLoading, setMemoryLoading] = useState(false);
+  const [memoryError, setMemoryError] = useState<string | null>(null);
+  const [editingMemoryId, setEditingMemoryId] = useState<string | null>(null);
+  const [memoryTitleDraft, setMemoryTitleDraft] = useState("");
+  const [memoryContentDraft, setMemoryContentDraft] = useState("");
+  const [memorySaving, setMemorySaving] = useState(false);
 
   useEffect(() => {
     let live = true;
@@ -459,6 +466,33 @@ export function HelpBuddyWorkspace({ title, pageSlug }: { title: string; pageSlu
         setKnowledgeBaseCount(baseResult.count ?? 0);
         setArticleCount(articleResult.count ?? 0);
         setQaEntries((qaResult.data ?? []) as Array<Record<string, unknown>>);
+      });
+    }
+    if (pageSlug === "saved-information") {
+      setMemoryLoading(true);
+      supabase.auth.getUser().then(async ({ data, error }) => {
+        if (!live) return;
+        if (error || !data.user) {
+          setMemoryError("Sign in to manage your private Help Buddy memories.");
+          setMemoryLoading(false);
+          return;
+        }
+        const { data: rows, error: queryError } = await supabase
+          .from("help_buddy_memory_records")
+          .select("id,title,content,memory_type,importance,updated_at")
+          .eq("profile_id", data.user.id)
+          .eq("memory_scope", "user")
+          .order("importance", { ascending: false })
+          .order("updated_at", { ascending: false });
+        if (!live) return;
+        if (queryError) setMemoryError(queryError.message);
+        else setMemoryRecords((rows ?? []) as typeof memoryRecords);
+        setMemoryLoading(false);
+      }).catch((error: unknown) => {
+        if (live) {
+          setMemoryError(error instanceof Error ? error.message : "Your saved memories could not be loaded.");
+          setMemoryLoading(false);
+        }
       });
     }
     if (pageSlug === "conversation-history" || pageSlug === "unanswered-questions") {
@@ -501,6 +535,97 @@ export function HelpBuddyWorkspace({ title, pageSlug }: { title: string; pageSlu
 
   if (pageSlug === "conversational-library") {
     return <div className="space-y-4"><Panel><div className="flex items-center gap-3"><Library className="size-6 text-primary" /><div><h2 className="text-lg font-semibold">Help Buddy Conversational Library</h2><p className="text-sm text-muted-foreground">Intent vocabulary, response patterns and approved conversational guidance.</p></div></div><div className="mt-4 grid gap-3 sm:grid-cols-4"><div className="rounded-lg bg-muted/50 p-3"><b className="text-2xl">{vocabulary.length}</b><p className="text-xs text-muted-foreground">Active vocabulary entries</p></div><div className="rounded-lg bg-muted/50 p-3"><b className="text-2xl">{qaEntries.length}</b><p className="text-xs text-muted-foreground">Accessible approved Q&A entries</p></div><div className="rounded-lg bg-muted/50 p-3"><b className="text-2xl">{knowledgeBaseCount}</b><p className="text-xs text-muted-foreground">Accessible Knowledge Spaces</p></div><div className="rounded-lg bg-muted/50 p-3"><b className="text-2xl">{articleCount}</b><p className="text-xs text-muted-foreground">Accessible published articles</p></div></div></Panel><Panel><h3 className="mb-3 font-semibold">Conversational intents</h3><div className="divide-y">{vocabulary.map((entry,index) => <div key={index} className="py-3"><div className="flex flex-wrap items-center justify-between gap-2"><b className="text-sm">{String(entry.phrase)}</b><span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] text-primary">{String(entry.category)}</span></div><p className="mt-1 text-xs text-muted-foreground">{String(entry.canonical_meaning)}</p></div>)}{!vocabulary.length && <p className="text-sm text-muted-foreground">No active Help Buddy vocabulary entries are available to this account.</p>}</div></Panel><Panel><h3 className="mb-3 font-semibold">Approved question-and-answer library</h3><div className="divide-y">{qaEntries.map((entry) => <details key={String(entry.id)} className="py-3"><summary className="cursor-pointer text-sm font-medium">{String(entry.question)}</summary><p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">{String(entry.answer_markdown ?? "").slice(0, 1400)}{String(entry.answer_markdown ?? "").length > 1400 ? "…" : ""}</p><p className="mt-2 text-[11px] text-muted-foreground">Intent: {String(entry.intent_key ?? "knowledge_lookup")} · Source-linked knowledge answer</p></details>)}{!qaEntries.length && <p className="text-sm text-muted-foreground">No approved Q&A entries are accessible to this account.</p>}</div></Panel><Panel className="text-xs text-muted-foreground">The HelpBuddy Private Knowledge Base is protected as assistant-private content. Its contents must be retrieved by the authorized assistant runtime, not exposed directly to a user's browser session.</Panel></div>;
+  }
+
+  if (pageSlug === "saved-information") {
+    const saveMemory = async () => {
+      if (!editingMemoryId || !memoryTitleDraft.trim() || !memoryContentDraft.trim()) return;
+      const supabase = getSupabaseClient();
+      if (!supabase) { setMemoryError("The secure memory service is unavailable."); return; }
+      setMemorySaving(true);
+      setMemoryError(null);
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        if (!auth.user) throw new Error("Sign in again to update your memories.");
+        const { data, error } = await supabase.from("help_buddy_memory_records")
+          .update({ title: memoryTitleDraft.trim().slice(0, 160), content: memoryContentDraft.trim().slice(0, 2000), updated_at: new Date().toISOString() })
+          .eq("id", editingMemoryId).eq("profile_id", auth.user.id).eq("memory_scope", "user")
+          .select("id,title,content,memory_type,importance,updated_at").single();
+        if (error) throw error;
+        setMemoryRecords((records) => records.map((record) => record.id === data.id ? data : record));
+        setEditingMemoryId(null);
+      } catch (error) {
+        setMemoryError(error instanceof Error ? error.message : "The memory could not be updated.");
+      } finally {
+        setMemorySaving(false);
+      }
+    };
+    const deleteMemory = async (id: string) => {
+      const supabase = getSupabaseClient();
+      if (!supabase) { setMemoryError("The secure memory service is unavailable."); return; }
+      setMemorySaving(true);
+      setMemoryError(null);
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        if (!auth.user) throw new Error("Sign in again to remove your memories.");
+        const { error } = await supabase.from("help_buddy_memory_records").delete()
+          .eq("id", id).eq("profile_id", auth.user.id).eq("memory_scope", "user");
+        if (error) throw error;
+        setMemoryRecords((records) => records.filter((record) => record.id !== id));
+        if (editingMemoryId === id) setEditingMemoryId(null);
+      } catch (error) {
+        setMemoryError(error instanceof Error ? error.message : "The memory could not be removed.");
+      } finally {
+        setMemorySaving(false);
+      }
+    };
+    return (
+      <div className="space-y-4">
+        <Panel>
+          <div className="flex items-center gap-3">
+            <Database className="size-6 text-primary" />
+            <div><h2 className="text-lg font-semibold">Saved Information</h2><p className="text-sm text-muted-foreground">Review, edit or remove information you explicitly asked Chat Buddy to remember.</p></div>
+          </div>
+          <p className="mt-3 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">These are private personal memories. They are not shared with your manager or coworkers. Do not store passwords, access tokens, financial credentials or other secrets.</p>
+        </Panel>
+        {memoryError && <Panel className="border-destructive/30 text-sm text-destructive" role="alert">{memoryError}</Panel>}
+        {memoryLoading ? <Panel><p className="text-sm text-muted-foreground">Loading your private memories…</p></Panel> : memoryRecords.length ? (
+          <div className="space-y-3">
+            {memoryRecords.map((memory) => (
+              <Panel key={memory.id}>
+                {editingMemoryId === memory.id ? (
+                  <div className="space-y-2">
+                    <Input value={memoryTitleDraft} onChange={(event) => setMemoryTitleDraft(event.target.value)} aria-label="Memory title" maxLength={160} />
+                    <Textarea value={memoryContentDraft} onChange={(event) => setMemoryContentDraft(event.target.value)} aria-label="Memory content" rows={4} maxLength={2000} />
+                    <div className="flex justify-end gap-2">
+                      <Button type="button" size="sm" variant="ghost" onClick={() => setEditingMemoryId(null)} disabled={memorySaving}>Cancel</Button>
+                      <Button type="button" size="sm" onClick={() => void saveMemory()} disabled={memorySaving || !memoryTitleDraft.trim() || !memoryContentDraft.trim()}>{memorySaving ? "Saving…" : "Save changes"}</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h3 className="font-semibold">{memory.title}</h3>
+                      <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] capitalize text-primary">{memory.memory_type.replaceAll("_", " ")}</span>
+                    </div>
+                    <p className="mt-2 whitespace-pre-wrap text-sm">{memory.content}</p>
+                    <div className="mt-3 flex items-center justify-between gap-2">
+                      <span className="text-[10px] text-muted-foreground">Updated {new Date(memory.updated_at).toLocaleDateString()}</span>
+                      <div className="flex gap-2">
+                        <Button type="button" size="sm" variant="outline" disabled={memorySaving} onClick={() => { setEditingMemoryId(memory.id); setMemoryTitleDraft(memory.title); setMemoryContentDraft(memory.content); }}>Edit</Button>
+                        <Button type="button" size="sm" variant="ghost" disabled={memorySaving} onClick={() => void deleteMemory(memory.id)}>Delete</Button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </Panel>
+            ))}
+          </div>
+        ) : (
+          <Panel><p className="text-sm font-medium">No saved memories yet</p><p className="mt-1 text-sm text-muted-foreground">In a Chat Buddy conversation, say “Remember that…” followed by a preference or useful work detail. It will appear here for you to manage.</p></Panel>
+        )}
+      </div>
+    );
   }
 
   if (pageSlug === "conversation-history" || pageSlug === "unanswered-questions") {
