@@ -324,3 +324,12 @@ These specifications are planning and implementation contracts, not proof that e
 - Security review and release acceptance are complete.
 
 **Outcome:** one coherent dashboard system in which the executive role determines the management lens, the dashboard level determines the operating horizon, and explicit scope determines exactly which locations and records the person can see and control.
+
+
+## 12. Batch 008 implementation foundation
+
+The detailed schema audit, canonical scope-assignment model, dashboard-template registry contract, RLS/write-path requirements, and acceptance tests are maintained in [Batch 008 — Organizational Intelligence & Management Scope Foundation](./BATCH_008_ORGANIZATIONAL_INTELLIGENCE_FOUNDATION.md).
+
+The implementation must reuse the existing tenant, organization, profile, role, permission, and workforce structures. It must not create a duplicate hierarchy or role catalog. The live-schema audit found that the existing role catalog already includes the core executive roles, while explicit manager-to-location assignment is still a missing capability.
+
+The current connected Supabase project had no isolated development branch during the audit. Accordingly, Batch 008 documentation was committed to the existing feature branch, but no production schema or customer data was changed. The additive migration and server-side assignment operations remain gated on isolated validation.
