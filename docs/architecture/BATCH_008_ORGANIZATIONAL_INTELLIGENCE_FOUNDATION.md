@@ -262,3 +262,34 @@ Batch 008 should be delivered in the following sequence:
 | Production schema changes | None |
 
 **Safety note:** The connected Supabase project currently has no isolated development branch available. No production DDL or data changes were made for Batch 008. The migration and RPC implementation must be validated in an isolated environment before production application.
+
+
+## 12. Additional dependency findings from the schema audit
+
+A second read-only pass checked constraints, triggers and entitlement helper functions:
+
+- `organizations.parent_organization_id` is a self-referencing FK with `ON DELETE SET NULL`; the inspected table has no declared CHECK constraint restricting `organization_type`. This does not mean arbitrary values are semantically safe: the existing application, triggers, policies and RPCs still need review before introducing `region` or `location` values.
+- `tenants.organization_id` references the tenant's root organization with `ON DELETE CASCADE`. The `organizations` table itself does not carry a `tenant_id` column. Therefore, organization-to-tenant membership must be resolved and validated through the tenant root/parent-child tree (or a deliberately designed mapping) rather than assuming a tenant column exists on every organization.
+- The organization readable-ID trigger is present and must be preserved when adding organization types.
+- The existing profile global-identity trigger responds to changes in profile name/contact/job/department/organization/tenant fields; new management assignment logic should not duplicate or interfere with it.
+- `profile_roles` enforces `expires_at > starts_at` when an expiry is supplied and has FKs to profiles, roles, organizations and tenants.
+- The read-only function-name audit did not find a function named `has_marketplace_entitlement` or a function matching the searched marketplace-entitlement name pattern. The subscription/location entitlement API must therefore be discovered by its actual catalog, RPC, or helper definitions before wiring it into the new scope resolver. Do not assume that helper exists.
+
+### Design consequence
+
+The first migration must not simply add `tenant_id` to every organization or widen organization RLS. It must establish a verified tenant-root ancestry check (or a normalized organization-to-tenant membership relation if existing federation requirements demand it), and validate every assigned location against that boundary. Parent changes, tenant-root changes, and assignment changes must be checked for cross-tenant integrity.
+
+## 13. Updated completion status
+
+| Item | Status |
+|---|---|
+| Existing table/column audit | Complete — read-only |
+| Existing RLS policy audit for core hierarchy and identity tables | Complete — read-only |
+| Existing FK/check constraint audit | Complete — read-only |
+| Existing trigger audit | Complete — read-only |
+| Existing role catalog reuse decision | Complete |
+| Marketplace entitlement helper discovery | Exact helper not found; API discovery still required |
+| Tenant-root ancestry strategy | Identified as required; implementation not yet written |
+| Additive schema migration | Not yet created |
+| Server-side assignment resolver/RPCs | Not implemented |
+| Production schema changes | None |
