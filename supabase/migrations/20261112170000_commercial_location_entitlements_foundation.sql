@@ -122,6 +122,16 @@ create index if not exists marketplace_entitlements_location_idx
   on public.marketplace_entitlements (location_id, entitlement_key, status)
   where location_id is not null;
 
+revoke all on public.organization_locations from anon, public;
+revoke all on public.organization_location_memberships from anon, public;
+revoke all on public.marketplace_subscription_location_assignments from anon, public;
+revoke all on public.marketplace_plan_entitlement_catalog from anon, public;
+
+grant select, insert, update on public.organization_locations to authenticated;
+grant select, insert, update on public.organization_location_memberships to authenticated;
+grant select on public.marketplace_subscription_location_assignments to authenticated;
+grant select, insert, update, delete on public.marketplace_plan_entitlement_catalog to authenticated;
+
 alter table public.organization_locations enable row level security;
 alter table public.organization_location_memberships enable row level security;
 alter table public.marketplace_subscription_location_assignments enable row level security;
@@ -214,7 +224,7 @@ as $$
      and c.availability_status = 'available'
     join public.marketplace_customer_subscriptions s
       on s.organization_id = l.organization_id
-     and s.status = 'active'
+     and s.status in ('active','trial')
     left join public.marketplace_subscription_location_assignments a
       on a.customer_subscription_id = s.id
      and a.location_id = l.id
