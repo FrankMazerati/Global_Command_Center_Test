@@ -33,6 +33,7 @@ type Message = {
   content: string;
   citations: Array<Record<string, unknown>>;
   created_at: string;
+  localOnly?: boolean;
 };
 
 function Panel({ children, className = "" }: { children: ReactNode; className?: string }) {
@@ -274,6 +275,9 @@ export function HelpBuddyConversation({ compact = false }: { compact?: boolean }
   const [sessionContext, setSessionContext] = useState<{ organization_id: string; tenant_id: string | null } | null>(null);
   const [status, setStatus] = useState("Connecting to authorized knowledge sources…");
   const [unansweredCount, setUnansweredCount] = useState(0);
+  const [feedbackGiven, setFeedbackGiven] = useState<Record<string, number>>({});
+  const [feedbackSavingId, setFeedbackSavingId] = useState<string | null>(null);
+  const [feedbackError, setFeedbackError] = useState<string | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -309,6 +313,24 @@ export function HelpBuddyConversation({ compact = false }: { compact?: boolean }
     return () => { live = false; };
   }, []);
 
+  const submitFeedback = async (messageId: string, rating: -1 | 1) => {
+    const supabase = getSupabaseClient();
+    if (!supabase || feedbackSavingId) return;
+    setFeedbackSavingId(messageId);
+    setFeedbackError(null);
+    try {
+      const { error } = await supabase.functions.invoke("help-buddy-chat", {
+        body: { action: "feedback", messageId, rating, feedbackType: "answer_quality" },
+      });
+      if (error) throw error;
+      setFeedbackGiven((current) => ({ ...current, [messageId]: rating }));
+    } catch (error) {
+      setFeedbackError(error instanceof Error ? error.message : "Feedback could not be saved.");
+    } finally {
+      setFeedbackSavingId(null);
+    }
+  };
+
   const send = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const question = draft.trim();
@@ -334,7 +356,7 @@ export function HelpBuddyConversation({ compact = false }: { compact?: boolean }
     } catch (reason) {
       const message = reason instanceof Error ? reason.message : "The request could not be completed.";
       setMessages((current) => [...current, {
-        id: crypto.randomUUID(), sender_type: "assistant", content: message, citations: [], created_at: new Date().toISOString(),
+        id: crypto.randomUUID(), sender_type: "assistant", content: message, citations: [], created_at: new Date().toISOString(), localOnly: true,
       }]);
       setStatus("The secure conversation service could not complete this request.");
     } finally {
@@ -365,11 +387,43 @@ export function HelpBuddyConversation({ compact = false }: { compact?: boolean }
                 {message.citations.map((citation, index) => typeof citation.path === "string" ? <a key={index} href={citation.path} className="rounded-full border border-current/20 px-2 py-0.5 text-[10px] font-medium underline underline-offset-2">Open {String(citation.title ?? "source")}</a> : <span key={index} className="rounded-full border border-current/20 px-2 py-0.5 text-[10px] opacity-80">{String(citation.title ?? citation.knowledge_base ?? citation.type ?? "Source")}</span>)}
               </div>
             )}
-            <time className="mt-2 block text-[10px] opacity-60">{new Date(message.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</time>
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <time className="block text-[10px] opacity-60">{new Date(message.created_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</time>
+              {message.sender_type === "assistant" && !message.localOnly && (
+                <div className="flex items-center gap-1" aria-label="Rate this answer">
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="size-7"
+                    aria-label="This answer was helpful"
+                    title="Helpful"
+                    disabled={feedbackSavingId === message.id || feedbackGiven[message.id] !== undefined}
+                    onClick={() => void submitFeedback(message.id, 1)}
+                  >
+                    <ThumbsUp className={`size-3.5 ${feedbackGiven[message.id] === 1 ? "text-primary" : ""}`} />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="ghost"
+                    className="size-7"
+                    aria-label="This answer was not helpful"
+                    title="Not helpful"
+                    disabled={feedbackSavingId === message.id || feedbackGiven[message.id] !== undefined}
+                    onClick={() => void submitFeedback(message.id, -1)}
+                  >
+                    <ThumbsDown className={`size-3.5 ${feedbackGiven[message.id] === -1 ? "text-primary" : ""}`} />
+                  </Button>
+                </div>
+              )}
+              {feedbackGiven[message.id] !== undefined && <span className="text-[10px] text-muted-foreground">Feedback saved</span>}
+            </div>
           </div>
         ))}
         {sending && <div className="rounded-xl border bg-muted/50 p-3 text-xs text-muted-foreground">Help Buddy is checking authorized sources…</div>}
       </div>
+      {feedbackError && <p role="alert" className="pb-2 text-xs text-destructive">{feedbackError}</p>}
       <form onSubmit={send} className="flex items-end gap-2 border-t pt-3">
         <Textarea value={draft} onChange={(event) => setDraft(event.target.value)} rows={2} placeholder="Ask Help Buddy a question…" aria-label="Message Help Buddy" className="min-h-11 resize-none" />
         <Button type="submit" size="icon" disabled={!draft.trim() || sending} aria-label="Send message"><Send className="size-4" /></Button>
