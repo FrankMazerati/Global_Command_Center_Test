@@ -124,7 +124,7 @@ export async function getChatBuddySessionId(): Promise<string> {
       intent_key: "chat_buddy_welcome_v1",
       sensitivity: "standard",
     });
-    if (welcomeInsertError) throw welcomeInsertError;
+    if (welcomeInsertError && welcomeInsertError.code !== "23505") throw welcomeInsertError;
   }
   return sessionId;
 }
