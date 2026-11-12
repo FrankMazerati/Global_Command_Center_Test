@@ -157,6 +157,8 @@ as $function$
 declare
   v_assignment public.workforce_management_assignments%rowtype;
   v_person_tenant_id uuid;
+  v_root_organization_id uuid;
+  v_assignment_org_in_tenant boolean;
 begin
   select a.* into v_assignment
   from public.workforce_management_assignments a
@@ -177,6 +179,25 @@ begin
 
   if v_person_tenant_id is distinct from new.tenant_id then
     raise exception 'Management assignment workforce person belongs to a different tenant' using errcode = '23514';
+  end if;
+
+  select t.organization_id into v_root_organization_id
+  from public.tenants t where t.id = new.tenant_id;
+
+  with recursive organization_tree(id, parent_organization_id) as (
+    select o.id, o.parent_organization_id
+    from public.organizations o
+    where o.id = v_assignment.organization_id
+    union all
+    select parent.id, parent.parent_organization_id
+    from public.organizations parent
+    join organization_tree child on child.parent_organization_id = parent.id
+  )
+  select exists (select 1 from organization_tree where id = v_root_organization_id)
+    into v_assignment_org_in_tenant;
+
+  if not v_assignment_org_in_tenant then
+    raise exception 'Management assignment organization is outside the supplied tenant tree' using errcode = '23514';
   end if;
 
   return new;
