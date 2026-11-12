@@ -1548,7 +1548,7 @@ function CommandCenterHome() {
                   <div>
                     <Bot size={17} />
                     <h2>CHAT BUDDY</h2>
-                    <p>Your AI Help Desk Assistant</p>
+                    <p>Your role-aware work assistant</p>
                   </div>
                   <button
                     type="button"
@@ -1566,7 +1566,7 @@ function CommandCenterHome() {
                 <div className="cc-buddy-card">
                   <img src="/assets/help-buddy.png" alt="Chat Buddy" />
                   <div>
-                    <b>Help Buddy</b>
+                    <b>Chat Buddy</b>
                     <span>Ask. Find. Connect. Get it done.</span>
                   </div>
                 </div>
