@@ -31,13 +31,14 @@ The connected Supabase project was inspected read-only on 2026-11-12. The follow
 - `roles` and `role_permissions`: existing role catalog and permission mappings. The catalog already contains CEO, CFO, COO, CIO, CTO, CISO, CHRO, executive assistant, auditor, compliance, IT, Help Desk L1/L2/L3, NOC, SOC and other roles.
 - `organizational_units`: existing directory/OU-like hierarchy, with `organization_id`, `parent_unit_id` and `distinguished_path`.
 - `workforce_organizational_units`: tenant-aware workforce OU structure with `tenant_id`, `organization_id` and `parent_unit_id`.
+- `governance_regions`, `governance_management_role_catalog`, `workforce_management_assignments`, and `workforce_role_assignments`: existing region, management-template, management-assignment, and workforce-role structures (detailed in Section 14).
 
 ### Important findings and constraints
 
 - The current organization records inspected included six `company` records and one `business_unit` record; no `region` or `location` organization records were present in that live query. This is a schema/data observation, not permission to seed synthetic locations.
 - The existing `organizations` table has a parent-child relationship, but the allowed organization-type constraint and its tenant consistency rules must be inspected before inserting new region/location types.
 - `organizational_units` is not a substitute for the company/region/location business hierarchy.
-- `workforce_organizational_units` is tenant-aware, but it is not a manager-to-location assignment model.
+- `workforce_organizational_units` is tenant-aware, but it is not a manager-to-location assignment model. The separate `workforce_management_assignments` model exists, but it currently lacks explicit location membership and a verified link to authenticated profiles.
 - `profile_roles` supports organization/tenant role context and time windows, but it does not by itself represent a manager responsible for an arbitrary set of locations.
 - Existing organization read policies primarily expose a user's own organization and global administrators. They do not establish the required explicit regional/location membership model.
 - Existing profiles include `manager_profile_id`, but the field alone is not a complete, validated management hierarchy or delegated authority model.
@@ -147,14 +148,15 @@ The UI may hide or disable unavailable controls for clarity, but the API/databas
 
 ## 7. Database implementation shape
 
-The next schema increment should be additive and should introduce only the missing concepts:
+The next schema increment must extend existing canonical structures and add only missing relationships:
 
-1. **Management scope assignments** — the person/role/template/time/scope grant.
-2. **Assignment location membership** — normalized explicit location membership for non-contiguous regional coverage.
-3. **Dashboard template registry** — versioned template metadata referencing existing role keys.
-4. **Audit lifecycle events** — grant, approve, activate, change scope, suspend, expire, revoke, and template publication events, linked to the existing governance/audit model where its contract supports the event.
+1. **Region-to-location membership** — normalized tenant-bound mapping from existing governance regions to covered location organizations.
+2. **Assignment-to-location membership** — normalized explicit location membership linked to existing `workforce_management_assignments` for non-contiguous scopes.
+3. **Verified profile identity bridge** — a safe mapping between authenticated profiles and workforce people, because current global-person matching returned zero linked records.
+4. **Dashboard layout registry (only if required)** — versioned layout metadata referencing existing `governance_management_role_catalog.role_key`; do not duplicate role identity.
+5. **Audit lifecycle events** — grant, approve, activate, change scope, suspend, expire, revoke, and template publication events, linked to the existing governance/audit model where its contract supports the event.
 
-Do not add a new role catalog, duplicate organization hierarchy, duplicate profile-to-department mapping, or duplicate subscription catalog.
+Do not add a parallel management assignment table, a new role catalog, duplicate organization hierarchy, duplicate profile-to-department mapping, or duplicate subscription catalog.
 
 ### RLS and write-path requirements
 
