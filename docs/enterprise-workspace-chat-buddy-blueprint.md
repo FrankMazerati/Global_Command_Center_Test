@@ -185,3 +185,15 @@ A batch is complete only when its UI, data model, server-side authorization, aud
 - The latest recorded Responsive Layout QA run passed. The latest Production Readiness run failed on 22 Prettier formatting errors in existing shell/dynamic-route files plus two hook warnings. Those specific formatting/warning issues were corrected on the PR branch, but a fresh CI run has not yet been recorded; tests and production build therefore remain unverified.
 
 - Remaining completion gates: run formatter/lint, unit tests, production build, authenticated integration tests, negative cross-tenant tests, and verify all changed migration files are aligned with the live migration history.
+
+
+## Subscription and organizational management architecture — 2026-11-12
+
+The approved commercial direction is now documented in [IntelliStack Subscription, Location Licensing, and Operations Management](commercial/INTELLISTACK_SUBSCRIPTION_AND_LOCATION_LICENSING.md).
+
+- Essential: $799 per activated location/month; Local Operations Manager; one location.
+- Professional: $1,499 per activated location/month; multi-location and regional management.
+- Enterprise: starting at $3,500 per organization/month under a negotiated contract; Global Operations Center and contracted location coverage.
+- Reuse `organizations` for the company/location hierarchy and existing marketplace pricing/subscription/entitlement tables. Do not create a parallel directory or rewrite the 4,800 existing customer-subscription records.
+- The staged migration adds location licensing and entitlement scope metadata, a subscription-to-location mapping, and a three-plan entitlement catalog. New prices remain draft/pending; checkout and customer access are not activated.
+- The feature-branch migration is not applied to the live Supabase project. It requires a dedicated development database, migration verification, positive/negative authorization tests, audit verification, and billing lifecycle tests before release.
