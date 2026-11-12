@@ -305,10 +305,15 @@ begin
       into v_verifier_tenant_id, v_verifier_organization_id, v_verifier_status
     from public.profiles p where p.id = new.verified_by_profile_id;
 
-    if v_verifier_tenant_id is distinct from new.tenant_id
-       or v_verifier_organization_id is distinct from new.organization_id
-       or v_verifier_status is distinct from 'active'::public.member_status then
-      raise exception 'Identity verifier must be active in the same tenant and organization' using errcode = '23514';
+    if v_verifier_status is distinct from 'active'::public.member_status then
+      raise exception 'Identity verifier must be active' using errcode = '23514';
+    end if;
+
+    if (v_verifier_tenant_id is distinct from new.tenant_id
+        or v_verifier_organization_id is distinct from new.organization_id)
+       and not private.is_global_admin() then
+      raise exception 'Cross-organization identity verification requires an active global administrator'
+        using errcode = '23514';
     end if;
   end if;
 
@@ -379,6 +384,54 @@ begin
      jsonb_build_object('profile_id',v_profile.id,'workforce_person_id',v_person.id));
 
   return v_link_id;
+end;
+$function$;
+
+-- Revoke a previously verified identity link without deleting its history.
+create or replace function public.revoke_workforce_profile_identity(
+  p_identity_link_id uuid,
+  p_reason text
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = pg_catalog, public, private, auth
+as $function$
+declare
+  v_actor uuid := auth.uid();
+  v_link public.workforce_profile_identity_links%rowtype;
+begin
+  if v_actor is null or length(trim(coalesce(p_reason,''))) < 8 then
+    raise exception 'Authenticated administrator and a meaningful revocation reason are required' using errcode = '42501';
+  end if;
+
+  select * into v_link from public.workforce_profile_identity_links
+  where id = p_identity_link_id for update;
+
+  if v_link.id is null or v_link.link_status <> 'verified' then
+    raise exception 'Only a verified identity link can be revoked' using errcode = '23514';
+  end if;
+
+  if not private.is_global_admin()
+     and not private.is_org_admin_scope(v_link.organization_id,v_link.tenant_id) then
+    raise exception 'Not authorized to revoke this workforce identity link' using errcode = '42501';
+  end if;
+
+  update public.workforce_profile_identity_links
+  set link_status = 'revoked', revoked_by_profile_id = v_actor,
+      revoked_at = now(), reason = trim(p_reason), updated_at = now()
+  where id = p_identity_link_id;
+
+  insert into public.audit_events
+    (organization_id, tenant_id, actor_profile_id, actor_auth_user_id, action,
+     resource_type, resource_id, outcome, reason, event_data)
+  values
+    (v_link.organization_id, v_link.tenant_id, v_actor, v_actor,
+     'workforce.identity_link.revoked', 'workforce_profile_identity_link',
+     p_identity_link_id::text, 'success', trim(p_reason),
+     jsonb_build_object('profile_id',v_link.profile_id,'workforce_person_id',v_link.workforce_person_id));
+
+  return true;
 end;
 $function$;
 
@@ -631,12 +684,14 @@ $function$;
 -- No direct browser table access. Only the audited RPCs above can mutate these
 -- records for authenticated callers.
 revoke all on function public.admin_link_workforce_profile_identity(uuid,uuid,text) from public, anon;
+revoke all on function public.revoke_workforce_profile_identity(uuid,text) from public, anon;
 revoke all on function public.request_workforce_management_assignment(uuid,text,text,uuid,uuid,uuid,uuid,text,timestamptz,timestamptz) from public, anon;
 revoke all on function public.set_workforce_management_assignment_locations(uuid,uuid[],text) from public, anon;
 revoke all on function public.approve_workforce_management_assignment(uuid,text) from public, anon;
 revoke all on function public.revoke_workforce_management_assignment(uuid,text) from public, anon;
 
 grant execute on function public.admin_link_workforce_profile_identity(uuid,uuid,text) to authenticated;
+grant execute on function public.revoke_workforce_profile_identity(uuid,text) to authenticated;
 grant execute on function public.request_workforce_management_assignment(uuid,text,text,uuid,uuid,uuid,uuid,text,timestamptz,timestamptz) to authenticated;
 grant execute on function public.set_workforce_management_assignment_locations(uuid,uuid[],text) to authenticated;
 grant execute on function public.approve_workforce_management_assignment(uuid,text) to authenticated;
