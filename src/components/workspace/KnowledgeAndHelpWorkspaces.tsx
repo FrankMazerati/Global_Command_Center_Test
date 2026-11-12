@@ -193,7 +193,7 @@ export function KnowledgeSpacesWorkspace({ title, pageSlug }: { title: string; p
             <Panel>
               <h3 className="mb-2 font-semibold">Ask Help Buddy</h3>
               <p className="mb-3 text-sm text-muted-foreground">Ask a question in natural language. Help Buddy can search the knowledge available to your account and point to the source.</p>
-              <Link to="/m/$section/$group/$page" params={{ section: "help-buddy", group: "help-buddy-workspace", page: "conversation-workspace" }} className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"><MessageCircle className="size-4" /> Open conversation</Link>
+              <Link to="/m/$section/$group/$page" params={{ section: "help-buddy", group: "conversations", page: "new-conversation" }} className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"><MessageCircle className="size-4" /> Open conversation</Link>
             </Panel>
           </aside>
         </div>
@@ -208,11 +208,11 @@ async function findGroundedAnswer(question: string, userId: string) {
   const lower = question.toLowerCase();
 
   if (/(knowledge base|knowledge space|where.*knowledge|find.*knowledge)/i.test(question)) {
-    const spaces = ALL_DESTINATIONS.filter((destination) => destination.section.slug === "knowledge-spaces");
-    const first = spaces.find((destination) => destination.page.slug === "all-knowledge-spaces") ?? spaces[0];
+    const spaces = ALL_DESTINATIONS.filter((destination) => destination.section.slug === "intellibase");
+    const first = spaces.find((destination) => destination.page.slug === "welcome") ?? spaces[0];
     return {
-      text: `You can find Knowledge Spaces in the hamburger menu under Knowledge Spaces. Open “All Knowledge Spaces” to browse authorized collections, or use the search field to find an article. ${first ? "I can take you directly to that workspace." : ""}`,
-      citations: first ? [{ type: "navigation", title: "All Knowledge Spaces", path: `/m/${first.section.slug}/${first.group.slug}/${first.page.slug}` }] : [],
+      text: `You can find IntelliBase in the hamburger menu under IntelliBase. Open “Welcome” to get started, or use Global Search to find an article. ${first ? "I can take you directly to that workspace." : ""}`,
+      citations: first ? [{ type: "navigation", title: "Welcome", path: `/m/${first.section.slug}/${first.group.slug}/${first.page.slug}` }] : [],
       unresolved: false,
     };
   }

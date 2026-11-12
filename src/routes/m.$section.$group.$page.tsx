@@ -98,6 +98,14 @@ const directorySlugs: Record<DirectoryKind, string[]> = {
   groups: ["groups", "security-groups", "group-objects"],
   group_memberships: ["group-membership"],
   tickets: [
+    "incidents",
+    "service-requests",
+    "problems",
+    "change-requests",
+    "open-tickets",
+    "assigned-tickets",
+    "escalations",
+    "work-queue",
     "command-queue",
     "create-ticket",
     "my-tickets",
@@ -1268,17 +1276,12 @@ function PageFoundation() {
   const { section, group, page } = findPage(params.section, params.group, params.page)!;
   const { activeTicketId } = useWork();
   const tone = toneVar[section.tone];
-  const ticketWorkspace = [
-    "active-ticket-workspace",
-    "technician-workspace",
-    "work-ticket",
-  ].includes(page.slug);
+  const ticketWorkspace = section.slug === "intellidesk-command-center" && group.slug === "technician-workspace" && page.slug === "work-queue";
   const directory = directoryKind(page.slug);
   const marketplace = marketplaceSlugs.includes(page.slug);
   const workforceHistory = workforceHistorySlugs.includes(page.slug);
-  const workflowCenter =
-    section.slug === "home-and-command-center" && group.slug === "workflow-center";
-  const knowledgeSpaces = section.slug === "knowledge-spaces";
+  const workflowCenter = section.slug === "workflow-center";
+  const knowledgeSpaces = section.slug === "intellibase";
   const officeTool = ["intelliword", "intellisheets", "intellislides", "intellichat"].includes(
     page.slug,
   );
@@ -1367,9 +1370,9 @@ function PageFoundation() {
           <Link
             to="/m/$section/$group/$page"
             params={{
-              section: "service-desk-and-enterprise-operations",
-              group: "ticket-management",
-              page: "active-ticket-workspace",
+              section: "intellidesk-command-center",
+              group: "technician-workspace",
+              page: "work-queue",
             }}
             className="ml-auto inline-flex items-center gap-1 font-medium text-primary hover:underline"
           >

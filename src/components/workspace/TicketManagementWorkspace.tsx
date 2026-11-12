@@ -114,9 +114,9 @@ export function TicketManagementWorkspace({
     await navigate({
       to: "/m/$section/$group/$page",
       params: {
-        section: "service-desk-and-enterprise-operations",
-        group: "ticket-management",
-        page: "active-ticket-workspace",
+        section: "intellidesk-command-center",
+        group: "technician-workspace",
+        page: "work-queue",
       },
     });
   };
@@ -127,9 +127,9 @@ export function TicketManagementWorkspace({
     await navigate({
       to: "/m/$section/$group/$page",
       params: {
-        section: "service-desk-and-enterprise-operations",
-        group: "ticket-management",
-        page: "active-ticket-workspace",
+        section: "intellidesk-command-center",
+        group: "technician-workspace",
+        page: "work-queue",
       },
     });
   };
