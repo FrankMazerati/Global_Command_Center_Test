@@ -428,3 +428,29 @@ export async function addWorkflowStepRun(input: {
   if (error) throw error;
   return data.id as string;
 }
+
+
+export interface IntegrationConnectionSummary {
+  provider_key: string;
+  display_name: string;
+  connection_status: "not_configured" | "pending" | "connected" | "degraded" | "disconnected" | "error";
+  last_checked_at: string | null;
+  last_successful_sync_at: string | null;
+  last_error_summary: string | null;
+}
+
+export async function listIntegrationConnections(): Promise<IntegrationConnectionSummary[]> {
+  const client = getSupabaseClient();
+  if (!client) throw new Error("Supabase is not configured.");
+  const profile = await currentProfile(client);
+  let query = client
+    .from("integration_connections")
+    .select("provider_key,display_name,connection_status,last_checked_at,last_successful_sync_at,last_error_summary")
+    .eq("organization_id", profile.organization_id);
+  query = profile.tenant_id
+    ? query.eq("tenant_id", profile.tenant_id)
+    : query.is("tenant_id", null);
+  const { data, error } = await query.order("display_name", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as IntegrationConnectionSummary[];
+}
