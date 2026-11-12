@@ -1295,7 +1295,7 @@ function PageFoundation() {
     "directory-dashboard", "global-directory", "directory-health", "directory-activity",
     "user-accounts", "global-user-id", "employee-accounts", "contractor-accounts",
     "business-accounts", "tenant-user-accounts", "external-users", "identity-verification",
-    "account-status", "departments", "teams", "security-groups", "group-objects",
+    "account-status", "departments", "organizational-units", "organizational-hierarchy", "teams", "security-groups", "group-objects",
     "roles-and-permissions", "access-management", "application-access", "access-requests",
     "access-audit", "directory-audit-history",
   ]);
