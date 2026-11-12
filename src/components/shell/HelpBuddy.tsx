@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { BookOpen, CheckSquare, ListTodo, MessageCircle, NotebookPen, Plus, Trash2, Workflow } from "lucide-react";
+import { BookOpen, CheckSquare, ListTodo, MessageCircle, NotebookPen, Plus, Trash2, Workflow, X } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ export function HelpBuddyPanel({ className }: { className?: string }) {
       <div className="flex items-center gap-3 border-b px-4 py-3">
         <img src="/assets/help-buddy.png" alt="Help Buddy character" className="size-12 shrink-0 object-contain" />
         <div className="min-w-0 flex-1">
-          <div className="font-display text-sm font-bold tracking-wide">Help Buddy</div>
+          <div className="font-display text-sm font-bold tracking-wide">Chat Buddy</div>
           <div className="truncate text-xs text-muted-foreground">
             {w.activeTicketId ? (
               <>
@@ -192,8 +192,8 @@ export function HelpBuddySheet() {
     <Sheet open={helpBuddyOpen} onOpenChange={setHelpBuddyOpen}>
       <SheetContent side="right" className="w-[92vw] max-w-md overflow-y-auto p-0">
         <SheetHeader className="sr-only">
-          <SheetTitle>Help Buddy</SheetTitle>
-          <SheetDescription>Your conversational work assistant</SheetDescription>
+          <SheetTitle>Chat Buddy</SheetTitle>
+          <SheetDescription>Your role-aware work assistant</SheetDescription>
         </SheetHeader>
         <HelpBuddyPanel />
       </SheetContent>
@@ -208,11 +208,11 @@ export function HelpBuddyLauncher() {
     <button
       type="button"
       onClick={() => openHelpBuddy()}
-      aria-label="Open Help Buddy"
+      aria-label="Open Chat Buddy"
       className="fixed bottom-4 right-4 z-40 flex items-center gap-2 rounded-full border bg-card py-1.5 pl-1.5 pr-4 shadow-float transition-transform hover:scale-105"
     >
       <img src="/assets/help-buddy.png" alt="" className="size-9 shrink-0 object-contain" />
-      <span className="font-display text-xs font-bold tracking-wide">Help Buddy</span>
+      <span className="font-display text-xs font-bold tracking-wide">Chat Buddy</span>
     </button>
   );
 }
