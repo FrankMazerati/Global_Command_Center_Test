@@ -110,6 +110,11 @@ The additive migration in `supabase/migrations/20261112170000_intellistack_three
 
 The new price versions remain draft/pending and checkout remains disabled. The entitlement catalog is product configuration, not customer access grants. It creates no customer, company, location, subscription, entitlement grant, employee, or demo activity record. Legacy plan records and all 4,800 existing customer-subscription rows remain unchanged.
 
+
+### Legacy subscription transition
+
+The existing `marketplace_customer_subscriptions` table contains 4,800 records using `level-1` through `level-5` keys, with active, cancelled, expired, past-due, and paused statuses. The existing price-version catalog also contains older `launch`, `basic`, `growth`, `premium`, and `full-experience` package keys. These records are not rewritten or deleted by this change. Some records are marked active or past due, so the transition to the three new plans requires an explicit grandfathering and contract-mapping policy before any legacy plan is retired or hidden from account management. The new three-plan Available Plans experience is the forward-looking sales catalog; it does not silently change existing customer contracts.
+
 ## Release gates
 
 Before enabling checkout or claiming a module is production-ready:
