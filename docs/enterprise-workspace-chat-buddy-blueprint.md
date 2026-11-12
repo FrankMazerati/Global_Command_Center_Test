@@ -135,7 +135,7 @@ These existing objects must be inspected and extended before creating new schema
 - Implement top toggle and durable open/minimized behavior.
 - Make dashboard assistant and full assistant panel share context.
 - Implement scenario/mode navigation and checklist workflow.
-- Clearly label local-only vs persisted behavior until connected.
+- Persist Chat Buddy sessions/messages and authenticated checklists to Supabase; label offline-only checklist fallback.
 - Add role/permission gates before enabling action controls.
 
 ### Phase 2 — role/workspace registry and hierarchy
