@@ -143,3 +143,8 @@ The Marketplace **Available Plans** route now opens a dedicated subscription wor
 - Location and subscription schema changes are staged on the feature branch only. No production migration was applied.
 - No customer locations, subscriptions, entitlements, or sample business records were created.
 - The local/regional/global management screens, lifecycle RPCs, billing provider integration, proration, and end-to-end authorization tests remain implementation/release work.
+
+
+## Related operations dashboard specification
+
+The three-tier commercial model is paired with three distinct role-based operational dashboards. See [Global, Regional & Location Operations Dashboards](../operations/GLOBAL_REGIONAL_LOCATION_DASHBOARD_TEMPLATES.md) for executive and functional templates, assigned-location scope rules, entitlement boundaries, and acceptance criteria.
