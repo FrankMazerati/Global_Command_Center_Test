@@ -157,15 +157,6 @@ using (
   profile_id = auth.uid()
   or public.is_global_admin()
   or public.is_org_admin(organization_id)
-  or exists (
-    select 1 from public.organization_location_memberships own
-    where own.location_id = organization_location_memberships.location_id
-      and own.profile_id = auth.uid()
-      and own.scope_role in ('location_manager','location_admin','regional_manager','auditor')
-      and own.is_active
-      and (own.starts_at is null or own.starts_at <= now())
-      and (own.expires_at is null or own.expires_at > now())
-  )
 );
 
 drop policy if exists organization_location_memberships_admin_manage on public.organization_location_memberships;
@@ -307,15 +298,15 @@ select p.id, v.package_key, v.price_key, 'USD', 'US',
        v.unit_label, v.notes, 'pending'
 from public.marketplace_products p
 cross join (values
-  ('essential','mocc-essential-location-2026-v1',799::numeric,8629::numeric,
+  ('essential','mocc-essential-location-2026-v1',799::numeric,9588::numeric,
    'location_monthly','per activated location / month',
    '{"scope":"single_location","checkout_enabled":false,"price_status":"proposed"}'::jsonb,
-   'Proposed launch price; annual amount reflects a 10% annual prepayment discount, subject to approval.'),
-  ('professional','mocc-professional-location-2026-v1',1499::numeric,16189::numeric,
+   'Proposed launch price; annual amount is the undiscounted monthly equivalent.'),
+  ('professional','mocc-professional-location-2026-v1',1499::numeric,17988::numeric,
    'location_monthly','per activated location / month',
    '{"scope":"contracted_multi_location","checkout_enabled":false,"price_status":"proposed"}'::jsonb,
    'Proposed launch price; regional and multi-location management is limited to contracted, activated locations.'),
-  ('enterprise','mocc-enterprise-organization-2026-v1',3500::numeric,37800::numeric,
+  ('enterprise','mocc-enterprise-organization-2026-v1',3500::numeric,42000::numeric,
    'organization_monthly','per enterprise organization / month; negotiated coverage',
    '{"scope":"organization_wide","minimum_monthly_price":3500,"location_coverage":"negotiated","checkout_enabled":false,"price_status":"proposed"}'::jsonb,
    'Proposed starting organization-wide commitment; contracted locations, users, support, AI usage, integrations, implementation and volume pricing are negotiated.')
