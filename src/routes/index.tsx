@@ -47,7 +47,7 @@ import {
 } from "@/components/ui/dialog";
 import { AVAILABILITY, useWork } from "@/lib/work-context";
 import { NAV } from "@/lib/nav";
-import { loadChatBuddyMessages, saveChatBuddyMessage, listCommandWorkItems, type ChatBuddyMessage } from "@/lib/command-work";
+import { loadChatBuddyMessages, saveChatBuddyMessage, listCommandWorkItems, listIntegrationConnections, listRecentAuditEvents, type ChatBuddyMessage, type RecentAuditEvent } from "@/lib/command-work";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -319,7 +319,9 @@ function CommandCenterHome() {
   const [quickPickEditorOpen, setQuickPickEditorOpen] = useState(false);
   const [quickPickItems, setQuickPickItems] = useState([...quickPicks]);
   const [draggedQuickPick, setDraggedQuickPick] = useState<string | null>(null);
-  const [connectedConnectors] = useState<string[]>([]);
+  const [connectionStatuses, setConnectionStatuses] = useState<Record<string, string>>({});
+  const connectedConnectors = Object.entries(connectionStatuses).filter(([, status]) => status === "connected").map(([name]) => name);
+  const [activityItems, setActivityItems] = useState<RecentAuditEvent[]>([]);
   const [profilePhoto, setProfilePhoto] = useState("/assets/frank-mazerati.png");
   const [backgroundPhoto, setBackgroundPhoto] = useState<string | null>(null);
   const [bio, setBio] = useState("Founder and Global Administrator");
@@ -436,6 +438,25 @@ function CommandCenterHome() {
     return () => { active = false; };
   }, []);
 
+  useEffect(() => {
+    let active = true;
+    listIntegrationConnections()
+      .then((rows) => {
+        if (!active) return;
+        setConnectionStatuses(Object.fromEntries(rows.map((row) => [row.display_name, row.connection_status])));
+      })
+      .catch(() => { if (active) setConnectionStatuses({}); });
+    return () => { active = false; };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    listRecentAuditEvents(5)
+      .then((rows) => { if (active) setActivityItems(rows); })
+      .catch(() => { if (active) setActivityItems([]); });
+    return () => { active = false; };
+  }, []);
+
   const items = [...liveItems, ...commandItems];
   const availability = work.availability;
   const managerName = String(managerRecord?.["display_name"] || [managerRecord?.["first_name"], managerRecord?.["last_name"]].filter(Boolean).join(" ") || "Profile not configured");
@@ -545,10 +566,6 @@ function CommandCenterHome() {
     setClockEntries((current) =>
       current.map((entry) => (entry[0] === previousCity ? choice : entry)),
     );
-  };
-
-  const toggleConnector = (connector: string) => {
-    toast.info(`${connector} is listed in the catalog. Its authorization flow is not connected here, so no connection was changed.`);
   };
 
   const addConnector = () => {
@@ -1579,16 +1596,15 @@ function CommandCenterHome() {
                 </div>
                 <div className="cc-connector-list">
                   {connectorChoices.map((connector) => {
-                    const connected = connectedConnectors.includes(connector);
+                    const status = connectionStatuses[connector] ?? "not_configured";
+                    const connected = status === "connected";
                     return (
                       <div className="cc-connector-row" key={connector}>
                         <span>
                           <i className={connected ? "connected" : ""} />
                           {connector}
                         </span>
-                        <button type="button" onClick={() => toggleConnector(connector)}>
-                          {connected ? "Remove" : "Add"}
-                        </button>
+                        <small>{status.replaceAll("_", " ")}</small>
                       </div>
                     );
                   })}
@@ -1603,18 +1619,13 @@ function CommandCenterHome() {
                   <button className="cc-text-link">View all</button>
                 </div>
                 <ul>
-                  <li>
-                    <span className="activity-dot green" />
-                    System backup completed <small>2 hrs ago</small>
-                  </li>
-                  <li>
-                    <span className="activity-dot blue" />
-                    Access request approved <small>3 hrs ago</small>
-                  </li>
-                  <li>
-                    <span className="activity-dot violet" />
-                    Policy update published <small>5 hrs ago</small>
-                  </li>
+                  {activityItems.length ? activityItems.map((entry) => (
+                    <li key={entry.id}>
+                      <span className={`activity-dot ${entry.outcome === "success" ? "green" : "blue"}`} />
+                      {entry.action} · {entry.resource_type}{entry.resource_id ? ` ${entry.resource_id}` : ""}
+                      <small>{new Date(entry.created_at).toLocaleString()}</small>
+                    </li>
+                  )) : <li>No recent authorized activity records are available.</li>}
                 </ul>
               </section>
             </aside>
