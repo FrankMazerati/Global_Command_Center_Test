@@ -1276,7 +1276,10 @@ function PageFoundation() {
   const { section, group, page } = findPage(params.section, params.group, params.page)!;
   const { activeTicketId } = useWork();
   const tone = toneVar[section.tone];
-  const ticketWorkspace = section.slug === "intellidesk-command-center" && group.slug === "technician-workspace" && page.slug === "work-queue";
+  const ticketWorkspace =
+    section.slug === "intellidesk-command-center" &&
+    group.slug === "technician-workspace" &&
+    page.slug === "work-queue";
   const directory = directoryKind(page.slug);
   const marketplace = marketplaceSlugs.includes(page.slug);
   const workforceHistory = workforceHistorySlugs.includes(page.slug);
@@ -1295,12 +1298,31 @@ function PageFoundation() {
   const helpBuddy = section.slug === "help-buddy";
   const helpBuddyManagement = helpBuddy && group.slug === "intelligence-management";
   const identityAccessSlugs = new Set([
-    "directory-dashboard", "global-directory", "directory-health", "directory-activity",
-    "user-accounts", "global-user-id", "employee-accounts", "contractor-accounts",
-    "business-accounts", "tenant-user-accounts", "external-users", "identity-verification",
-    "account-status", "departments", "organizational-units", "organizational-hierarchy", "teams", "security-groups", "group-objects",
-    "roles-and-permissions", "access-management", "application-access", "access-requests",
-    "access-audit", "directory-audit-history",
+    "directory-dashboard",
+    "global-directory",
+    "directory-health",
+    "directory-activity",
+    "user-accounts",
+    "global-user-id",
+    "employee-accounts",
+    "contractor-accounts",
+    "business-accounts",
+    "tenant-user-accounts",
+    "external-users",
+    "identity-verification",
+    "account-status",
+    "departments",
+    "organizational-units",
+    "organizational-hierarchy",
+    "teams",
+    "security-groups",
+    "group-objects",
+    "roles-and-permissions",
+    "access-management",
+    "application-access",
+    "access-requests",
+    "access-audit",
+    "directory-audit-history",
   ]);
   const identityAccess = section.slug === "new-active-directory" && identityAccessSlugs.has(page.slug);
   const publicSiteView =
