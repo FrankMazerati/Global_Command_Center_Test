@@ -20,7 +20,7 @@ const DATASETS: Record<string, { table: string; description: string; fields: str
   "identity-verification": { table: "profiles", description: "Identity profile and account status fields. Verification evidence is not inferred.", fields: ["display_name", "work_email", "member_status", "updated_at"] },
   "account-status": { table: "profiles", description: "Account lifecycle status from the canonical profile record.", fields: ["display_name", "work_email", "member_status", "updated_at"] },
   departments: { table: "departments", description: "Organization-scoped departments and reporting structure.", fields: ["name", "code", "manager_profile_id", "organization_id"] },
-  teams: { table: "workforce_organizational_units", description: "Organizational units and team records.", fields: ["name", "unit_type", "parent_unit_id", "organization_id"] },
+  teams: { table: "organizational_units", description: "Organization-scoped organizational units and team records.", fields: ["name", "unit_type", "parent_unit_id", "organization_id"] },
   "security-groups": { table: "groups", description: "Security groups and their organization and tenant scope.", fields: ["name", "group_key", "group_type", "is_privileged", "organization_id", "tenant_id"] },
   "group-objects": { table: "groups", description: "Directory group objects.", fields: ["name", "group_key", "group_type", "description", "is_privileged"] },
   "roles-and-permissions": { table: "roles", description: "Role catalog. Role and permission administration is restricted by database policy.", fields: ["name", "role_key", "description", "is_privileged", "is_system_role"] },
@@ -37,6 +37,7 @@ const textValue = (value: unknown) => value == null || value === "" ? "—" : ty
 export function IdentityAccessWorkspace({ title, pageSlug }: { title: string; pageSlug: string }) {
   const dataset = DATASETS[pageSlug] ?? (ROLE_CATALOG_SLUGS.has(pageSlug) ? DATASETS["roles-and-permissions"] : undefined);
   const [rows, setRows] = useState<Row[]>([]);
+  const [catalogView, setCatalogView] = useState<"roles" | "permissions" | "role_permissions">("roles");
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +49,8 @@ export function IdentityAccessWorkspace({ title, pageSlug }: { title: string; pa
   const [saving, setSaving] = useState(false);
   const [selected, setSelected] = useState<Row | null>(null);
   const isRequestPage = ACCESS_REQUEST_SLUGS.has(pageSlug);
+  const isRoleCatalog = ROLE_CATALOG_SLUGS.has(pageSlug);
+  const activeTable = isRequestPage ? "access_requests" : isRoleCatalog ? catalogView : dataset?.table;
 
   const load = useCallback(async () => {
     const supabase = getSupabaseClient();
@@ -59,7 +62,7 @@ export function IdentityAccessWorkspace({ title, pageSlug }: { title: string; pa
     }
     setLoading(true);
     setError(null);
-    const table = isRequestPage ? "access_requests" : dataset?.table;
+    const table = activeTable;
     if (!table) {
       setRows([]);
       setLoading(false);
@@ -74,7 +77,7 @@ export function IdentityAccessWorkspace({ title, pageSlug }: { title: string; pa
       setRefreshedAt(new Date().toLocaleString());
     }
     setLoading(false);
-  }, [dataset?.table, isRequestPage]);
+  }, [activeTable, isRequestPage]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -88,9 +91,15 @@ export function IdentityAccessWorkspace({ title, pageSlug }: { title: string; pa
     const available = new Set(rows.flatMap((row) => Object.keys(row)));
     const preferred = isRequestPage
       ? ["requester_profile_id", "target_profile_id", "requested_resource", "reason", "status", "temporary_access", "expires_at", "created_at"]
-      : dataset?.fields ?? [];
+      : activeTable === "roles"
+        ? ["name", "role_key", "description", "is_privileged", "is_system_role"]
+        : activeTable === "permissions"
+          ? ["permission_key", "resource", "action", "description", "sensitivity"]
+          : activeTable === "role_permissions"
+            ? ["role_id", "permission_id", "scope"]
+            : dataset?.fields ?? [];
     return [...preferred.filter((field) => available.has(field)), ...[...available].filter((field) => !preferred.includes(field))].slice(0, 8);
-  }, [dataset?.fields, isRequestPage, rows]);
+  }, [activeTable, dataset?.fields, isRequestPage, rows]);
 
   const submitRequest = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -154,6 +163,16 @@ export function IdentityAccessWorkspace({ title, pageSlug }: { title: string; pa
           <RefreshCw className={`size-4 ${loading ? "animate-spin" : ""}`} /> Refresh
         </button>
       </div>
+
+      {isRoleCatalog && (
+        <div className="flex flex-wrap gap-2" role="tablist" aria-label="Role and permission catalog">
+          {(["roles", "permissions", "role_permissions"] as const).map((view) => (
+            <button key={view} type="button" role="tab" aria-selected={catalogView === view} onClick={() => setCatalogView(view)} className={`rounded-md border px-3 py-2 text-sm ${catalogView === view ? "border-primary bg-primary/10 text-primary" : "hover:bg-accent"}`}>
+              {view === "roles" ? "Roles" : view === "permissions" ? "Permissions" : "Role assignments"}
+            </button>
+          ))}
+        </div>
+      )}
 
       {isRequestPage && (
         <form onSubmit={submitRequest} className="grid gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 sm:grid-cols-2">
