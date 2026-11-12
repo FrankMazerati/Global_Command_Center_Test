@@ -985,3 +985,24 @@ body:has(.command-center-home)::before, body:has(.login-screen)::before { displa
 .command-center-home .cc-quick-picks > .cc-micro-items { grid-column: 1 / -1; grid-row: 2; width: 100%; }
 .command-center-home .cc-clock-reorder { min-width: 17px; border: 1px solid rgba(71,180,244,.25); border-radius: 3px; color: #bcecff; background: rgba(8,62,111,.42); font-size: 9px; line-height: 1; }
 .command-center-home .cc-micro-edit-row[draggable="true"] { cursor: grab; }
+
+
+/* Chat Buddy compact checklist and role-preparation scenarios. */
+.command-center-home .cc-buddy-checklist { display: grid; gap: 8px; padding: 9px; border: 1px solid rgba(77,177,235,.24); border-radius: 7px; background: rgba(4,25,55,.48); }
+.command-center-home .cc-buddy-checklist-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #dff7ff; font-size: 9px; letter-spacing: .08em; }
+.command-center-home .cc-buddy-checklist-heading span, .command-center-home .cc-buddy-checklist small { color: #789eb3; font-size: 8px; letter-spacing: 0; }
+.command-center-home .cc-buddy-checklist ul { display: grid; gap: 5px; max-height: 180px; overflow-y: auto; overscroll-behavior: contain; }
+.command-center-home .cc-buddy-checklist li { display: flex; align-items: center; gap: 6px; min-width: 0; padding: 5px 6px; border: 1px solid rgba(77,177,235,.16); border-radius: 4px; color: #c5e8f7; font-size: 9px; }
+.command-center-home .cc-buddy-checklist li label { display: flex; align-items: center; gap: 7px; min-width: 0; flex: 1; }
+.command-center-home .cc-buddy-checklist li input { accent-color: #36c6ff; }
+.command-center-home .cc-buddy-checklist li span { overflow-wrap: anywhere; }
+.command-center-home .cc-buddy-checklist li span.is-done { color: #789eb3; text-decoration: line-through; }
+.command-center-home .cc-buddy-checklist li > button { color: #ff9bb4; font-size: 15px; }
+.command-center-home .cc-buddy-checklist form { display: flex; gap: 5px; }
+.command-center-home .cc-buddy-checklist form input { min-width: 0; flex: 1; padding: 6px 7px; border: 1px solid rgba(71,180,244,.3); border-radius: 4px; outline: 0; color: #eafbff; background: rgba(8,39,74,.72); font-size: 9px; }
+.command-center-home .cc-buddy-checklist form button { display: inline-flex; align-items: center; gap: 4px; padding: 5px 7px; border: 1px solid rgba(71,180,244,.3); border-radius: 4px; color: #bcecff; background: rgba(8,62,111,.55); font-size: 9px; }
+.command-center-home .cc-buddy-checklist form button:disabled { opacity: .45; cursor: not-allowed; }
+.command-center-home .cc-buddy-checklist-empty, .command-center-home .cc-buddy-alerts p { color: #89a7b8; font-size: 9px; }
+.command-center-home .cc-buddy-alerts { display: grid; gap: 5px; }
+.command-center-home .cc-buddy-alerts button { display: grid; gap: 3px; padding: 7px; border: 1px solid rgba(77,177,235,.22); border-radius: 5px; color: #dff7ff; background: rgba(4,25,55,.48); text-align: left; font-size: 9px; }
+.command-center-home .cc-buddy-alerts button span { color: #89a7b8; font-size: 8px; }
