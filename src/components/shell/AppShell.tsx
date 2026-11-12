@@ -117,7 +117,7 @@ const FOOTER_DESTINATIONS: Record<string, [string, string, string]> = {
     "policies-and-standards",
     "corporate-policies",
   ],
-  "Service Status": ["intellistack-configuration-center", "system-monitoring", "platform-health"],
+  "Service Status": ["platform-administration-center", "monitoring-and-diagnostics", "overview"],
   "Knowledge Center": ["intellibase", "getting-started", "welcome"],
 };
 
