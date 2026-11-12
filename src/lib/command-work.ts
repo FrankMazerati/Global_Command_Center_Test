@@ -87,24 +87,46 @@ export async function getChatBuddySessionId(): Promise<string> {
     .limit(1)
     .maybeSingle();
   if (sessionError) throw sessionError;
-  if (existing?.id) return existing.id as string;
+  let sessionId = existing?.id as string | undefined;
+  if (!sessionId) {
+    const { data: created, error: createError } = await client
+      .from("assistant_sessions")
+      .insert({
+        assistant_id: assistant.id,
+        profile_id: profile.id,
+        organization_id: profile.organization_id,
+        tenant_id: profile.tenant_id,
+        session_status: "active",
+        channel: "workspace",
+        title: "Chat Buddy",
+        context_metadata: { source: "command_center" },
+      })
+      .select("id")
+      .single();
+    if (createError) throw createError;
+    sessionId = created.id as string;
+  }
 
-  const { data: created, error: createError } = await client
-    .from("assistant_sessions")
-    .insert({
-      assistant_id: assistant.id,
-      profile_id: profile.id,
-      organization_id: profile.organization_id,
-      tenant_id: profile.tenant_id,
-      session_status: "active",
-      channel: "workspace",
-      title: "Chat Buddy",
-      context_metadata: { source: "command_center" },
-    })
+  const { data: welcome, error: welcomeLookupError } = await client
+    .from("assistant_messages")
     .select("id")
-    .single();
-  if (createError) throw createError;
-  return created.id as string;
+    .eq("session_id", sessionId)
+    .eq("intent_key", "chat_buddy_welcome_v1")
+    .limit(1)
+    .maybeSingle();
+  if (welcomeLookupError) throw welcomeLookupError;
+  if (!welcome) {
+    const { error: welcomeInsertError } = await client.from("assistant_messages").insert({
+      session_id: sessionId,
+      sender_type: "assistant",
+      content: "Hi, I’m Chat Buddy. I can help organize your work and prepare next steps within your access. Your messages and checklists can be saved here. Live AI response generation is not connected in this workspace yet.",
+      message_kind: "chat",
+      intent_key: "chat_buddy_welcome_v1",
+      sensitivity: "standard",
+    });
+    if (welcomeInsertError) throw welcomeInsertError;
+  }
+  return sessionId;
 }
 
 export async function loadChatBuddyMessages(): Promise<ChatBuddyMessage[]> {
