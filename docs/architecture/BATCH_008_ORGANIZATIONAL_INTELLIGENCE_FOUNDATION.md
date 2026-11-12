@@ -293,3 +293,45 @@ The first migration must not simply add `tenant_id` to every organization or wid
 | Additive schema migration | Not yet created |
 | Server-side assignment resolver/RPCs | Not implemented |
 | Production schema changes | None |
+
+
+## 14. Critical second-pass discovery — existing management model
+
+A deeper catalog inspection found that the first-pass statement that no management-assignment capability exists was too broad. The database already contains a management model, and Batch 008 must extend it rather than introduce a parallel assignment system.
+
+### Existing canonical management structures
+
+- `governance_regions` already models a region hierarchy (`global`, `continent`, `subregion`, `country`, `operational_area`) with parent regions and lifecycle status.
+- `governance_management_role_catalog` already contains 25 management-role templates, allowed scopes, role family, approval requirement and active state. This is the canonical governance management-role catalog; do not create a duplicate role-template registry without proving a missing requirement.
+- `workforce_management_assignments` already stores a workforce person, management role key, organization, scope type (`global`, `region`, `tenant`, `department`), optional region/tenant/department target, status, authorization-enabled flag, dates, approval metadata and reason.
+- `workforce_role_assignments` already maps workforce people to roles with tenant and organization context.
+- `workforce_people` stores 5,000 workforce records and has a `global_person_id`; profiles also have `global_person_id`.
+
+### Important identity-link finding
+
+A read-only count found 5,000 workforce people and zero matching profile rows by `global_person_id`. This means the workforce-person assignment model is not currently linked to authenticated profiles by that identifier. Do not assume a workforce management assignment authorizes a signed-in profile. A verified identity-linking workflow or a separate explicit profile-to-assignment link is required before it can drive dashboard authorization.
+
+### Important location-scope gap
+
+- `workforce_management_assignments` has no explicit location scope type or assignment-to-location membership table.
+- `governance_regions` has no tenant/location membership mapping table in the inspected schema.
+- `workforce_management_assignments` region scope references `governance_regions`, but that alone does not establish which tenant locations belong to a region.
+- The existing assignment scope CHECK constraint allows only global, region, tenant and department. Location is not currently supported.
+- The existing governance role catalog allowed-scope constraint allows global, region, tenant and department. It does not currently include location.
+- Existing management assignment RLS read policy uses `is_org_admin(organization_id)`; it does not establish a user's explicit eight-location membership.
+
+### Corrected Batch 008 implementation strategy
+
+1. Preserve `governance_regions`, `governance_management_role_catalog`, `workforce_management_assignments`, `workforce_role_assignments`, `workforce_people`, and `profiles` as the canonical existing structures.
+2. Add an explicit, tenant-bound region-to-location organization membership relation, with integrity checks ensuring each location belongs to the same tenant's organization tree.
+3. Add explicit management-assignment-to-location membership for non-contiguous assignments such as eight West Side locations. The relation must reference an existing `workforce_management_assignments` row and a verified location organization; it must not store location IDs in JSON.
+4. Add a secure profile identity bridge only after defining the authoritative matching and lifecycle rules. A matching email or display name is not sufficient. Prefer verified global identity linkage or an approved account-link operation.
+5. Extend scope enums/check constraints and governance role allowed scopes to support location only after migration compatibility and existing records are assessed.
+6. Reuse the existing role catalog for role/template identity. If dashboard layouts need separate versioning, add a focused dashboard-layout registry that references existing management role keys; do not duplicate the role catalog.
+7. Do not make `workforce_management_assignments.authorization_enabled` a profile authorization source until the identity bridge, tenant integrity, location membership, entitlement and action-permission checks are all verified.
+
+## 15. Updated implementation gate and safety decision
+
+A Supabase development branch is required to validate this migration. The branch creation quote for the connected Supabase organization is **$0.01344 per hour**. Branch creation has not been completed because the non-zero recurring cost requires the user's explicit agreement. No branch was created, no migration was applied, and no production data was modified.
+
+The repository work can continue on the existing GitHub feature branch. Database migration execution and end-to-end RLS tests remain blocked until an isolated Supabase branch is approved and available.
