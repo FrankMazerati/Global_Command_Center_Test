@@ -10,6 +10,24 @@ alter table public.organizations
   add column if not exists location_country_code text,
   add column if not exists location_address jsonb;
 
+
+-- Company members can discover their own company's location metadata. This does not
+-- grant access to the operational records stored under any location.
+drop policy if exists organizations_read_child_locations on public.organizations;
+create policy organizations_read_child_locations
+  on public.organizations
+  for select to authenticated
+  using (
+    organization_type = 'location'
+    and exists (
+      select 1
+      from public.profiles p
+      where p.id = (select auth.uid())
+        and p.member_status = 'active'
+        and p.organization_id = organizations.parent_organization_id
+    )
+  );
+
 create unique index if not exists organizations_parent_location_code_uidx
   on public.organizations(parent_organization_id, location_code)
   where organization_type = 'location' and location_code is not null;
