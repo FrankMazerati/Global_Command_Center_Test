@@ -454,3 +454,27 @@ export async function listIntegrationConnections(): Promise<IntegrationConnectio
   if (error) throw error;
   return (data ?? []) as IntegrationConnectionSummary[];
 }
+
+
+export interface RecentAuditEvent {
+  id: string;
+  action: string;
+  resource_type: string;
+  resource_id: string | null;
+  outcome: string;
+  created_at: string;
+}
+
+export async function listRecentAuditEvents(limit = 5): Promise<RecentAuditEvent[]> {
+  const client = getSupabaseClient();
+  if (!client) throw new Error("Supabase is not configured.");
+  const profile = await currentProfile(client);
+  const { data, error } = await client
+    .from("audit_events")
+    .select("id,action,resource_type,resource_id,outcome,created_at")
+    .eq("organization_id", profile.organization_id)
+    .order("created_at", { ascending: false })
+    .limit(Math.min(Math.max(limit, 1), 20));
+  if (error) throw error;
+  return (data ?? []) as RecentAuditEvent[];
+}
