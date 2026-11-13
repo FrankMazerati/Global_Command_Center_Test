@@ -53,6 +53,19 @@ export interface TicketMessage {
   metadata: Record<string, unknown> | null;
 }
 
+export interface TicketApproval {
+  id: string;
+  ticket_id: string;
+  requested_by: string;
+  approver_profile_id: string | null;
+  permission_key: string;
+  reason: string;
+  status: "pending" | "approved" | "denied";
+  decision_reason: string | null;
+  requested_at: string;
+  decided_at: string | null;
+}
+
 export interface TicketAuditEvent {
   id: string;
   actor_profile_id: string | null;
@@ -277,3 +290,51 @@ export async function listAssignableProfiles(ticket: TicketRecord): Promise<Tick
   if (error) throw new Error(error.message);
   return (data ?? []) as TicketProfile[];
 }
+
+export async function loadTicketApprovals(ticketId: string): Promise<TicketApproval[]> {
+  const { data, error } = await client()
+    .from("ticket_approval_requests")
+    .select("id,ticket_id,requested_by,approver_profile_id,permission_key,reason,status,decision_reason,requested_at,decided_at")
+    .eq("ticket_id", ticketId)
+    .order("requested_at", { ascending: false })
+    .limit(100);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as TicketApproval[];
+}
+
+export async function requestTicketApproval(input: {
+  ticketId: string;
+  permissionKey: string;
+  reason: string;
+}): Promise<TicketApproval> {
+  const { data, error } = await client().rpc("request_ticket_approval", {
+    p_ticket_id: input.ticketId,
+    p_permission_key: input.permissionKey.trim(),
+    p_reason: input.reason.trim(),
+  });
+  if (error) throw new Error(error.message);
+  return unwrapTicketApproval(data);
+}
+
+export async function decideTicketApproval(input: {
+  approvalId: string;
+  decision: "approved" | "denied";
+  reason: string;
+}): Promise<TicketApproval> {
+  const { data, error } = await client().rpc("decide_ticket_approval", {
+    p_approval_id: input.approvalId,
+    p_decision: input.decision,
+    p_reason: input.reason.trim(),
+  });
+  if (error) throw new Error(error.message);
+  return unwrapTicketApproval(data);
+}
+
+function unwrapTicketApproval(data: unknown): TicketApproval {
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row || typeof row !== "object" || !("id" in row)) {
+    throw new Error("The approval operation completed without returning an approval record.");
+  }
+  return row as TicketApproval;
+}
+
