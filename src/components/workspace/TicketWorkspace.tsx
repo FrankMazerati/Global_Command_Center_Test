@@ -842,7 +842,7 @@ export function TicketWorkspace() {
         <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-4 shadow-[0_16px_50px_rgba(0,0,0,.2)] backdrop-blur-xl sm:p-5">
           <div className="mb-3 flex items-center gap-2">
             <History className="size-4 text-violet-200" />
-            <h3 className="font-semibold text-white">Ticket audit trail</h3>
+            <h3 className="font-semibold text-white">Ticket history</h3>
             <span className="ml-auto text-[10px] text-slate-500">{audit.length} event(s)</span>
           </div>
           <p className="mb-3 text-xs text-slate-400">
