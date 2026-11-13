@@ -43,6 +43,26 @@ describe("ticket workflow contract", () => {
     ).toBeNull();
   });
 
+  it("rejects whitespace-only ticket fields after trimming", () => {
+    expect(
+      validateTicketDetails({
+        title: "     ",
+        description: "          ",
+        category: "  ",
+      }),
+    ).not.toBeNull();
+  });
+
+  it("rejects fields that exceed the supported limits", () => {
+    expect(
+      validateTicketDetails({
+        title: "T".repeat(241),
+        description: "D".repeat(10),
+        category: "Network",
+      }),
+    ).toContain("5 to 240");
+  });
+
   it("validates ticket title, description, and category before submission", () => {
     expect(
       validateTicketDetails({
