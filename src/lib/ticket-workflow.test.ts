@@ -53,14 +53,38 @@ describe("ticket workflow contract", () => {
     ).not.toBeNull();
   });
 
-  it("rejects fields that exceed the supported limits", () => {
+  it("matches the database title bounds (4 to 180 characters)", () => {
     expect(
       validateTicketDetails({
-        title: "T".repeat(241),
+        title: "T".repeat(181),
         description: "D".repeat(10),
         category: "Network",
       }),
-    ).toContain("5 to 240");
+    ).toContain("4 to 180");
+    expect(
+      validateTicketDetails({
+        title: "Four",
+        description: "D".repeat(10),
+        category: "Network",
+      }),
+    ).toBeNull();
+  });
+
+  it("rejects descriptions and categories outside the UI contract", () => {
+    expect(
+      validateTicketDetails({
+        title: "Network outage",
+        description: "D".repeat(10001),
+        category: "Network",
+      }),
+    ).toContain("10,000");
+    expect(
+      validateTicketDetails({
+        title: "Network outage",
+        description: "Users cannot reach the shared drive.",
+        category: "N",
+      }),
+    ).toContain("2 to 100");
   });
 
   it("validates ticket title, description, and category before submission", () => {
