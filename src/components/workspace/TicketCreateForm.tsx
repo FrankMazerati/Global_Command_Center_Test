@@ -3,7 +3,7 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createPortalTicket, type TicketRecord } from "@/lib/tickets";
-import type { TicketPriority } from "@/lib/ticket-workflow";
+import { validateTicketDetails, type TicketPriority } from "@/lib/ticket-workflow";
 
 const CATEGORIES = [
   "Service Request",
@@ -35,6 +35,12 @@ export function TicketCreateForm({
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (saving) return;
+    const validationError = validateTicketDetails({ title, description, category });
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
     setError(null);
     setSaving(true);
     try {
