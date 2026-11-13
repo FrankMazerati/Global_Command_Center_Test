@@ -235,14 +235,32 @@ export async function addTicketMessage(input: {
 
 export async function loadTicketAudit(ticketId: string): Promise<TicketAuditEvent[]> {
   const { data, error } = await client()
-    .from("audit_events")
-    .select("id,actor_profile_id,action,resource_type,resource_id,outcome,event_data,created_at")
-    .eq("resource_type", "ticket")
-    .eq("resource_id", ticketId)
+    .from("ticket_lifecycle_events")
+    .select("id,actor_profile_id,event_key,from_status,to_status,reason,metadata,created_at")
+    .eq("ticket_id", ticketId)
     .order("created_at", { ascending: false })
     .limit(100);
   if (error) throw new Error(error.message);
-  return (data ?? []) as TicketAuditEvent[];
+  return (data ?? []).map((event) => ({
+    id: event.id as string,
+    actor_profile_id: (event.actor_profile_id as string | null) ?? null,
+    action: `ticket.${event.event_key as string}`,
+    resource_type: "ticket",
+    resource_id: ticketId,
+    outcome: "recorded",
+    event_data: {
+      ...((event.metadata as Record<string, unknown> | null) ?? {}),
+      reason: event.reason,
+      ...(event.from_status !== event.to_status
+        ? {
+            changed_fields: ["status"],
+            before: { status: event.from_status },
+            after: { status: event.to_status },
+          }
+        : {}),
+    },
+    created_at: event.created_at as string,
+  })) as TicketAuditEvent[];
 }
 
 export async function listAssignableProfiles(ticket: TicketRecord): Promise<TicketProfile[]> {
