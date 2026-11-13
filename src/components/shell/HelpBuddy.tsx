@@ -29,6 +29,7 @@ import { HelpBuddyConversation } from "@/components/workspace/KnowledgeAndHelpWo
 import { useWork } from "@/lib/work-context";
 import { cn } from "@/lib/utils";
 import { listCommandWorkItems, updateCommandWorkItem, type CommandWorkItem } from "@/lib/command-work";
+import { findTicketByReference } from "@/lib/tickets";
 
 const KNOWLEDGE = ALL_DESTINATIONS.filter((d) => d.section.slug === "intellibase");
 export function HelpBuddyPanel({ className }: { className?: string }) {
@@ -37,6 +38,8 @@ export function HelpBuddyPanel({ className }: { className?: string }) {
   const [noteScope, setNoteScope] = useState<"personal" | "ticket">("personal");
   const [item, setItem] = useState("");
   const [ticketInput, setTicketInput] = useState("");
+  const [ticketLookupBusy, setTicketLookupBusy] = useState(false);
+  const [ticketLookupError, setTicketLookupError] = useState<string | null>(null);
   const [kq, setKq] = useState("");
   const [workItems, setWorkItems] = useState<CommandWorkItem[]>([]);
   const [workLoading, setWorkLoading] = useState(false);
@@ -151,10 +154,26 @@ export function HelpBuddyPanel({ className }: { className?: string }) {
             ) : (
               <form
                 className="flex gap-2"
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault();
-                  if (ticketInput.trim()) w.setActiveTicketId(ticketInput.trim().toUpperCase());
-                  setTicketInput("");
+                  const reference = ticketInput.trim();
+                  if (!reference || ticketLookupBusy) return;
+                  setTicketLookupBusy(true);
+                  setTicketLookupError(null);
+                  try {
+                    const ticket = await findTicketByReference(reference);
+                    if (!ticket) {
+                      throw new Error("No ticket matching that reference is visible to your account.");
+                    }
+                    w.setActiveTicketId(ticket.id);
+                    setTicketInput("");
+                  } catch (error) {
+                    setTicketLookupError(
+                      error instanceof Error ? error.message : "The ticket could not be verified.",
+                    );
+                  } finally {
+                    setTicketLookupBusy(false);
+                  }
                 }}
               >
                 <Input
@@ -163,13 +182,18 @@ export function HelpBuddyPanel({ className }: { className?: string }) {
                   placeholder="Ticket ID, e.g. TKT-1042"
                   aria-label="Ticket ID"
                 />
-                <Button type="submit" size="sm">
-                  Set
+                <Button type="submit" size="sm" disabled={ticketLookupBusy || !ticketInput.trim()}>
+                  {ticketLookupBusy ? "Checking…" : "Set"}
                 </Button>
               </form>
             )}
+            {ticketLookupError && (
+              <p role="alert" className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
+                {ticketLookupError}
+              </p>
+            )}
             <p className="mt-1.5 text-[11px] text-muted-foreground">
-              Stays with you as you move between sections.
+              Ticket references are checked against records your account is authorized to view. Your verified ticket stays with you as you move between sections.
             </p>
           </section>
           <section>
