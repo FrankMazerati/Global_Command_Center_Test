@@ -801,7 +801,7 @@ export function TicketWorkspace() {
             </div>
             <label className="mt-3 block space-y-1 text-xs text-slate-300">
               <span>
-                Reason / resolution details (required for wait, escalation, resolve, reopen, or
+                Reason / resolution details (required for assignment, wait, escalation, resolve, reopen, or
                 cancel)
               </span>
               <textarea
