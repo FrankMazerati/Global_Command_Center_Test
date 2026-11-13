@@ -10,7 +10,7 @@ import {
   Workflow,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -28,25 +28,59 @@ import { ALL_DESTINATIONS } from "@/lib/nav";
 import { HelpBuddyConversation } from "@/components/workspace/KnowledgeAndHelpWorkspaces";
 import { useWork } from "@/lib/work-context";
 import { cn } from "@/lib/utils";
+import { listCommandWorkItems, updateCommandWorkItem, type CommandWorkItem } from "@/lib/command-work";
+import { findTicketByReference } from "@/lib/tickets";
 
 const KNOWLEDGE = ALL_DESTINATIONS.filter((d) => d.section.slug === "intellibase");
-const WORK_VIEWS = [
-  "Open work",
-  "Pending work",
-  "Closed work",
-  "Transferred work",
-  "Follow-ups",
-  "Manager sign-off",
-];
-
 export function HelpBuddyPanel({ className }: { className?: string }) {
   const w = useWork();
   const [note, setNote] = useState("");
   const [noteScope, setNoteScope] = useState<"personal" | "ticket">("personal");
   const [item, setItem] = useState("");
   const [ticketInput, setTicketInput] = useState("");
+  const [ticketLookupBusy, setTicketLookupBusy] = useState(false);
+  const [ticketLookupError, setTicketLookupError] = useState<string | null>(null);
   const [kq, setKq] = useState("");
+  const [workItems, setWorkItems] = useState<CommandWorkItem[]>([]);
+  const [workLoading, setWorkLoading] = useState(false);
+  const [workError, setWorkError] = useState<string | null>(null);
+  const [updatingWorkId, setUpdatingWorkId] = useState<string | null>(null);
   const done = w.checklist.filter((c) => c.done).length;
+  useEffect(() => {
+    let active = true;
+    setWorkLoading(true);
+    listCommandWorkItems()
+      .then((items) => {
+        if (active) {
+          setWorkItems(items);
+          setWorkError(null);
+        }
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          setWorkError(error instanceof Error ? error.message : "Your work could not be loaded.");
+        }
+      })
+      .finally(() => {
+        if (active) setWorkLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function changeWorkStatus(item: CommandWorkItem, status: CommandWorkItem["status"]) {
+    setUpdatingWorkId(item.id);
+    try {
+      const updated = await updateCommandWorkItem(item.id, { status });
+      setWorkItems((items) => items.map((entry) => entry.id === updated.id ? updated : entry));
+      setWorkError(null);
+    } catch (error) {
+      setWorkError(error instanceof Error ? error.message : "The work item could not be updated.");
+    } finally {
+      setUpdatingWorkId(null);
+    }
+  }
   const kResults = KNOWLEDGE.filter((d) =>
     d.page.title.toLowerCase().includes(kq.toLowerCase()),
   ).slice(0, 8);
@@ -120,10 +154,26 @@ export function HelpBuddyPanel({ className }: { className?: string }) {
             ) : (
               <form
                 className="flex gap-2"
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault();
-                  if (ticketInput.trim()) w.setActiveTicketId(ticketInput.trim().toUpperCase());
-                  setTicketInput("");
+                  const reference = ticketInput.trim();
+                  if (!reference || ticketLookupBusy) return;
+                  setTicketLookupBusy(true);
+                  setTicketLookupError(null);
+                  try {
+                    const ticket = await findTicketByReference(reference);
+                    if (!ticket) {
+                      throw new Error("No ticket matching that reference is visible to your account.");
+                    }
+                    w.setActiveTicketId(`TKT-${ticket.ticket_number}`);
+                    setTicketInput("");
+                  } catch (error) {
+                    setTicketLookupError(
+                      error instanceof Error ? error.message : "The ticket could not be verified.",
+                    );
+                  } finally {
+                    setTicketLookupBusy(false);
+                  }
                 }}
               >
                 <Input
@@ -132,13 +182,18 @@ export function HelpBuddyPanel({ className }: { className?: string }) {
                   placeholder="Ticket ID, e.g. TKT-1042"
                   aria-label="Ticket ID"
                 />
-                <Button type="submit" size="sm">
-                  Set
+                <Button type="submit" size="sm" disabled={ticketLookupBusy || !ticketInput.trim()}>
+                  {ticketLookupBusy ? "Checking…" : "Set"}
                 </Button>
               </form>
             )}
+            {ticketLookupError && (
+              <p role="alert" className="mt-2 rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">
+                {ticketLookupError}
+              </p>
+            )}
             <p className="mt-1.5 text-[11px] text-muted-foreground">
-              Stays with you as you move between sections.
+              Ticket references are checked against records your account is authorized to view. Your verified ticket stays with you as you move between sections.
             </p>
           </section>
           <section>
@@ -301,19 +356,77 @@ export function HelpBuddyPanel({ className }: { className?: string }) {
           </p>
         </TabsContent>
 
-        <TabsContent value="work" className="space-y-2 p-4">
-          {WORK_VIEWS.map((v) => (
-            <div
-              key={v}
-              className="flex items-center justify-between rounded-lg border px-3 py-2 text-sm"
+        <TabsContent value="work" className="space-y-3 p-4">
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { label: "Open", count: workItems.filter((entry) => ["open", "in_progress"].includes(entry.status)).length },
+              { label: "Blocked", count: workItems.filter((entry) => entry.status === "blocked" || entry.status === "waiting_approval").length },
+              { label: "Completed", count: workItems.filter((entry) => entry.status === "completed").length },
+            ].map((summary) => (
+              <div key={summary.label} className="rounded-lg border bg-card px-2 py-2 text-center">
+                <div className="text-lg font-semibold tabular-nums">{summary.count}</div>
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{summary.label}</div>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Work queue</h3>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setWorkLoading(true);
+                listCommandWorkItems()
+                  .then((items) => { setWorkItems(items); setWorkError(null); })
+                  .catch((error: unknown) => setWorkError(error instanceof Error ? error.message : "Your work could not be refreshed."))
+                  .finally(() => setWorkLoading(false));
+              }}
+              disabled={workLoading}
             >
-              <span className="flex items-center gap-2">
-                <CheckSquare className="size-4 text-primary" />
-                {v}
-              </span>
-              <span className="text-xs text-muted-foreground">Awaiting backend</span>
+              Refresh
+            </Button>
+          </div>
+          {workError && <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/5 p-2 text-xs text-destructive">{workError}</p>}
+          {workLoading ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">Loading your work…</p>
+          ) : workItems.length ? (
+            <ul className="space-y-2">
+              {workItems.map((entry) => (
+                <li key={entry.id} className="rounded-lg border bg-card p-3">
+                  <div className="flex items-start gap-2">
+                    <CheckSquare className="mt-0.5 size-4 shrink-0 text-primary" />
+                    <div className="min-w-0 flex-1">
+                      <div className="break-words text-sm font-medium">{entry.title}</div>
+                      {entry.description && <p className="mt-1 text-xs text-muted-foreground">{entry.description}</p>}
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[10px]">
+                        <span className="rounded-full bg-muted px-2 py-0.5 capitalize">{entry.status.replaceAll("_", " ")}</span>
+                        <span className="rounded-full border px-2 py-0.5 capitalize">{entry.priority} priority</span>
+                        {entry.requires_approval && <span className="rounded-full border border-amber-500/40 px-2 py-0.5">Approval required</span>}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex justify-end">
+                    {entry.status === "completed" ? (
+                      <Button size="sm" variant="outline" disabled={updatingWorkId === entry.id} onClick={() => void changeWorkStatus(entry, "open")}>Reopen</Button>
+                    ) : entry.status === "cancelled" ? (
+                      <span className="text-xs text-muted-foreground">Cancelled</span>
+                    ) : (
+                      <Button size="sm" disabled={updatingWorkId === entry.id} onClick={() => void changeWorkStatus(entry, "completed")}>
+                        {updatingWorkId === entry.id ? "Saving…" : "Mark complete"}
+                      </Button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="rounded-lg border border-dashed p-4 text-center">
+              <ListTodo className="mx-auto mb-2 size-6 text-muted-foreground" />
+              <p className="text-sm font-medium">No assigned work yet</p>
+              <p className="mt-1 text-xs text-muted-foreground">Tasks you create in the Workflow tab and work visible to your account will appear here.</p>
             </div>
-          ))}
+          )}
         </TabsContent>
 
         <TabsContent value="chat" className="p-4">
