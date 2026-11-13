@@ -19,6 +19,7 @@ import {
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { getSupabaseClient } from "@/lib/supabase";
+import { NAV } from "@/lib/nav";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -33,6 +34,16 @@ export const Route = createFileRoute("/login")({
   }),
   component: LoginPage,
 });
+
+function navHrefForPage(title: string) {
+  for (const section of NAV) {
+    for (const group of section.groups) {
+      const page = group.pages.find((candidate) => candidate.title === title);
+      if (page) return `/m/${section.slug}/${group.slug}/${page.slug}`;
+    }
+  }
+  return "/login";
+}
 
 type LoginEnvironment = "employee" | "business" | "tenant";
 const environments = [
@@ -112,10 +123,26 @@ const businessProducts = [
 ];
 
 const loginQuickLinks = [
-  { label: "24/7 Support", detail: "Service desk and assistance", href: "/m/intellidesk-command-center/service-desk-dashboard/open-tickets" },
-  { label: "IntelliBase", detail: "Knowledge base, learning and documentation", href: "/m/intellibase/knowledge-dashboard/featured-knowledge" },
-  { label: "Security & Compliance", detail: "Security operations and governance", href: "/m/soc-security-operations-center/soc-dashboard/security-posture" },
-  { label: "Global Infrastructure", detail: "Network, systems and infrastructure operations", href: "/m/network-operations-center/noc-dashboard/network-health" },
+  {
+    label: "24/7 Support",
+    detail: "Service desk and assistance",
+    href: "/m/intellidesk-command-center/service-desk-dashboard/open-tickets",
+  },
+  {
+    label: "IntelliBase",
+    detail: "Knowledge base, learning and documentation",
+    href: "/m/intellibase/knowledge-dashboard/featured-knowledge",
+  },
+  {
+    label: "Security & Compliance",
+    detail: "Security operations and governance",
+    href: "/m/soc-security-operations-center/soc-dashboard/security-posture",
+  },
+  {
+    label: "Global Infrastructure",
+    detail: "Network, systems and infrastructure operations",
+    href: "/m/network-operations-center/noc-dashboard/network-health",
+  },
   { label: "Platform Overview", detail: "Explore the IntelliStack platform", href: "/p/products" },
 ];
 
@@ -139,12 +166,18 @@ function LoginPage() {
     event.preventDefault();
     setMessage("");
     if (!identifier.trim()) {
-      setMessage(phoneMode ? "Enter your phone number to continue." : "Enter your email address to continue.");
+      setMessage(
+        phoneMode
+          ? "Enter your phone number to continue."
+          : "Enter your email address to continue.",
+      );
       return;
     }
     const supabase = getSupabaseClient(remember);
     if (!supabase) {
-      setMessage("Secure sign-in is not configured. Add the Supabase project URL and publishable key to the deployment environment.");
+      setMessage(
+        "Secure sign-in is not configured. Add the Supabase project URL and publishable key to the deployment environment.",
+      );
       return;
     }
     setBusy(true);
@@ -157,7 +190,9 @@ function LoginPage() {
           return;
         }
         setPhoneOtpSent(true);
-        setMessage("A verification code was sent if this phone number is registered and SMS sign-in is enabled.");
+        setMessage(
+          "A verification code was sent if this phone number is registered and SMS sign-in is enabled.",
+        );
         return;
       }
       if (!phoneOtp.trim()) {
@@ -192,7 +227,8 @@ function LoginPage() {
       }
     }
     sessionStorage.setItem("mo:requested-environment", environment);
-    if (environment === "business") sessionStorage.setItem("mo:requested-business-product", businessProduct);
+    if (environment === "business")
+      sessionStorage.setItem("mo:requested-business-product", businessProduct);
     toast.success("Identity verified. Opening your command center.");
     navigate({ to: "/", replace: true });
   }
@@ -405,13 +441,20 @@ function LoginPage() {
                   <span /> Remember me
                 </label>
                 {!phoneMode ? (
-                  <button type="button" onClick={resetPassword}>Forgot password?</button>
+                  <button type="button" onClick={resetPassword}>
+                    Forgot password?
+                  </button>
                 ) : (
-                  <button type="button" onClick={() => {
-                    setPhoneOtpSent(false);
-                    setPhoneOtp("");
-                    setMessage("Enter your phone number and request a new verification code.");
-                  }}>Resend / change number</button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPhoneOtpSent(false);
+                      setPhoneOtp("");
+                      setMessage("Enter your phone number and request a new verification code.");
+                    }}
+                  >
+                    Resend / change number
+                  </button>
                 )}
               </div>
               {message && (
@@ -421,7 +464,13 @@ function LoginPage() {
               )}
               <button className="login-submit" disabled={busy} type="submit">
                 <ShieldCheck size={15} />
-                {busy ? "Verifying identity…" : phoneMode ? (phoneOtpSent ? "Verify Code & Sign In" : "Send Secure Code") : "Sign In"}
+                {busy
+                  ? "Verifying identity…"
+                  : phoneMode
+                    ? phoneOtpSent
+                      ? "Verify Code & Sign In"
+                      : "Send Secure Code"
+                    : "Sign In"}
               </button>
               <div className="login-help-links">
                 <span>Something else?</span>
@@ -450,12 +499,25 @@ function LoginPage() {
                     disabled={busy}
                     onClick={() => void startConnector(provider, label, note)}
                   >
-                    <span className={`provider-mark provider-${label.toLowerCase().replaceAll(" ", "-")}`}>
-                      {label === "Google Workspace" ? <b className="provider-google">G</b>
-                        : label === "Microsoft 365" || label === "Microsoft Entra ID" ? <span className="provider-microsoft"><i /><i /><i /><i /></span>
-                        : label === "AWS" ? <b className="provider-aws">aws</b>
-                        : label === "GitHub" ? <Github size={17} />
-                        : <Apple size={17} />}
+                    <span
+                      className={`provider-mark provider-${label.toLowerCase().replaceAll(" ", "-")}`}
+                    >
+                      {label === "Google Workspace" ? (
+                        <b className="provider-google">G</b>
+                      ) : label === "Microsoft 365" || label === "Microsoft Entra ID" ? (
+                        <span className="provider-microsoft">
+                          <i />
+                          <i />
+                          <i />
+                          <i />
+                        </span>
+                      ) : label === "AWS" ? (
+                        <b className="provider-aws">aws</b>
+                      ) : label === "GitHub" ? (
+                        <Github size={17} />
+                      ) : (
+                        <Apple size={17} />
+                      )}
                     </span>
                     {label}
                   </button>
@@ -470,10 +532,18 @@ function LoginPage() {
                   placeholder="Search SSO providers and protocols…"
                   autoComplete="off"
                 />
-                <small>Popular providers are listed first. Selection does not imply a live connection.</small>
-                <div className="provider-directory-list" role="listbox" aria-label="Additional identity providers">
+                <small>
+                  Popular providers are listed first. Selection does not imply a live connection.
+                </small>
+                <div
+                  className="provider-directory-list"
+                  role="listbox"
+                  aria-label="Additional identity providers"
+                >
                   {directoryProviders
-                    .filter((provider) => provider.toLowerCase().includes(providerSearch.toLowerCase()))
+                    .filter((provider) =>
+                      provider.toLowerCase().includes(providerSearch.toLowerCase()),
+                    )
                     .map((provider) => (
                       <button
                         type="button"
@@ -483,7 +553,9 @@ function LoginPage() {
                         key={provider}
                         onClick={() => {
                           setDirectoryProvider(provider);
-                          setMessage(`${provider} selected. An administrator must configure and verify this connection before it can be used to sign in.`);
+                          setMessage(
+                            `${provider} selected. An administrator must configure and verify this connection before it can be used to sign in.`,
+                          );
                         }}
                       >
                         {provider}
@@ -534,34 +606,42 @@ function LoginPage() {
             <b>SYSTEMS</b>
             <small>SECURED · TRUSTED · COMPLIANT</small>
           </span>
+          <p>Think beyond locally, connect everything globally, powered by intelligence.</p>
         </div>
         <div className="login-footer-group">
-          <b>About Us</b>
-          <a href="/p/about">Our Story</a>
-          <a href="/p/about">Leadership</a>
-          <a href="/p/careers">Careers</a>
-          <a href="/p/social">News &amp; Media</a>
+          <b>Company</b>
+          <a href={navHrefForPage("Company Profile")}>Company Profile</a>
+          <a href={navHrefForPage("Business Performance")}>Business Performance</a>
+          <a href={navHrefForPage("Business Health")}>Business Health</a>
+          <a href={navHrefForPage("Contact Information")}>Contact Information</a>
         </div>
         <div className="login-footer-group">
-          <b>Products &amp; Services</b>
-          <a href="/p/products">Platform Overview</a>
-          <a href="/p/solutions">Solutions</a>
-          <a href="/p/partners">Integrations &amp; Partners</a>
-          <a href="/p/contact">Pricing &amp; Sales</a>
+          <b>Platform</b>
+          <a href={navHrefForPage("Platform Overview")}>Platform Overview</a>
+          <a href={navHrefForPage("System Status")}>System Status</a>
+          <a href={navHrefForPage("Global Settings")}>Global Settings</a>
+          <a href={navHrefForPage("Application Configuration")}>Applications</a>
         </div>
         <div className="login-footer-group">
           <b>Resources</b>
-          <a href="/m/intellibase/training-and-certification/learning-paths">Help Center</a>
-          <a href="/m/intellibase/training-and-certification/learning-paths">Documentation</a>
-          <a href="/m/soc-security-operations-center/soc-dashboard/security-posture">System Security</a>
-          <a href="/p/contact">Contact Support</a>
+          <a href={navHrefForPage("Learning Paths")}>Learning Paths</a>
+          <a href={navHrefForPage("Application Documentation")}>Documentation</a>
+          <a href={navHrefForPage("Troubleshooting")}>Troubleshooting</a>
+          <a href={navHrefForPage("Common Issues")}>Common Issues</a>
         </div>
         <div className="login-footer-group">
-          <b>Legal &amp; Policies</b>
-          <a href="/p/privacy">Privacy</a>
-          <a href="/p/terms">Terms</a>
-          <a href="/p/accessibility">Accessibility</a>
-          <a href="/p/security">Security &amp; Compliance</a>
+          <b>Support</b>
+          <a href={navHrefForPage("Knowledge Search")}>Help Center</a>
+          <a href={navHrefForPage("Open Tickets")}>Open Tickets</a>
+          <a href={navHrefForPage("Related Tickets")}>Related Tickets</a>
+          <a href={navHrefForPage("Technical Procedures")}>Technical Procedures</a>
+        </div>
+        <div className="login-footer-group">
+          <b>Legal &amp; Trust</b>
+          <a href={navHrefForPage("Compliance Assessments")}>Compliance</a>
+          <a href={navHrefForPage("Compliance Findings")}>Compliance Findings</a>
+          <a href={navHrefForPage("Control Evidence")}>Control Evidence</a>
+          <a href={navHrefForPage("Incident Reports")}>Incident Reports</a>
         </div>
         <div className="login-footer-status">
           <span>

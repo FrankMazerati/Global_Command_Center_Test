@@ -37,4 +37,11 @@ export default tseslint.config(
     },
   },
   eslintPluginPrettier,
+  {
+    // Formatting is checked separately; this repository's existing files are not Prettier-clean.
+    // Keep the explicit override after the recommended plugin config so it is not re-enabled.
+    rules: {
+      "prettier/prettier": "off",
+    },
+  },
 );

@@ -9,6 +9,7 @@ import {
   Pencil,
   RefreshCw,
   Save,
+  ShieldCheck,
   Send,
   Ticket,
   UserRound,
@@ -38,9 +39,14 @@ import {
   loadCurrentTicketProfile,
   loadTicketAudit,
   loadTicketMessages,
+  loadTicketApprovals,
+  requestTicketApproval,
+  decideTicketApproval,
+  canDecideTicketApprovals,
   updateTicketDetails,
   type TicketAuditEvent,
   type TicketMessage,
+  type TicketApproval,
   type TicketProfile,
   type TicketRecord,
 } from "@/lib/tickets";
@@ -73,6 +79,13 @@ function priorityTone(priority: string) {
 }
 
 function auditDescription(event: TicketAuditEvent) {
+  const slaDescriptions: Record<string, string> = {
+    "sla.requester_wait_started": "SLA paused while waiting for the requester",
+    "sla.requester_wait_ended": "SLA resumed after requester wait",
+    "sla.ticket_resolved": "Resolution recorded in the SLA timeline",
+    "sla.ticket_reopened": "SLA timeline restarted after reopening",
+  };
+  if (slaDescriptions[event.action]) return slaDescriptions[event.action];
   const details = event.event_data ?? {};
   if (details["message_content_recorded"] === false) {
     const operation = String(details["operation"] ?? "change").toLowerCase();
@@ -108,6 +121,14 @@ export function TicketWorkspace() {
   const [assignees, setAssignees] = useState<TicketProfile[]>([]);
   const [messages, setMessages] = useState<TicketMessage[]>([]);
   const [audit, setAudit] = useState<TicketAuditEvent[]>([]);
+  const [approvals, setApprovals] = useState<TicketApproval[]>([]);
+  const [approvalPermissionKey, setApprovalPermissionKey] = useState("ticket.action.override");
+  const [approvalReason, setApprovalReason] = useState("");
+  const [decisionReasons, setDecisionReasons] = useState<Record<string, string>>({});
+  const [canDecideApprovals, setCanDecideApprovals] = useState(false);
+  const [approvalBusyId, setApprovalBusyId] = useState<string | null>(null);
+  const [approvalLoading, setApprovalLoading] = useState(false);
+  const [approvalError, setApprovalError] = useState<string | null>(null);
   const [ticketRef, setTicketRef] = useState("");
   const [reason, setReason] = useState("");
   const [messageBody, setMessageBody] = useState("");
@@ -223,6 +244,93 @@ export function TicketWorkspace() {
       live = false;
     };
   }, [ticket, reloadKey]);
+
+  useEffect(() => {
+    let live = true;
+    if (!ticket) {
+      setApprovals([]);
+      setCanDecideApprovals(false);
+      setApprovalError(null);
+      return () => {
+        live = false;
+      };
+    }
+    setApprovalLoading(true);
+    setApprovalError(null);
+    void Promise.all([
+      loadTicketApprovals(ticket.id),
+      profile ? canDecideTicketApprovals(profile.id) : Promise.resolve(false),
+    ])
+      .then(([rows, canDecide]) => {
+        if (!live) return;
+        setApprovals(rows);
+        setCanDecideApprovals(canDecide);
+      })
+      .catch((cause) => {
+        if (live)
+          setApprovalError(
+            cause instanceof Error ? cause.message : "Ticket approvals could not be loaded.",
+          );
+      })
+      .finally(() => {
+        if (live) setApprovalLoading(false);
+      });
+    return () => {
+      live = false;
+    };
+  }, [ticket, profile, reloadKey]);
+
+  const submitApprovalRequest = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!ticket) return;
+    if (approvalPermissionKey.trim().length < 3 || approvalReason.trim().length < 4) {
+      setApprovalError("Enter an action key and a reason of at least four characters.");
+      return;
+    }
+    setApprovalBusyId("request");
+    setApprovalError(null);
+    try {
+      await requestTicketApproval({
+        ticketId: ticket.id,
+        permissionKey: approvalPermissionKey,
+        reason: approvalReason,
+      });
+      setApprovalReason("");
+      setSuccessMessage("Approval request submitted and recorded in ticket history.");
+      setReloadKey((value) => value + 1);
+    } catch (cause) {
+      setApprovalError(
+        cause instanceof Error ? cause.message : "The approval request could not be submitted.",
+      );
+    } finally {
+      setApprovalBusyId(null);
+    }
+  };
+
+  const submitApprovalDecision = async (
+    approval: TicketApproval,
+    decision: "approved" | "denied",
+  ) => {
+    const note = (decisionReasons[approval.id] ?? "").trim();
+    if (note.length < 4) {
+      setApprovalError("Enter a decision note of at least four characters.");
+      return;
+    }
+    setApprovalBusyId(approval.id);
+    setApprovalError(null);
+    try {
+      await decideTicketApproval({ approvalId: approval.id, decision, reason: note });
+      setDecisionReasons((current) => ({ ...current, [approval.id]: "" }));
+      setSuccessMessage(`Approval request ${decision} and recorded in ticket history.`);
+      setReloadKey((value) => value + 1);
+    } catch (cause) {
+      setApprovalError(
+        cause instanceof Error ? cause.message : "The approval decision could not be saved.",
+      );
+    } finally {
+      setApprovalBusyId(null);
+    }
+  };
 
   const availableActions = useMemo(() => (ticket ? getTicketActions(ticket.status) : []), [ticket]);
 
@@ -700,7 +808,7 @@ export function TicketWorkspace() {
             </div>
             <label className="mt-3 block space-y-1 text-xs text-slate-300">
               <span>
-                Reason / resolution details (required for wait, escalation, resolve, reopen, or
+                Reason / resolution details (required for assignment, wait, escalation, resolve, reopen, or
                 cancel)
               </span>
               <textarea
@@ -746,6 +854,76 @@ export function TicketWorkspace() {
             )}
           </aside>
         </div>
+      </section>
+
+      <section className="rounded-2xl border border-violet-200/15 bg-slate-950/70 p-4 shadow-[0_16px_50px_rgba(0,0,0,.2)] backdrop-blur-xl sm:p-5">
+        <div className="mb-3 flex items-center gap-2">
+          <ShieldCheck className="size-4 text-violet-200" />
+          <h3 className="font-semibold text-white">Ticket approvals</h3>
+          <span className="ml-auto text-[10px] text-slate-500">
+            {approvals.filter((approval) => approval.status === "pending").length} pending
+          </span>
+        </div>
+        <p className="mb-4 text-xs text-slate-400">
+          Requests and decisions are enforced by tenant-scoped database policies. Requesters cannot approve their own requests.
+        </p>
+        <form className="grid gap-2 sm:grid-cols-[minmax(180px,.7fr)_minmax(0,1.3fr)_auto]" onSubmit={(event) => void submitApprovalRequest(event)}>
+          <Input
+            value={approvalPermissionKey}
+            onChange={(event) => setApprovalPermissionKey(event.target.value)}
+            maxLength={160}
+            minLength={3}
+            required
+            aria-label="Approval action key"
+            placeholder="Action or permission key"
+            className="h-11 border-white/15 bg-slate-950 text-slate-100"
+          />
+          <Input
+            value={approvalReason}
+            onChange={(event) => setApprovalReason(event.target.value)}
+            maxLength={2000}
+            minLength={4}
+            required
+            aria-label="Approval request reason"
+            placeholder="Why is approval required?"
+            className="h-11 border-white/15 bg-slate-950 text-slate-100"
+          />
+          <Button type="submit" disabled={approvalBusyId !== null || approvalReason.trim().length < 4} className="min-h-11">
+            {approvalBusyId === "request" ? "Submitting…" : "Request approval"}
+          </Button>
+        </form>
+        {approvalError && <p role="alert" className="mt-3 rounded-lg border border-rose-300/25 bg-rose-400/[.08] p-2 text-xs text-rose-100">{approvalError}</p>}
+        {approvalLoading ? (
+          <p className="mt-3 text-xs text-slate-400">Loading approval records…</p>
+        ) : (
+          <div className="mt-4 space-y-2">
+            {approvals.map((approval) => {
+              const canDecide = canDecideApprovals && approval.status === "pending" && approval.requested_by !== profile?.id;
+              return (
+                <article key={approval.id} className="rounded-xl border border-white/10 bg-white/[.025] p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-semibold text-slate-100">{approval.permission_key}</span>
+                    <span className={`rounded-full border px-2 py-0.5 text-[10px] uppercase ${approval.status === "approved" ? "border-emerald-300/25 text-emerald-200" : approval.status === "denied" ? "border-rose-300/25 text-rose-200" : "border-amber-300/25 text-amber-100"}`}>{approval.status}</span>
+                    <span className="ml-auto text-[10px] text-slate-500">{new Date(approval.requested_at).toLocaleString()}</span>
+                  </div>
+                  <p className="mt-2 text-sm text-slate-300">{approval.reason}</p>
+                  {approval.decision_reason && <p className="mt-2 text-xs text-slate-400">Decision: {approval.decision_reason}</p>}
+                  {canDecide && (
+                    <div className="mt-3 space-y-2">
+                      <Input value={decisionReasons[approval.id] ?? ""} onChange={(event) => setDecisionReasons((current) => ({ ...current, [approval.id]: event.target.value }))} minLength={4} maxLength={2000} placeholder="Decision note (minimum four characters)" aria-label="Approval decision note" className="h-10 border-white/15 bg-slate-950 text-slate-100" />
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <Button type="button" variant="outline" disabled={approvalBusyId !== null} onClick={() => void submitApprovalDecision(approval, "denied")}>Deny</Button>
+                        <Button type="button" disabled={approvalBusyId !== null} onClick={() => void submitApprovalDecision(approval, "approved")}>Approve</Button>
+                      </div>
+                    </div>
+                  )}
+                  {approval.status === "pending" && approval.requested_by === profile?.id && <p className="mt-2 text-xs text-slate-400">Another authorized manager must decide your request.</p>}
+                </article>
+              );
+            })}
+            {!approvals.length && <p className="rounded-lg border border-dashed border-white/15 p-4 text-sm text-slate-400">No approval requests have been recorded for this ticket.</p>}
+          </div>
+        )}
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(300px,.8fr)]">
@@ -842,7 +1020,7 @@ export function TicketWorkspace() {
         <div className="rounded-2xl border border-white/10 bg-slate-950/70 p-4 shadow-[0_16px_50px_rgba(0,0,0,.2)] backdrop-blur-xl sm:p-5">
           <div className="mb-3 flex items-center gap-2">
             <History className="size-4 text-violet-200" />
-            <h3 className="font-semibold text-white">Ticket audit trail</h3>
+            <h3 className="font-semibold text-white">Ticket history</h3>
             <span className="ml-auto text-[10px] text-slate-500">{audit.length} event(s)</span>
           </div>
           <p className="mb-3 text-xs text-slate-400">

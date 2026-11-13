@@ -53,6 +53,19 @@ export interface TicketMessage {
   metadata: Record<string, unknown> | null;
 }
 
+export interface TicketApproval {
+  id: string;
+  ticket_id: string;
+  requested_by: string;
+  approver_profile_id: string | null;
+  permission_key: string;
+  reason: string;
+  status: "pending" | "approved" | "denied";
+  decision_reason: string | null;
+  requested_at: string;
+  decided_at: string | null;
+}
+
 export interface TicketAuditEvent {
   id: string;
   actor_profile_id: string | null;
@@ -157,11 +170,11 @@ export async function createPortalTicket(input: {
   category: string;
   priority: TicketPriority;
 }): Promise<TicketRecord> {
-  const { data, error } = await client().rpc("create_portal_ticket", {
+  const { data, error } = await client().rpc("create_ticket", {
     p_title: input.title.trim(),
     p_description: input.description.trim(),
-    p_category: input.category,
     p_priority: input.priority,
+    p_category: input.category,
   });
   if (error) throw new Error(error.message);
   return unwrapTicket(data);
@@ -225,23 +238,71 @@ export async function addTicketMessage(input: {
       tenant_id: input.ticket.tenant_id,
       ticket_id: input.ticket.id,
       author_profile_id: input.profileId,
+      channel: input.visibility === "public" ? "customer" : "internal",
       body: input.body.trim(),
-      visibility: input.visibility,
+      visibility: input.visibility === "public" ? "customer" : "internal",
       metadata: { source: "ticket-workspace" },
     });
   if (error) throw new Error(error.message);
 }
 
 export async function loadTicketAudit(ticketId: string): Promise<TicketAuditEvent[]> {
-  const { data, error } = await client()
-    .from("audit_events")
-    .select("id,actor_profile_id,action,resource_type,resource_id,outcome,event_data,created_at")
-    .eq("resource_type", "ticket")
-    .eq("resource_id", ticketId)
-    .order("created_at", { ascending: false })
-    .limit(100);
-  if (error) throw new Error(error.message);
-  return (data ?? []) as TicketAuditEvent[];
+  const supabase = client();
+  const [lifecycleResult, slaResult] = await Promise.all([
+    supabase
+      .from("ticket_lifecycle_events")
+      .select("id,actor_profile_id,event_key,from_status,to_status,reason,metadata,created_at")
+      .eq("ticket_id", ticketId)
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("ticket_sla_clock_events")
+      .select("id,actor_profile_id,event_type,occurred_at,metadata")
+      .eq("ticket_id", ticketId)
+      .order("occurred_at", { ascending: false })
+      .limit(100),
+  ]);
+  if (lifecycleResult.error) throw new Error(lifecycleResult.error.message);
+  if (slaResult.error) throw new Error(slaResult.error.message);
+
+  const lifecycle = (lifecycleResult.data ?? []).map((event) => ({
+    id: event.id as string,
+    actor_profile_id: (event.actor_profile_id as string | null) ?? null,
+    action: `ticket.${event.event_key as string}`,
+    resource_type: "ticket",
+    resource_id: ticketId,
+    outcome: "recorded",
+    event_data: {
+      ...((event.metadata as Record<string, unknown> | null) ?? {}),
+      reason: event.reason,
+      ...(event.from_status !== event.to_status
+        ? {
+            changed_fields: ["status"],
+            before: { status: event.from_status },
+            after: { status: event.to_status },
+          }
+        : {}),
+    },
+    created_at: event.created_at as string,
+  })) as TicketAuditEvent[];
+
+  const slaEvents = (slaResult.data ?? []).map((event) => ({
+    id: event.id as string,
+    actor_profile_id: (event.actor_profile_id as string | null) ?? null,
+    action: `sla.${event.event_type as string}`,
+    resource_type: "ticket",
+    resource_id: ticketId,
+    outcome: "recorded",
+    event_data: {
+      ...((event.metadata as Record<string, unknown> | null) ?? {}),
+      source: "sla-clock",
+    },
+    created_at: event.occurred_at as string,
+  })) as TicketAuditEvent[];
+
+  return [...lifecycle, ...slaEvents]
+    .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
+    .slice(0, 150);
 }
 
 export async function listAssignableProfiles(ticket: TicketRecord): Promise<TicketProfile[]> {
@@ -258,3 +319,72 @@ export async function listAssignableProfiles(ticket: TicketRecord): Promise<Tick
   if (error) throw new Error(error.message);
   return (data ?? []) as TicketProfile[];
 }
+
+export async function canDecideTicketApprovals(profileId: string): Promise<boolean> {
+  const managerRoles = [
+    "super_admin",
+    "global_admin",
+    "organization_admin",
+    "service_desk_manager",
+    "it_manager",
+  ];
+  const { data, error } = await client()
+    .from("profile_roles")
+    .select("role_id,roles!inner(role_key)")
+    .eq("profile_id", profileId)
+    .eq("is_active", true)
+    .in("roles.role_key", managerRoles)
+    .or(`starts_at.is.null,starts_at.lte.${new Date().toISOString()}`)
+    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
+    .limit(1);
+  if (error) return false;
+  return Boolean(data?.length);
+}
+
+export async function loadTicketApprovals(ticketId: string): Promise<TicketApproval[]> {
+  const { data, error } = await client()
+    .from("ticket_approval_requests")
+    .select("id,ticket_id,requested_by,approver_profile_id,permission_key,reason,status,decision_reason,requested_at,decided_at")
+    .eq("ticket_id", ticketId)
+    .order("requested_at", { ascending: false })
+    .limit(100);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as TicketApproval[];
+}
+
+export async function requestTicketApproval(input: {
+  ticketId: string;
+  permissionKey: string;
+  reason: string;
+}): Promise<TicketApproval> {
+  const { data, error } = await client().rpc("request_ticket_approval", {
+    p_ticket_id: input.ticketId,
+    p_permission_key: input.permissionKey.trim(),
+    p_reason: input.reason.trim(),
+  });
+  if (error) throw new Error(error.message);
+  return unwrapTicketApproval(data);
+}
+
+export async function decideTicketApproval(input: {
+  approvalId: string;
+  decision: "approved" | "denied";
+  reason: string;
+}): Promise<TicketApproval> {
+  const { data, error } = await client().rpc("decide_ticket_approval", {
+    p_approval_id: input.approvalId,
+    p_decision: input.decision,
+    p_reason: input.reason.trim(),
+  });
+  if (error) throw new Error(error.message);
+  return unwrapTicketApproval(data);
+}
+
+function unwrapTicketApproval(data: unknown): TicketApproval {
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row || typeof row !== "object" || !("id" in row)) {
+    throw new Error("The approval operation completed without returning an approval record.");
+  }
+  return row as TicketApproval;
+}
+

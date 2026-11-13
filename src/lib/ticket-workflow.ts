@@ -1,5 +1,6 @@
 export const TICKET_STATUSES = [
   "new",
+  "offered",
   "accepted",
   "in_progress",
   "waiting",
@@ -33,8 +34,9 @@ export function validateTicketDetails(input: {
   const title = input.title.trim();
   const description = input.description.trim();
   const category = input.category.trim();
-  if (title.length < 5 || title.length > 240) {
-    return "Ticket title must contain 5 to 240 characters.";
+  // Keep the browser contract inside the database create_ticket limits.
+  if (title.length < 4 || title.length > 180) {
+    return "Ticket title must contain 4 to 180 characters.";
   }
   if (description.length < 10 || description.length > 10000) {
     return "Ticket details must contain 10 to 10,000 characters.";
@@ -56,6 +58,7 @@ const ACTIONS_BY_STATUS: Record<TicketStatus, readonly TicketAction[]> = {
     "assign",
     "set_priority",
   ],
+  offered: ["accept", "start", "wait_requester", "wait_internal", "escalate", "cancel", "assign", "set_priority"],
   accepted: [
     "start",
     "wait_requester",
@@ -97,10 +100,12 @@ const REASON_REQUIRED: ReadonlySet<TicketAction> = new Set([
   "resolve",
   "reopen",
   "cancel",
+  "assign",
 ]);
 
 export const TICKET_STATUS_LABELS: Record<TicketStatus, string> = {
   new: "New",
+  offered: "Offered",
   accepted: "Accepted",
   in_progress: "In progress",
   waiting: "Waiting",

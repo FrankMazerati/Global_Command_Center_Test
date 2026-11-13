@@ -45,7 +45,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { AVAILABILITY, useWork } from "@/lib/work-context";
+import { useWork } from "@/lib/work-context";
 import { NAV } from "@/lib/nav";
 import {
   loadChatBuddyMessages,
@@ -77,18 +77,15 @@ type WorkItem = {
   tone: "urgent" | "high" | "medium" | "low";
   action: string;
   createdAt?: string;
+  status?: string;
+  source?: string;
   approvalId?: string;
   canDecide?: boolean;
 };
 
 type QuickPick = { label: string; detail: string; icon: LucideIcon; href: string };
 type SummaryCategory =
-  | "Assigned"
-  | "Needs Your Attention"
-  | "High Priority"
-  | "Medium Priority"
-  | "Low Priority"
-  | "Waiting & Approvals";
+  "Completed" | "In Progress" | "To Do" | "Immediate Attention" | "Awaiting Me / Others";
 
 const quickPicks: QuickPick[] = [
   {
@@ -221,7 +218,7 @@ const connectorChoices = [
   "GitLab",
   "ServiceNow",
 ];
-type ProfileEditor = "photo" | "background" | "bio" | "linkedin" | "payment" | "status" | null;
+type ProfileEditor = "photo" | "background" | "bio" | "linkedin" | "payment" | null;
 
 const defaultNewsFeeds: Array<readonly [string, string]> = [];
 
@@ -313,6 +310,16 @@ function statusSlug(status: string) {
   return status.toLowerCase().replace(/\s+/g, "-");
 }
 
+function navHrefForPage(title: string) {
+  for (const section of NAV) {
+    for (const group of section.groups) {
+      const page = group.pages.find((candidate) => candidate.title === title);
+      if (page) return `/m/${section.slug}/${group.slug}/${page.slug}`;
+    }
+  }
+  return "/";
+}
+
 function CommandCenterHome() {
   const navigate = useNavigate();
   const work = useWork();
@@ -323,9 +330,10 @@ function CommandCenterHome() {
   const [profileEditor, setProfileEditor] = useState<ProfileEditor>(null);
   const [query, setQuery] = useState("");
   const [activeTab, setActiveTab] = useState("Main Workflow");
-  const [activeBuddyTab, setActiveBuddyTab] = useState("Checklist");
+  const [activeBuddyTab, setActiveBuddyTab] = useState("Chat");
   const [assistantCollapsed, setAssistantCollapsed] = useState(false);
   const [checklistDraft, setChecklistDraft] = useState("");
+  const [noteDraft, setNoteDraft] = useState("");
   const [clockEntries, setClockEntries] = useState<ReadonlyArray<readonly [string, string]>>([
     ...clocks,
   ]);
@@ -342,12 +350,11 @@ function CommandCenterHome() {
     .filter(([, status]) => status === "connected")
     .map(([name]) => name);
   const [activityItems, setActivityItems] = useState<RecentAuditEvent[]>([]);
-  const [profilePhoto, setProfilePhoto] = useState("/assets/frank-mazerati.png");
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
   const [backgroundPhoto, setBackgroundPhoto] = useState<string | null>(null);
-  const [bio, setBio] = useState("Founder and Global Administrator");
+  const [bio, setBio] = useState("");
   const [linkedin, setLinkedin] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
-  const [statusNote, setStatusNote] = useState("Available for focused work");
   const [newsItems, setNewsItems] = useState<Array<readonly [string, string]>>([
     ...defaultNewsFeeds,
   ]);
@@ -360,6 +367,7 @@ function CommandCenterHome() {
   const [draggedClock, setDraggedClock] = useState<string | null>(null);
   const [liveItems, setLiveItems] = useState<WorkItem[]>([]);
   const [managerRecord, setManagerRecord] = useState<Record<string, unknown> | null>(null);
+  const [managerDetails, setManagerDetails] = useState<Record<string, unknown> | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [summaryCategory, setSummaryCategory] = useState<SummaryCategory | null>(null);
@@ -407,6 +415,8 @@ function CommandCenterHome() {
             tone,
             action: String(row["action"] ?? "Open"),
             createdAt: String(row["created_at"] ?? row["updated_at"] ?? ""),
+            status: String(row["status"] ?? "new"),
+            source: "ticket",
           } satisfies WorkItem;
         });
         setLiveItems(mapped);
@@ -428,12 +438,22 @@ function CommandCenterHome() {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "id,display_name,first_name,last_name,work_email,employee_global_id,company_global_id,location_city,location_region",
+          "id,display_name,first_name,last_name,work_email,employee_global_id,company_global_id,location_city,location_region,avatar_url,job_title,department_id,manager_profile_id",
         )
         .eq("id", authData.user.id)
         .maybeSingle();
       if (!active || error || !data) return;
-      setManagerRecord(data as Record<string, unknown>);
+      const profile = data as Record<string, unknown>;
+      setManagerRecord(profile);
+      const managerId = profile["manager_profile_id"];
+      if (typeof managerId === "string" && managerId) {
+        const { data: manager } = await supabase
+          .from("profiles")
+          .select("display_name,first_name,last_name,job_title,work_email")
+          .eq("id", managerId)
+          .maybeSingle();
+        if (active && manager) setManagerDetails(manager as Record<string, unknown>);
+      }
     });
     return () => {
       active = false;
@@ -448,7 +468,7 @@ function CommandCenterHome() {
         const workItems =
           workResult.status === "fulfilled"
             ? workResult.value
-                .filter((row) => row.status !== "completed" && row.status !== "cancelled")
+                .filter((row) => row.status !== "cancelled")
                 .map((row) => ({
                   id: row.id,
                   title: row.title,
@@ -456,6 +476,8 @@ function CommandCenterHome() {
                   tone: row.priority === "critical" ? ("urgent" as const) : row.priority,
                   action: "Open",
                   createdAt: row.created_at,
+                  status: row.status,
+                  source: row.source_type,
                 }))
             : [];
         const approvals =
@@ -469,6 +491,8 @@ function CommandCenterHome() {
                 tone: approval.priority === "critical" ? ("urgent" as const) : approval.priority,
                 action: approval.participant_role === "approver" ? "Review" : "Track",
                 createdAt: approval.requested_at,
+                status: "waiting_approval",
+                source: "approval",
               }))
             : [];
         setCommandItems([...workItems, ...approvals]);
@@ -525,13 +549,31 @@ function CommandCenterHome() {
   }, []);
 
   const items = useMemo(() => [...liveItems, ...commandItems], [liveItems, commandItems]);
-  const availability = work.availability;
   const managerName = String(
     managerRecord?.["display_name"] ||
       [managerRecord?.["first_name"], managerRecord?.["last_name"]].filter(Boolean).join(" ") ||
       "Profile not configured",
   );
   const managerEmail = String(managerRecord?.["work_email"] ?? "Work email not configured");
+  const managerJobTitle = String(managerRecord?.["job_title"] ?? "Job title not configured");
+  const managerDepartment = String(managerRecord?.["department_id"] ?? "Department not configured");
+  const reportingManagerName = String(
+    managerDetails?.["display_name"] ||
+      [managerDetails?.["first_name"], managerDetails?.["last_name"]].filter(Boolean).join(" ") ||
+      "Manager not configured",
+  );
+  const managerAvatar =
+    typeof managerRecord?.["avatar_url"] === "string" ? managerRecord["avatar_url"] : null;
+  const displayedPhoto = profilePhoto ?? managerAvatar;
+  const profileInitials =
+    managerName
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "?";
+  const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const managerUserId = String(managerRecord?.["employee_global_id"] ?? "ID not assigned");
   const managerCompany = String(managerRecord?.["company_global_id"] ?? "Organization not linked");
   const managerWorkplace =
@@ -542,12 +584,39 @@ function CommandCenterHome() {
     (pick, index, all) => all.findIndex((candidate) => candidate.label === pick.label) === index,
   );
 
+  const activityWorkItems = useMemo(
+    () =>
+      activityItems.map((entry) => ({
+        id: entry.id,
+        title: entry.action.replaceAll("_", " "),
+        detail:
+          [entry.resource_type, entry.resource_id].filter(Boolean).join(" · ") || "Audit event",
+        tone: entry.outcome === "success" ? ("low" as const) : ("medium" as const),
+        action: "Details",
+        createdAt: entry.created_at,
+        source: "activity",
+      })),
+    [activityItems],
+  );
+  const openWorkItems = items.filter(
+    (item) => !["completed", "cancelled", "resolved", "closed"].includes(item.status ?? ""),
+  );
+  const tabItems =
+    activeTab === "Tickets"
+      ? liveItems
+      : activeTab === "Approvals"
+        ? items.filter((item) => Boolean(item.approvalId))
+        : activeTab === "Activity"
+          ? activityWorkItems
+          : activeTab === "Main Workflow"
+            ? openWorkItems
+            : items;
   const visibleItems = useMemo(
     () =>
-      items.filter((item) =>
+      tabItems.filter((item) =>
         `${item.id} ${item.title} ${item.detail}`.toLowerCase().includes(query.toLowerCase()),
       ),
-    [items, query],
+    [tabItems, query],
   );
 
   const signOut = async () => {
@@ -581,12 +650,21 @@ function CommandCenterHome() {
   };
 
   const summaryItems: Record<SummaryCategory, WorkItem[]> = {
-    Assigned: items,
-    "Needs Your Attention": items.filter((item) => item.tone === "urgent"),
-    "High Priority": items.filter((item) => item.tone === "high"),
-    "Medium Priority": items.filter((item) => item.tone === "medium"),
-    "Low Priority": items.filter((item) => item.tone === "low"),
-    "Waiting & Approvals": items.filter((item) => Boolean(item.approvalId)),
+    Completed: items.filter((item) =>
+      ["completed", "resolved", "closed"].includes(item.status ?? ""),
+    ),
+    "In Progress": items.filter((item) =>
+      ["in_progress", "accepted", "escalated"].includes(item.status ?? ""),
+    ),
+    "To Do": items.filter(
+      (item) => !item.approvalId && ["open", "new", "todo", "pending"].includes(item.status ?? ""),
+    ),
+    "Immediate Attention": items.filter((item) => item.tone === "urgent" || item.tone === "high"),
+    "Awaiting Me / Others": items.filter(
+      (item) =>
+        Boolean(item.approvalId) ||
+        ["waiting_approval", "blocked", "waiting"].includes(item.status ?? ""),
+    ),
   };
 
   const sendMessage = async (event: FormEvent<HTMLFormElement>) => {
@@ -598,11 +676,11 @@ function CommandCenterHome() {
       setConversation((current) => [...current, saved]);
       setMessage("");
       toast.info(
-        "Message saved to Chat Buddy history. AI response generation is not connected yet.",
+        "Message saved to Help Buddy history. AI response generation is not connected yet.",
       );
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Unable to save your Chat Buddy message.",
+        error instanceof Error ? error.message : "Unable to save your Help Buddy message.",
       );
     }
   };
@@ -649,7 +727,11 @@ function CommandCenterHome() {
       const targetIndex = index + direction;
       if (index < 0 || targetIndex < 0 || targetIndex >= current.length) return current;
       const reordered = [...current];
-      [reordered[index], reordered[targetIndex]] = [reordered[targetIndex], reordered[index]];
+      const from = reordered[index];
+      const to = reordered[targetIndex];
+      if (!from || !to) return current;
+      reordered[index] = to;
+      reordered[targetIndex] = from;
       return reordered;
     });
   };
@@ -811,10 +893,20 @@ function CommandCenterHome() {
             );
           })}
         </nav>
-        <div className="cc-sidebar-status">
-          <span className="cc-online-dot" />
-          All systems online
-        </div>
+        <nav className="cc-sidebar-pinned" aria-label="Pinned shortcuts">
+          <a href={navHrefForPage("Global Settings")}>
+            <Settings2 size={17} />
+            <span>Settings</span>
+          </a>
+          <a href={navHrefForPage("Knowledge Search")}>
+            <BookOpen size={17} />
+            <span>Help Center</span>
+          </a>
+          <button type="button" onClick={() => void signOut()}>
+            <LogOut size={17} />
+            <span>Log out</span>
+          </button>
+        </nav>
       </aside>
 
       <div className="cc-main">
@@ -869,38 +961,62 @@ function CommandCenterHome() {
             >
               <MessageCircle size={17} />
             </button>
-            <button
-              type="button"
-              className={`cc-status-pill cc-status-${statusSlug(availability)}`}
-              aria-label="Open status manager"
-              onClick={() => {
-                setProfileOpen(true);
-                setProfileEditor("status");
-              }}
-            >
-              <i /> {availability} <ChevronDown size={10} />
-            </button>
             <div className="cc-profile-wrap">
               <button
                 className="cc-avatar-button"
                 onClick={() => setProfileOpen((value) => !value)}
                 aria-expanded={profileOpen}
               >
-                <img src={profilePhoto} alt={managerName} />
-                <span>
-                  {managerName.split(" ")[0]}
-                  <br />
-                  <b>{managerName.split(" ").slice(1).join(" ")}</b>
-                </span>
+                {displayedPhoto ? (
+                  <img src={displayedPhoto} alt={managerName} />
+                ) : (
+                  <span className="cc-avatar-initials">{profileInitials}</span>
+                )}
+                <span>{managerName}</span>
                 <ChevronDown size={13} />
               </button>
               {profileOpen && (
                 <div className="cc-popover">
                   <strong>{managerName}</strong>
-                  <span>{bio}</span>
-                  <button className="cc-profile-option" onClick={() => setProfileEditor("status")}>
-                    <Activity size={14} /> Status: {availability}
-                  </button>
+                  <div className="cc-profile-facts">
+                    <span>
+                      <b>Global ID</b>
+                      {managerUserId}
+                    </span>
+                    <span>
+                      <b>Company ID</b>
+                      {managerCompany}
+                    </span>
+                    <span>
+                      <b>Workplace</b>
+                      {managerWorkplace}
+                    </span>
+                    <span>
+                      <b>Email</b>
+                      {managerEmail}
+                    </span>
+                    <span>
+                      <b>Job title</b>
+                      {managerJobTitle}
+                    </span>
+                    <span>
+                      <b>Department</b>
+                      {managerDepartment}
+                    </span>
+                    <span>
+                      <b>Manager</b>
+                      {reportingManagerName}
+                    </span>
+                    {managerDetails && (
+                      <span>
+                        <b>Manager contact</b>
+                        {String(managerDetails["work_email"] ?? "Email not provided")}
+                        {managerDetails["job_title"]
+                          ? ` · ${String(managerDetails["job_title"])}`
+                          : ""}
+                      </span>
+                    )}
+                  </div>
                   <label className="cc-profile-option">
                     <Upload size={14} /> Upload profile photo
                     <input
@@ -956,15 +1072,6 @@ function CommandCenterHome() {
                             value={paymentMethod}
                             onChange={(event) => setPaymentMethod(event.target.value)}
                             placeholder="Card ending in 4242"
-                          />
-                        </label>
-                      )}
-                      {profileEditor === "status" && (
-                        <label>
-                          Status note
-                          <input
-                            value={statusNote}
-                            onChange={(event) => setStatusNote(event.target.value)}
                           />
                         </label>
                       )}
@@ -1025,19 +1132,21 @@ function CommandCenterHome() {
           <section className="cc-identity-panel">
             <div className="cc-identity-main">
               <div className="cc-identity-photo">
-                <img src={profilePhoto} alt={managerName} />
-                <span />
+                {displayedPhoto ? (
+                  <img src={displayedPhoto} alt={managerName} />
+                ) : (
+                  <span className="cc-avatar-initials">{profileInitials}</span>
+                )}
               </div>
               <div>
                 <small>WELCOME TO YOUR COMMAND CENTER</small>
-                <h1>Good evening, {managerName}!</h1>
-                <p>
-                  Today is another opportunity to learn, grow and accomplish more. Your command
-                  center is ready.
-                </p>
-                <strong>
-                  Chief Principal Architect <i /> Founder
-                </strong>
+                <h1>
+                  {managerName === "Profile not configured"
+                    ? "Your command center"
+                    : `Welcome, ${managerName}`}
+                </h1>
+                <p>See everything, connect everything, work smarter</p>
+                <strong>MAXIMUS OPTIMUS COMMAND CENTER</strong>
               </div>
             </div>
             <div className="cc-identity-details">
@@ -1054,33 +1163,15 @@ function CommandCenterHome() {
                 <b>{managerEmail}</b>
               </div>
               <div>
-                <small>WORKPLACE</small>
+                <small>WORKPLACE · LOCAL TIME</small>
                 <b>{managerWorkplace}</b>
-              </div>
-            </div>
-            <div className="cc-identity-control">
-              <label>
-                STATUS
-                <select
-                  value={availability}
-                  onChange={(event) =>
-                    work.setAvailability(event.target.value as typeof availability)
-                  }
-                >
-                  {AVAILABILITY.map((status) => (
-                    <option key={status}>{status}</option>
-                  ))}
-                </select>
-              </label>
-              <div className="cc-local-time">
-                <Clock3 size={13} />
-                <b>{timeFor("America/Chicago", now)}</b>
-                <span>{dateFor("America/Chicago", now)}</span>
-              </div>
-              <div className="cc-local-weather">
-                <CloudSun size={14} />
-                <b>72°F</b>
-                <span>Mostly sunny</span>
+                <span className="cc-profile-local-time">
+                  <Clock3 size={13} /> {timeFor(localTimeZone, now)} · {dateFor(localTimeZone, now)}{" "}
+                  · {localTimeZone}
+                </span>
+                <span className="cc-weather-unavailable">
+                  Weather unavailable · source not connected
+                </span>
               </div>
             </div>
           </section>
@@ -1179,6 +1270,11 @@ function CommandCenterHome() {
           <section className="cc-micro-toolbar cc-news-strip">
             <div className="cc-micro-label">GLOBAL NEWS</div>
             <div className="cc-micro-items">
+              {newsItems.length === 0 && (
+                <span className="cc-feed-unavailable">
+                  News unavailable · connect a licensed source
+                </span>
+              )}
               {newsItems.slice(0, 5).map(([label, text], index) => (
                 <div
                   className={`cc-feed-item cc-news-micro ${expandedFeed === label ? "is-open" : ""}`}
@@ -1215,9 +1311,9 @@ function CommandCenterHome() {
             </button>
             {newsOpen && (
               <div className="cc-micro-more-panel">
-                {expandedFeed && (
+                {expandedFeed && newsItems.some(([label]) => label === expandedFeed) && (
                   <div className="cc-feed-detail">
-                    {newsItems.find(([label]) => label === expandedFeed)?.[1]}
+                    {expandedFeed}: live headlines unavailable until a news source is connected.
                   </div>
                 )}
                 <div className="cc-micro-overflow-list">
@@ -1279,6 +1375,11 @@ function CommandCenterHome() {
           <section className="cc-micro-toolbar cc-market-strip">
             <div className="cc-micro-label">STOCK PICKER</div>
             <div className="cc-micro-items">
+              {tickers.length === 0 && (
+                <span className="cc-feed-unavailable">
+                  Quotes unavailable · connect market data
+                </span>
+              )}
               {tickers.slice(0, 5).map(([symbol, change], index) => (
                 <div className="cc-ticker-item cc-stock-micro" key={`${symbol}-${index}`}>
                   <button type="button" onClick={() => setExpandedFeed(symbol)}>
@@ -1311,10 +1412,9 @@ function CommandCenterHome() {
             </button>
             {marketOpen && (
               <div className="cc-micro-more-panel">
-                {expandedFeed && (
+                {expandedFeed && tickers.some(([symbol]) => symbol === expandedFeed) && (
                   <div className="cc-feed-detail">
-                    {expandedFeed} is open in Market Watch. Select a finance page from the hamburger
-                    menu for the connected market workspace.
+                    {expandedFeed}: live quote unavailable until a market-data source is connected.
                   </div>
                 )}
                 <div className="cc-micro-overflow-list">
@@ -1379,16 +1479,13 @@ function CommandCenterHome() {
             <div className="cc-strip-heading">
               <Bell size={14} /> COMPANY ANNOUNCEMENTS
             </div>
-            <span>
-              Quarterly planning · New knowledge vault update · Platform build review today
-            </span>
+            <span className="cc-announcement-status">Company announcement feed not connected</span>
             <button type="button" onClick={() => setAnnouncementsOpen((value) => !value)}>
               {announcementsOpen ? "Hide updates" : "View updates"} <ChevronDown size={12} />
             </button>
             {announcementsOpen && (
               <div className="cc-feed-detail">
-                Your current focus is completing the full Global Command Center project and
-                verifying every page-to-page workflow.
+                Announcements will appear here when an authorized company feed is connected.
               </div>
             )}
           </section>
@@ -1484,12 +1581,11 @@ function CommandCenterHome() {
               <div className="cc-metrics cc-work-statuses" aria-label="Work summary">
                 {(
                   [
-                    ["Assigned", "All assigned work"],
-                    ["Needs Your Attention", "Urgent priority"],
-                    ["High Priority", "High priority"],
-                    ["Medium Priority", "Medium priority"],
-                    ["Low Priority", "Lower priority"],
-                    ["Waiting & Approvals", "Pending decisions"],
+                    ["Completed", "Completed and resolved"],
+                    ["In Progress", "Actively being worked"],
+                    ["To Do", "Open work items"],
+                    ["Immediate Attention", "Urgent and high priority"],
+                    ["Awaiting Me / Others", "Blocked or awaiting decisions"],
                   ] as const
                 ).map(([category, caption]) => (
                   <button
@@ -1510,7 +1606,7 @@ function CommandCenterHome() {
               </div>
               <div className="cc-queue-heading">
                 <span>TO-DO LIST · ORDERED BY PRIORITY</span>
-                <button type="button" onClick={() => setSummaryCategory("Assigned")}>
+                <button type="button" onClick={() => setSummaryCategory("To Do")}>
                   View all <ChevronRight size={12} />
                 </button>
               </div>
@@ -1541,7 +1637,11 @@ function CommandCenterHome() {
                   </div>
                 ))}
                 {visibleItems.length === 0 && (
-                  <div className="cc-empty">No matching work in this view.</div>
+                  <div className="cc-empty">
+                    {items.length === 0
+                      ? "No work records are available from connected sources."
+                      : `No ${activeTab.toLowerCase()} records match this view.`}
+                  </div>
                 )}
               </div>
               <div className="cc-module-row">
@@ -1568,15 +1668,15 @@ function CommandCenterHome() {
                 <div className="cc-panel-heading">
                   <div>
                     <Bot size={17} />
-                    <h2>CHAT BUDDY</h2>
+                    <h2>HELP BUDDY</h2>
                     <p>Your role-aware work assistant</p>
                   </div>
                   <button
                     type="button"
                     className="cc-mini-button"
-                    aria-label={assistantCollapsed ? "Open Chat Buddy" : "Minimize Chat Buddy"}
+                    aria-label={assistantCollapsed ? "Open Help Buddy" : "Minimize Help Buddy"}
                     aria-expanded={!assistantCollapsed}
-                    title={assistantCollapsed ? "Open Chat Buddy" : "Minimize Chat Buddy"}
+                    title={assistantCollapsed ? "Open Help Buddy" : "Minimize Help Buddy"}
                     onClick={() => setAssistantCollapsed((value) => !value)}
                   >
                     <ChevronDown size={14} className={assistantCollapsed ? "rotate-180" : ""} />
@@ -1585,19 +1685,22 @@ function CommandCenterHome() {
                 {!assistantCollapsed && (
                   <>
                     <div className="cc-buddy-card">
-                      <img src="/assets/help-buddy.png" alt="Chat Buddy" />
+                      <img src="/assets/help-buddy.png" alt="Help Buddy" />
                       <div>
-                        <b>Chat Buddy</b>
+                        <b>Help Buddy</b>
                         <span>Ask. Find. Connect. Get it done.</span>
                       </div>
                     </div>
-                    <div className="cc-buddy-tabs" role="tablist" aria-label="Chat Buddy scenarios">
+                    <div className="cc-buddy-tabs" role="tablist" aria-label="Help Buddy sections">
                       {(
                         [
-                          ["Assist", Bot],
-                          ["Checklist", Activity],
-                          ["Prepare", CalendarDays],
-                          ["Alerts", Bell],
+                          ["Chat", MessageCircle],
+                          ["Tasks", CheckCircle2],
+                          ["Notes", FileText],
+                          ["People", Users],
+                          ["Files", BookOpen],
+                          ["Activity", Activity],
+                          ["History", Clock3],
                         ] as Array<[string, LucideIcon]>
                       ).map(([label, Icon]) => (
                         <button
@@ -1613,10 +1716,10 @@ function CommandCenterHome() {
                         </button>
                       ))}
                     </div>
-                    {activeBuddyTab === "Checklist" ? (
+                    {activeBuddyTab === "Tasks" ? (
                       <div className="cc-buddy-checklist">
                         <div className="cc-buddy-checklist-heading">
-                          <strong>MY CHECKLIST</strong>
+                          <strong>MY TASKS</strong>
                           <span>
                             {work.checklist.filter((entry) => entry.done).length}/
                             {work.checklist.length} complete
@@ -1646,7 +1749,7 @@ function CommandCenterHome() {
                           </ul>
                         ) : (
                           <p className="cc-buddy-checklist-empty">
-                            No checklist steps yet. Add the first step below.
+                            No task items yet. Add one below.
                           </p>
                         )}
                         <form
@@ -1659,72 +1762,110 @@ function CommandCenterHome() {
                           <input
                             value={checklistDraft}
                             onChange={(event) => setChecklistDraft(event.target.value)}
-                            placeholder="Add a checklist step…"
-                            aria-label="New checklist step"
+                            placeholder="Add a task…"
+                            aria-label="New task"
                           />
                           <button type="submit" disabled={!checklistDraft.trim()}>
                             <Plus size={13} /> Add
                           </button>
                         </form>
-                        <small>
-                          Personal checklist · Saved in this browser until persistent workflow
-                          storage is connected.
-                        </small>
+                        <small>Tasks are saved to your authorized work queue.</small>
                       </div>
-                    ) : activeBuddyTab === "Prepare" ? (
-                      <div className="cc-buddy-actions">
-                        <button
-                          onClick={() =>
-                            setMessage(
-                              "Help me prepare a meeting: identify the purpose, draft an agenda, suggest attendees from information I am authorized to access, and check my connected calendar. Do not send invitations without my confirmation.",
-                            )
-                          }
+                    ) : activeBuddyTab === "Notes" ? (
+                      <div className="cc-buddy-checklist">
+                        <strong>PRIVATE NOTES</strong>
+                        <form
+                          onSubmit={(event) => {
+                            event.preventDefault();
+                            if (noteDraft.trim()) work.addNote(noteDraft.trim(), "personal");
+                            setNoteDraft("");
+                          }}
                         >
-                          Schedule a Meeting
-                        </button>
-                        <button
-                          onClick={() =>
-                            setMessage(
-                              "Help me prepare a trip: organize dates, destination, approved travel requirements, itinerary, and documents. Do not book or purchase anything without explicit authorization.",
-                            )
-                          }
-                        >
-                          Prepare a Trip
-                        </button>
-                        <button
-                          onClick={() =>
-                            setMessage(
-                              "Gather the business documents relevant to my current work. Search only repositories and records I am authorized to access, and include source links.",
-                            )
-                          }
-                        >
-                          Gather Business Documents
-                        </button>
-                      </div>
-                    ) : activeBuddyTab === "Alerts" ? (
-                      <div className="cc-buddy-alerts">
-                        {liveItems.length ? (
-                          liveItems
-                            .filter((entry) => entry.tone === "urgent" || entry.tone === "high")
-                            .slice(0, 5)
-                            .map((entry) => (
-                              <button type="button" key={entry.id} onClick={() => openItem(entry)}>
-                                <strong>{entry.title}</strong>
-                                <span>
-                                  {entry.id} · {entry.tone.toUpperCase()}
-                                </span>
+                          <input
+                            value={noteDraft}
+                            onChange={(event) => setNoteDraft(event.target.value)}
+                            placeholder="Write a private note…"
+                            aria-label="New private note"
+                          />
+                          <button type="submit" disabled={!noteDraft.trim()}>
+                            <Plus size={13} /> Save
+                          </button>
+                        </form>
+                        {work.notes
+                          .filter((note) => note.scope === "personal")
+                          .map((note) => (
+                            <div className="cc-buddy-note" key={note.id}>
+                              <span>{note.text}</span>
+                              <button
+                                type="button"
+                                onClick={() => work.removeNote(note.id)}
+                                aria-label="Delete note"
+                              >
+                                <X size={12} />
                               </button>
-                            ))
+                            </div>
+                          ))}
+                        <small>Notes are stored on this device and are not shared.</small>
+                      </div>
+                    ) : activeBuddyTab === "People" ? (
+                      <div className="cc-buddy-actions">
+                        <p>
+                          Find people in your authorized directory. No people records are shown
+                          until a directory is connected.
+                        </p>
+                        <a href="/m/new-active-directory/people-and-accounts/employees">
+                          Open People Directory <ChevronRight size={13} />
+                        </a>
+                        <button type="button" onClick={() => setQuery("people")}>
+                          Search current work for people
+                        </button>
+                      </div>
+                    ) : activeBuddyTab === "Files" ? (
+                      <div className="cc-buddy-actions">
+                        <p>Search documents only in repositories you are authorized to access.</p>
+                        <a href={navHrefForPage("Knowledge Search")}>
+                          Open Knowledge Vault <ChevronRight size={13} />
+                        </a>
+                        <span>
+                          File search and uploads depend on configured workspace connections.
+                        </span>
+                      </div>
+                    ) : activeBuddyTab === "Activity" ? (
+                      <div className="cc-buddy-alerts">
+                        {activityWorkItems.length ? (
+                          activityWorkItems.slice(0, 5).map((entry) => (
+                            <button type="button" key={entry.id} onClick={() => openItem(entry)}>
+                              <strong>{entry.title}</strong>
+                              <span>
+                                {entry.detail} ·{" "}
+                                {entry.createdAt
+                                  ? new Date(entry.createdAt).toLocaleString()
+                                  : "Time unavailable"}
+                              </span>
+                            </button>
+                          ))
                         ) : (
-                          <p>
-                            No live alert records are connected to this view yet. Sample dashboard
-                            records are not shown as live alerts.
-                          </p>
+                          <p>No authorized activity records are available in this view.</p>
+                        )}
+                      </div>
+                    ) : activeBuddyTab === "History" ? (
+                      <div className="cc-buddy-alerts">
+                        {conversation.length ? (
+                          conversation.slice(-8).map((entry) => (
+                            <article key={entry.id}>
+                              <strong>{entry.sender_type === "user" ? "You" : "Help Buddy"}</strong>
+                              <span>{entry.content}</span>
+                              <small>{new Date(entry.created_at).toLocaleString()}</small>
+                            </article>
+                          ))
+                        ) : (
+                          <p>No saved Help Buddy conversations yet.</p>
                         )}
                       </div>
                     ) : (
                       <div className="cc-buddy-actions">
                         <button
+                          type="button"
                           onClick={() =>
                             setMessage(
                               "Create a ticket for me. First check whether I am authorized to create it and ask for any missing required details.",
@@ -1734,6 +1875,7 @@ function CommandCenterHome() {
                           Create a Ticket
                         </button>
                         <button
+                          type="button"
                           onClick={() =>
                             setMessage(
                               "Find documentation I am authorized to access for my current task.",
@@ -1743,6 +1885,7 @@ function CommandCenterHome() {
                           Find Documentation
                         </button>
                         <button
+                          type="button"
                           onClick={() =>
                             setMessage(
                               "Check the live system status sources available to my role. Clearly identify unavailable integrations.",
@@ -1752,6 +1895,7 @@ function CommandCenterHome() {
                           Check System Status
                         </button>
                         <button
+                          type="button"
                           onClick={() =>
                             setMessage(
                               "Help me contact the appropriate human support team for my authorized scope.",
@@ -1778,8 +1922,8 @@ function CommandCenterHome() {
                       <input
                         value={message}
                         onChange={(event) => setMessage(event.target.value)}
-                        placeholder="Ask Chat Buddy…"
-                        aria-label="Ask Chat Buddy"
+                        placeholder="Ask Help Buddy…"
+                        aria-label="Ask Help Buddy"
                       />
                       <button type="submit" aria-label="Send message">
                         <ChevronRight size={15} />
@@ -1818,42 +1962,57 @@ function CommandCenterHome() {
                   })}
                 </div>
               </section>
-              <section className="cc-side-panel">
-                <div className="cc-panel-heading">
-                  <div>
-                    <Activity size={15} />
-                    <h2>RECENT ACTIVITY</h2>
-                  </div>
-                  <span className="cc-text-link">Live audit feed</span>
-                </div>
-                <ul>
-                  {activityItems.length ? (
-                    activityItems.map((entry) => (
-                      <li key={entry.id}>
-                        <span
-                          className={`activity-dot ${entry.outcome === "success" ? "green" : "blue"}`}
-                        />
-                        {entry.action} · {entry.resource_type}
-                        {entry.resource_id ? ` ${entry.resource_id}` : ""}
-                        <small>{new Date(entry.created_at).toLocaleString()}</small>
-                      </li>
-                    ))
-                  ) : (
-                    <li>No recent authorized activity records are available.</li>
-                  )}
-                </ul>
-              </section>
             </aside>
           </div>
         </main>
         <footer className="cc-footer">
-          <span>
-            <ShieldCheck size={13} /> Secure, Trusted &amp; Compliant.
-          </span>
-          <span>© 2026 IntelliStack Systems · One world. One system. One intelligent network.</span>
-          <span>
-            <i className="cc-online-dot" /> Global Command Center v2.0.0
-          </span>
+          <div className="cc-footer-brand">
+            <img src="/assets/intellistack-shield.jpg" alt="" />
+            <div>
+              <b>INTELLISTACK SYSTEMS</b>
+              <span>MAXIMUS OPTIMUS COMMAND CENTER</span>
+            </div>
+            <p>Think beyond locally, connect everything globally, powered by intelligence.</p>
+          </div>
+          <div className="cc-footer-group">
+            <b>Company</b>
+            <a href={navHrefForPage("Company Profile")}>Company Profile</a>
+            <a href={navHrefForPage("Business Performance")}>Business Performance</a>
+            <a href={navHrefForPage("Business Health")}>Business Health</a>
+            <a href={navHrefForPage("Contact Information")}>Contact Information</a>
+          </div>
+          <div className="cc-footer-group">
+            <b>Platform</b>
+            <a href={navHrefForPage("Platform Overview")}>Platform Overview</a>
+            <a href={navHrefForPage("System Status")}>System Status</a>
+            <a href={navHrefForPage("Global Settings")}>Global Settings</a>
+            <a href={navHrefForPage("Application Configuration")}>Applications</a>
+          </div>
+          <div className="cc-footer-group">
+            <b>Resources</b>
+            <a href={navHrefForPage("Learning Paths")}>Learning Paths</a>
+            <a href={navHrefForPage("Application Documentation")}>Documentation</a>
+            <a href={navHrefForPage("Troubleshooting")}>Troubleshooting</a>
+            <a href={navHrefForPage("Common Issues")}>Common Issues</a>
+          </div>
+          <div className="cc-footer-group">
+            <b>Support</b>
+            <a href={navHrefForPage("Knowledge Search")}>Help Center</a>
+            <a href={navHrefForPage("Open Tickets")}>Open Tickets</a>
+            <a href={navHrefForPage("Related Tickets")}>Related Tickets</a>
+            <a href={navHrefForPage("Technical Procedures")}>Technical Procedures</a>
+          </div>
+          <div className="cc-footer-group">
+            <b>Legal &amp; Trust</b>
+            <a href={navHrefForPage("Compliance Assessments")}>Compliance</a>
+            <a href={navHrefForPage("Compliance Findings")}>Compliance Findings</a>
+            <a href={navHrefForPage("Control Evidence")}>Control Evidence</a>
+            <a href={navHrefForPage("Incident Reports")}>Incident Reports</a>
+          </div>
+          <div className="cc-footer-legal">
+            Secured, Trusted &amp; Compliant · IntelliStack Systems™ | Maximus Optimus Command
+            Center™ | Copyright © 2026 IntelliStack Systems. All rights reserved.
+          </div>
         </footer>
       </div>
       <Dialog
@@ -1872,11 +2031,27 @@ function CommandCenterHome() {
                 <DialogTitle>{selectedWorkItem.title}</DialogTitle>
                 <DialogDescription>
                   {selectedWorkItem.id} · {selectedWorkItem.tone.toUpperCase()} priority
+                  {selectedWorkItem.status
+                    ? ` · ${selectedWorkItem.status.replaceAll("_", " ")}`
+                    : ""}
+                  {selectedWorkItem.source
+                    ? ` · ${selectedWorkItem.source.replaceAll("_", " ")}`
+                    : ""}
                 </DialogDescription>
               </DialogHeader>
               <p className="whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
                 {selectedWorkItem.detail}
               </p>
+              {selectedWorkItem.createdAt && (
+                <p className="text-xs text-muted-foreground">
+                  Last recorded: {new Date(selectedWorkItem.createdAt).toLocaleString()}
+                </p>
+              )}
+              {selectedWorkItem.createdAt && (
+                <p className="text-xs text-muted-foreground">
+                  Last recorded: {new Date(selectedWorkItem.createdAt).toLocaleString()}
+                </p>
+              )}
               {selectedWorkItem.approvalId && selectedWorkItem.canDecide && (
                 <div className="mt-4 grid gap-3">
                   <label className="grid gap-1 text-sm font-medium">
@@ -1923,8 +2098,8 @@ function CommandCenterHome() {
               <DialogHeader>
                 <DialogTitle>{summaryCategory}</DialogTitle>
                 <DialogDescription>
-                  {summaryItems[summaryCategory].length} matching work item(s). Select an item to
-                  view its details.
+                  {summaryItems[summaryCategory].length} matching records. Select a record to view
+                  its details.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid max-h-[55dvh] gap-2 overflow-y-auto pr-1">

@@ -28,6 +28,8 @@ import {
   KnowledgeSpacesWorkspace,
 } from "@/components/workspace/KnowledgeAndHelpWorkspaces";
 import { HelpBuddyIntelligenceManagement } from "@/components/workspace/HelpBuddyIntelligenceManagement";
+import { ChatBuddyAvatarStudio } from "@/components/workspace/ChatBuddyAvatarStudio";
+import { ChatBuddyManagerCoordination } from "@/components/workspace/ChatBuddyManagerCoordination";
 import { MarketplaceHistoryWorkspace } from "@/components/workspace/MarketplaceHistoryWorkspace";
 import { SubscriptionPlansWorkspace } from "@/components/workspace/SubscriptionPlansWorkspace";
 import { OrganizationLocationsWorkspace } from "@/components/workspace/OrganizationLocationsWorkspace";
@@ -1303,6 +1305,8 @@ function PageFoundation() {
   ].includes(page.slug);
   const helpBuddy = section.slug === "help-buddy";
   const helpBuddyManagement = helpBuddy && group.slug === "intelligence-management";
+  const chatBuddyAvatarStudio = helpBuddy && group.slug === "help-buddy-studio" && page.slug === "avatar";
+  const chatBuddyManagerCoordination = helpBuddy && group.slug === "team-coordination" && page.slug === "manager-coordination";
   const identityAccessSlugs = new Set([
     "directory-dashboard",
     "global-directory",
@@ -1418,6 +1422,10 @@ function PageFoundation() {
         <IntelliSphereToolsWorkspace pageSlug={page.slug} />
       ) : knowledgeSpaces ? (
         <KnowledgeSpacesWorkspace title={page.title} pageSlug={page.slug} />
+      ) : chatBuddyAvatarStudio ? (
+        <ChatBuddyAvatarStudio />
+      ) : chatBuddyManagerCoordination ? (
+        <ChatBuddyManagerCoordination />
       ) : helpBuddyManagement ? (
         <HelpBuddyIntelligenceManagement pageSlug={page.slug} />
       ) : helpBuddy ? (
