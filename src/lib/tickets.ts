@@ -291,6 +291,27 @@ export async function listAssignableProfiles(ticket: TicketRecord): Promise<Tick
   return (data ?? []) as TicketProfile[];
 }
 
+export async function canDecideTicketApprovals(profileId: string): Promise<boolean> {
+  const managerRoles = [
+    "super_admin",
+    "global_admin",
+    "organization_admin",
+    "service_desk_manager",
+    "it_manager",
+  ];
+  const { data, error } = await client()
+    .from("profile_roles")
+    .select("role_id,roles!inner(role_key)")
+    .eq("profile_id", profileId)
+    .eq("is_active", true)
+    .in("roles.role_key", managerRoles)
+    .or(`starts_at.is.null,starts_at.lte.${new Date().toISOString()}`)
+    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
+    .limit(1);
+  if (error) return false;
+  return Boolean(data?.length);
+}
+
 export async function loadTicketApprovals(ticketId: string): Promise<TicketApproval[]> {
   const { data, error } = await client()
     .from("ticket_approval_requests")
