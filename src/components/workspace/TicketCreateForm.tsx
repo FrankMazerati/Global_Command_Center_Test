@@ -65,8 +65,8 @@ export function TicketCreateForm({
           <Input
             value={title}
             onChange={(event) => setTitle(event.target.value)}
-            minLength={5}
-            maxLength={240}
+            minLength={4}
+            maxLength={180}
             required
             autoComplete="off"
             aria-label="Ticket subject"
