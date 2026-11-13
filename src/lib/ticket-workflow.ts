@@ -1,5 +1,6 @@
 export const TICKET_STATUSES = [
   "new",
+  "offered",
   "accepted",
   "in_progress",
   "waiting",
@@ -56,6 +57,7 @@ const ACTIONS_BY_STATUS: Record<TicketStatus, readonly TicketAction[]> = {
     "assign",
     "set_priority",
   ],
+  offered: ["accept", "start", "wait_requester", "wait_internal", "escalate", "cancel", "assign", "set_priority"],
   accepted: [
     "start",
     "wait_requester",
@@ -101,6 +103,7 @@ const REASON_REQUIRED: ReadonlySet<TicketAction> = new Set([
 
 export const TICKET_STATUS_LABELS: Record<TicketStatus, string> = {
   new: "New",
+  offered: "Offered",
   accepted: "Accepted",
   in_progress: "In progress",
   waiting: "Waiting",
