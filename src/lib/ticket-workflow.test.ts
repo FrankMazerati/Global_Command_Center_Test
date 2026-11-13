@@ -87,6 +87,49 @@ describe("ticket workflow contract", () => {
     ).toContain("2 to 100");
   });
 
+
+  it("keeps terminal-state actions constrained", () => {
+    expect(getTicketActions("cancelled")).toEqual([]);
+    expect(getTicketActions("closed")).toEqual(["reopen", "set_priority"]);
+    expect(getTicketActions("resolved")).toEqual(["close", "reopen", "set_priority"]);
+    expect(getTicketActions("unknown")).toEqual([]);
+  });
+
+  it("requires reasons for wait, escalation, resolution, reopen, and cancellation", () => {
+    const reasonRequired = [
+      ["in_progress", "wait_requester"],
+      ["in_progress", "wait_internal"],
+      ["in_progress", "escalate"],
+      ["in_progress", "resolve"],
+      ["resolved", "reopen"],
+      ["new", "cancel"],
+    ] as const;
+    for (const [status, action] of reasonRequired) {
+      expect(validateTicketAction(status, action)).toContain("20 characters");
+      expect(
+        validateTicketAction(
+          status,
+          action,
+          "Documented the operational reason and the next responsible owner.",
+        ),
+      ).toBeNull();
+    }
+  });
+
+  it("distinguishes requester wait from internal wait and supports resumption", () => {
+    expect(getTicketActions("in_progress")).toEqual(
+      expect.arrayContaining(["wait_requester", "wait_internal"]),
+    );
+    expect(getTicketActions("waiting")).toContain("resume");
+  });
+
+  it("allows escalation and resolution at the expected support stages", () => {
+    for (const status of ["new", "offered", "accepted", "in_progress", "waiting"]) {
+      expect(getTicketActions(status)).toContain("escalate");
+    }
+    expect(getTicketActions("escalated")).toContain("resolve");
+  });
+
   it("validates ticket title, description, and category before submission", () => {
     expect(
       validateTicketDetails({
