@@ -247,14 +247,25 @@ export async function addTicketMessage(input: {
 }
 
 export async function loadTicketAudit(ticketId: string): Promise<TicketAuditEvent[]> {
-  const { data, error } = await client()
-    .from("ticket_lifecycle_events")
-    .select("id,actor_profile_id,event_key,from_status,to_status,reason,metadata,created_at")
-    .eq("ticket_id", ticketId)
-    .order("created_at", { ascending: false })
-    .limit(100);
-  if (error) throw new Error(error.message);
-  return (data ?? []).map((event) => ({
+  const supabase = client();
+  const [lifecycleResult, slaResult] = await Promise.all([
+    supabase
+      .from("ticket_lifecycle_events")
+      .select("id,actor_profile_id,event_key,from_status,to_status,reason,metadata,created_at")
+      .eq("ticket_id", ticketId)
+      .order("created_at", { ascending: false })
+      .limit(100),
+    supabase
+      .from("ticket_sla_clock_events")
+      .select("id,actor_profile_id,event_type,occurred_at,metadata")
+      .eq("ticket_id", ticketId)
+      .order("occurred_at", { ascending: false })
+      .limit(100),
+  ]);
+  if (lifecycleResult.error) throw new Error(lifecycleResult.error.message);
+  if (slaResult.error) throw new Error(slaResult.error.message);
+
+  const lifecycle = (lifecycleResult.data ?? []).map((event) => ({
     id: event.id as string,
     actor_profile_id: (event.actor_profile_id as string | null) ?? null,
     action: `ticket.${event.event_key as string}`,
@@ -274,6 +285,24 @@ export async function loadTicketAudit(ticketId: string): Promise<TicketAuditEven
     },
     created_at: event.created_at as string,
   })) as TicketAuditEvent[];
+
+  const slaEvents = (slaResult.data ?? []).map((event) => ({
+    id: event.id as string,
+    actor_profile_id: (event.actor_profile_id as string | null) ?? null,
+    action: `sla.${event.event_type as string}`,
+    resource_type: "ticket",
+    resource_id: ticketId,
+    outcome: "recorded",
+    event_data: {
+      ...((event.metadata as Record<string, unknown> | null) ?? {}),
+      source: "sla-clock",
+    },
+    created_at: event.occurred_at as string,
+  })) as TicketAuditEvent[];
+
+  return [...lifecycle, ...slaEvents]
+    .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
+    .slice(0, 150);
 }
 
 export async function listAssignableProfiles(ticket: TicketRecord): Promise<TicketProfile[]> {
