@@ -165,7 +165,7 @@ export function HelpBuddyPanel({ className }: { className?: string }) {
                     if (!ticket) {
                       throw new Error("No ticket matching that reference is visible to your account.");
                     }
-                    w.setActiveTicketId(ticket.id);
+                    w.setActiveTicketId(`TKT-${ticket.ticket_number}`);
                     setTicketInput("");
                   } catch (error) {
                     setTicketLookupError(
