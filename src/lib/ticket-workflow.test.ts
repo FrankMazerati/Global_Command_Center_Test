@@ -103,6 +103,7 @@ describe("ticket workflow contract", () => {
       ["in_progress", "resolve"],
       ["resolved", "reopen"],
       ["new", "cancel"],
+      ["new", "assign"],
     ] as const;
     for (const [status, action] of reasonRequired) {
       expect(validateTicketAction(status, action)).toContain("20 characters");
@@ -114,6 +115,17 @@ describe("ticket workflow contract", () => {
         ),
       ).toBeNull();
     }
+  });
+
+  it("requires a documented reason for assignment and reassignment", () => {
+    expect(validateTicketAction("new", "assign")).toContain("20 characters");
+    expect(
+      validateTicketAction(
+        "new",
+        "assign",
+        "Assigning this ticket to the network support queue for ownership and follow-up.",
+      ),
+    ).toBeNull();
   });
 
   it("distinguishes requester wait from internal wait and supports resumption", () => {
