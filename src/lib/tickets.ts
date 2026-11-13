@@ -157,11 +157,11 @@ export async function createPortalTicket(input: {
   category: string;
   priority: TicketPriority;
 }): Promise<TicketRecord> {
-  const { data, error } = await client().rpc("create_portal_ticket", {
+  const { data, error } = await client().rpc("create_ticket", {
     p_title: input.title.trim(),
     p_description: input.description.trim(),
-    p_category: input.category,
     p_priority: input.priority,
+    p_category: input.category,
   });
   if (error) throw new Error(error.message);
   return unwrapTicket(data);
