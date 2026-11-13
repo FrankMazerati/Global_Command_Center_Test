@@ -2,6 +2,23 @@
 
 This document is the implementation contract for the existing Supabase-backed ticket workflow. It is not tied to a third-party editor or paid service.
 
+## Verified implementation — 2026-11-13
+
+The following contracts are now present in the existing Supabase project and wired into the ticket workspace:
+
+- `create_ticket` creates authenticated requests.
+- `accept_ticket` performs an atomic first-worker-wins claim. It remains SECURITY DEFINER because it must safely perform a row-locked claim across the normal technician UPDATE policy; it now uses an empty search path, fully qualified objects, and explicit active-profile, role, organization, tenant, requester, status, and unassigned checks.
+- `apply_ticket_transition` handles accept, start, requester/internal wait, resume, escalation, resolution, close, reopen, cancel, assignment/reassignment, and priority changes.
+- `update_ticket_details` validates and updates ticket title, description, and category.
+- `request_ticket_approval` and `decide_ticket_approval` provide atomic ticket approval creation and decisions.
+- Ticket approval RLS restricts visibility to the requester, ticket participants, and authorized support/management roles. Decisions require an active manager role, same organization/tenant scope, a decision note, and separation of duties; requesters cannot approve their own requests.
+- Approval lifecycle events must reference the real approval row created by the same requester and ticket. This keeps event history connected to the approval record.
+- The ticket workspace now includes approval requests, manager decisions, comments, lifecycle history, assignment, priority, and status actions.
+
+The approval flow was exercised inside a rollback-only transaction using the seeded L1 technician and Super Admin identities: the L1 request was created, self-approval was rejected, the Super Admin decision succeeded, and the transaction was rolled back. No test approval rows were left behind.
+
+The application verification, production-readiness validation, and responsive-layout QA workflows completed successfully on the verified application revision before the latest documentation/migration-only changes. Re-run them after subsequent code changes before treating that revision as green.
+
 ## Confirmed existing database contracts
 
 - `create_ticket(p_title text, p_description text, p_priority ticket_priority, p_category text)`
@@ -76,6 +93,11 @@ Chat Buddy must resolve a ticket reference against the authenticated user's RLS-
 - Every successful mutation creates expected lifecycle and audit evidence.
 - Approval decisions are atomic, authorized, single-use, and auditable.
 
-## Current rollout boundary
+## Remaining implementation and verification scope
 
-Read-only inspection confirmed that `apply_ticket_transition`, `update_ticket_details`, and `add_ticket_conversation_message` are not currently present in the live database. Do not call them as though they exist. The current message insert path is direct and requires the existing non-null tenant column. A live schema/RPC rollout is intentionally not performed in this pass: it requires a reviewed migration and explicit production-database authorization. The application must surface missing contracts as unavailable rather than fake success.
+- Escalation currently records levels 1–4, the actor, reason, and escalation event. Routing to a named L2/L3 queue, acknowledgment timers, and escalation destination ownership still need to be completed.
+- Reassignment requires a 20-character reason and records old/new assignee identifiers. Reopen lifecycle metadata preserves the previous resolution summary.
+- Ticket conversation insertion currently uses the existing direct insert path with the required `channel` field. A dedicated server-side conversation RPC and complete requester/internal visibility matrix remain follow-up hardening work.
+- SLA clocks and wait accounting exist, but need role-based end-to-end tests for requester wait, internal wait, resume, pause/resume behavior, and breach notifications.
+- Browser-level authenticated role testing is still required for requester, L1, L2, L3, service-desk manager, IT manager, and global administrator. The rollback-only database test validates the approval RPC path without retaining test data.
+- Do not merge the pull request into `main` or deploy production without explicit approval. Keep using the existing pull request branch and existing Supabase project.
