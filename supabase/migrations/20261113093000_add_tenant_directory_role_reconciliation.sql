@@ -24,8 +24,8 @@ with role_targets(role_key, target_count, hierarchy_order) as (
     ('coo'::text, 2, 20),
     ('regional_manager'::text, 5, 30),
     ('department_manager'::text, 5, 40),
-    ('help_desk_manager'::text, 1, 50),
-    ('help_desk_lead'::text, 1, 60),
+    ('help_desk_manager'::text, 5, 50),
+    ('help_desk_lead'::text, 5, 60),
     ('help_desk_l3'::text, 5, 70),
     ('help_desk_l2'::text, 5, 80),
     ('help_desk_l1'::text, 5, 90)
