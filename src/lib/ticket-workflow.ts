@@ -100,6 +100,7 @@ const REASON_REQUIRED: ReadonlySet<TicketAction> = new Set([
   "resolve",
   "reopen",
   "cancel",
+  "assign",
 ]);
 
 export const TICKET_STATUS_LABELS: Record<TicketStatus, string> = {
