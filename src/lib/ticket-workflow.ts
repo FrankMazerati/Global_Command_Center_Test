@@ -34,8 +34,9 @@ export function validateTicketDetails(input: {
   const title = input.title.trim();
   const description = input.description.trim();
   const category = input.category.trim();
-  if (title.length < 5 || title.length > 240) {
-    return "Ticket title must contain 5 to 240 characters.";
+  // Keep the browser contract inside the database create_ticket limits.
+  if (title.length < 4 || title.length > 180) {
+    return "Ticket title must contain 4 to 180 characters.";
   }
   if (description.length < 10 || description.length > 10000) {
     return "Ticket details must contain 10 to 10,000 characters.";
