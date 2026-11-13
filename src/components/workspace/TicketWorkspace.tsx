@@ -79,6 +79,13 @@ function priorityTone(priority: string) {
 }
 
 function auditDescription(event: TicketAuditEvent) {
+  const slaDescriptions: Record<string, string> = {
+    "sla.requester_wait_started": "SLA paused while waiting for the requester",
+    "sla.requester_wait_ended": "SLA resumed after requester wait",
+    "sla.ticket_resolved": "Resolution recorded in the SLA timeline",
+    "sla.ticket_reopened": "SLA timeline restarted after reopening",
+  };
+  if (slaDescriptions[event.action]) return slaDescriptions[event.action];
   const details = event.event_data ?? {};
   if (details["message_content_recorded"] === false) {
     const operation = String(details["operation"] ?? "change").toLowerCase();
