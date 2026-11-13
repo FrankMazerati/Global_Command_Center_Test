@@ -225,8 +225,9 @@ export async function addTicketMessage(input: {
       tenant_id: input.ticket.tenant_id,
       ticket_id: input.ticket.id,
       author_profile_id: input.profileId,
+      channel: input.visibility === "public" ? "customer" : "internal",
       body: input.body.trim(),
-      visibility: input.visibility,
+      visibility: input.visibility === "public" ? "customer" : "internal",
       metadata: { source: "ticket-workspace" },
     });
   if (error) throw new Error(error.message);
