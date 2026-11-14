@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: verify-${{ github.ref }}
@@ -50,6 +50,23 @@ jobs:
             src/components/workspace/IntegrationOperationsWorkspaces.tsx \
             src/components/workspace/KnowledgeAndHelpWorkspaces.tsx \
             'src/routes/m.$section.$group.$page.tsx'
+
+      - name: Commit formatting changes on the repair branch
+        if: github.event_name == 'push' && github.ref_name == 'fix/intellibase-knowledge-connectivity-2026-11-14'
+        run: |
+          if ! git diff --quiet -- \
+            src/components/workspace/IntegrationOperationsWorkspaces.tsx \
+            src/components/workspace/KnowledgeAndHelpWorkspaces.tsx \
+            'src/routes/m.$section.$group.$page.tsx'; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add \
+              src/components/workspace/IntegrationOperationsWorkspaces.tsx \
+              src/components/workspace/KnowledgeAndHelpWorkspaces.tsx \
+              'src/routes/m.$section.$group.$page.tsx'
+            git commit -m "Format repaired source files [skip ci]"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
 
       - name: Lint repaired source files
         run: |
