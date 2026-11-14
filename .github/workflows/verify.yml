@@ -40,15 +40,23 @@ jobs:
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Record existing repository-wide lint baseline
+      - name: Record repository lint baseline
         run: pnpm lint
         continue-on-error: true
 
-      - name: Format the new integration workspace
-        run: pnpm exec prettier --write src/components/workspace/IntegrationOperationsWorkspaces.tsx
+      - name: Format repaired source files
+        run: |
+          pnpm exec prettier --write \
+            src/components/workspace/IntegrationOperationsWorkspaces.tsx \
+            src/components/workspace/KnowledgeAndHelpWorkspaces.tsx \
+            'src/routes/m.$section.$group.$page.tsx'
 
-      - name: Lint the new integration workspace
-        run: pnpm exec eslint src/components/workspace/IntegrationOperationsWorkspaces.tsx
+      - name: Lint repaired source files
+        run: |
+          pnpm exec eslint \
+            src/components/workspace/IntegrationOperationsWorkspaces.tsx \
+            src/components/workspace/KnowledgeAndHelpWorkspaces.tsx \
+            'src/routes/m.$section.$group.$page.tsx'
 
       - name: Run available tests
         run: pnpm test --passWithNoTests
@@ -60,7 +68,10 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: formatted-integration-workspace
-          path: src/components/workspace/IntegrationOperationsWorkspaces.tsx
+          name: formatted-repair-source
+          path: |
+            src/components/workspace/IntegrationOperationsWorkspaces.tsx
+            src/components/workspace/KnowledgeAndHelpWorkspaces.tsx
+            src/routes/m.$section.$group.$page.tsx
           if-no-files-found: error
           retention-days: 1
