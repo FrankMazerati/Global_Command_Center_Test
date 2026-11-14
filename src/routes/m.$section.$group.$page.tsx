@@ -39,7 +39,10 @@ import { GroupMembershipWorkspace } from "@/components/workspace/GroupMembership
 import { OperationalPageWorkspace } from "@/components/workspace/OperationalPageWorkspace";
 import { IdentityAccessWorkspace } from "@/components/workspace/IdentityAccessWorkspace";
 import { PublicSiteManagementWorkspace } from "@/components/workspace/PublicSiteManagementWorkspace";
-import { ConnectorHubWorkspace, IntelliSyncWorkspace } from "@/components/workspace/IntegrationOperationsWorkspaces";
+import {
+  ConnectorHubWorkspace,
+  IntelliSyncWorkspace,
+} from "@/components/workspace/IntegrationOperationsWorkspaces";
 import { findPage, toneVar } from "@/lib/nav";
 import { getSupabaseClient } from "@/lib/supabase";
 import { useWork } from "@/lib/work-context";
