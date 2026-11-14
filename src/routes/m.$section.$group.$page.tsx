@@ -39,6 +39,7 @@ import { GroupMembershipWorkspace } from "@/components/workspace/GroupMembership
 import { OperationalPageWorkspace } from "@/components/workspace/OperationalPageWorkspace";
 import { IdentityAccessWorkspace } from "@/components/workspace/IdentityAccessWorkspace";
 import { PublicSiteManagementWorkspace } from "@/components/workspace/PublicSiteManagementWorkspace";
+import { ConnectorHubWorkspace, IntelliSyncWorkspace } from "@/components/workspace/IntegrationOperationsWorkspaces";
 import { findPage, toneVar } from "@/lib/nav";
 import { getSupabaseClient } from "@/lib/supabase";
 import { useWork } from "@/lib/work-context";
@@ -1291,6 +1292,8 @@ function PageFoundation() {
   const workforceHistory = workforceHistorySlugs.includes(page.slug);
   const workflowCenter = section.slug === "workflow-center";
   const knowledgeSpaces = section.slug === "intellibase";
+  const connectorHub = section.slug === "connector-hub";
+  const intelliSync = section.slug === "intellisync";
   const officeTool = ["intelliword", "intellisheets", "intellislides", "intellichat"].includes(
     page.slug,
   );
@@ -1418,6 +1421,10 @@ function PageFoundation() {
         <IntelliSphereToolsWorkspace pageSlug={page.slug} />
       ) : knowledgeSpaces ? (
         <KnowledgeSpacesWorkspace title={page.title} pageSlug={page.slug} />
+      ) : connectorHub ? (
+        <ConnectorHubWorkspace title={page.title} />
+      ) : intelliSync ? (
+        <IntelliSyncWorkspace title={page.title} />
       ) : helpBuddyManagement ? (
         <HelpBuddyIntelligenceManagement pageSlug={page.slug} />
       ) : helpBuddy ? (
