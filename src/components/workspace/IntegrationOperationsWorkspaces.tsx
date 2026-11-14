@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Activity,
   AlertCircle,
@@ -31,6 +31,7 @@ type Provider = {
   supports_webhooks: boolean;
   supports_incremental_sync: boolean;
   is_featured: boolean;
+  search_aliases: string[];
 };
 
 type Connection = {
@@ -56,7 +57,7 @@ type SyncEvent = {
   classification: string;
 };
 
-function Panel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+function Panel({ children, className = "" }: { children: ReactNode; className?: string }) {
   return <section className={`rounded-xl border bg-card p-4 shadow-card sm:p-5 ${className}`}>{children}</section>;
 }
 
@@ -88,6 +89,7 @@ export function ConnectorHubWorkspace({ title }: { title: string }) {
 
   useEffect(() => {
     let live = true;
+    setError(null);
     const supabase = getSupabaseClient();
     if (!supabase) {
       setError("The secure connector catalog is not configured.");
@@ -97,7 +99,7 @@ export function ConnectorHubWorkspace({ title }: { title: string }) {
 
     Promise.all([
       supabase.from("integration_provider_catalog")
-        .select("provider_key,provider_name,publisher,category,description,catalog_status,readiness_stage,auth_methods,required_scopes,supported_sync_modes,documentation_url,security_tier,supports_webhooks,supports_incremental_sync,is_featured")
+        .select("provider_key,provider_name,publisher,category,description,catalog_status,readiness_stage,auth_methods,required_scopes,supported_sync_modes,documentation_url,security_tier,supports_webhooks,supports_incremental_sync,is_featured,search_aliases")
         .order("display_order", { ascending: true })
         .limit(250),
       supabase.from("integration_connections")
@@ -347,9 +349,11 @@ export function IntelliSyncWorkspace({ title }: { title: string }) {
         ) : <p className="rounded-lg bg-muted/50 p-4 text-sm text-muted-foreground">No synchronization events have been recorded yet.</p>}
       </Panel>
 
-      <Panel className="border-dashed">
-        <div className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 size-4 text-muted-foreground" /><div><p className="text-sm font-medium">Protected sync service connected</p><p className="mt-1 text-xs text-muted-foreground">The authenticated status API is reachable when this panel loads successfully. Provider OAuth, job creation, schedules, manual retry, and reconciliation controls are not exposed by the current API and are not represented as working actions here.</p></div></div>
-      </Panel>
+      {health ? (
+        <Panel className="border-dashed">
+          <div className="flex items-start gap-2"><CheckCircle2 className="mt-0.5 size-4 text-muted-foreground" /><div><p className="text-sm font-medium">Protected sync service connected</p><p className="mt-1 text-xs text-muted-foreground">The authenticated status API is reachable. Provider OAuth, job creation, schedules, manual retry, and reconciliation controls are not exposed by the current API and are not represented as working actions here.</p></div></div>
+        </Panel>
+      ) : null}
     </div>
   );
 }
