@@ -35,3 +35,36 @@ Several collections have short starter articles. This repair makes existing cont
 ## Verification still required
 
 The GitHub Actions workflow runs lint, tests, and the production build. The application must not be marked build-verified until those checks complete successfully. A signed-in browser smoke test is also required to confirm the user's account sees the correct authorized collections and can open article details.
+
+
+## Connector Hub and IntelliSync audit
+
+Read-only inspection of the connected Supabase project found:
+
+- `integration_provider_catalog`: 169 provider catalog records.
+- `integration_connections`: 0 connection records.
+- `integration_connection_events`: 0 events.
+- `integration_sync_runs`: 0 runs.
+- IntelliSync operational tables (profiles, connection bindings, events, deliveries, runs, policies, conflicts, and audit): all currently contain 0 records.
+
+The Supabase Edge Function `intellisync-api` is active (JWT verification enabled). Its current actions are event emission, listing events, listing connections, and health reporting. It does not currently expose a provider OAuth/connect flow, create or revoke a provider connection, start a synchronization run, or configure a schedule. Therefore the backend has an IntelliSync event/API foundation, but no live connector or synchronization configuration has been established.
+
+The IntelliSync schema tables have RLS enabled and no direct table policies. The current IntelliSync RPC functions are granted to `service_role`, not directly to `authenticated`; this is consistent with keeping the sync tables server-side. Do not add broad client policies to make the tables appear in the browser.
+
+The connector catalog is not proof that a provider is connected. The current connection count is zero.
+
+## Supabase advisor snapshot
+
+The project's advisor scan reported:
+
+- Security: 49 RLS-enabled tables with no policies (a mix of internal schemas and public tables; review each table's intended exposure rather than adding blanket policies).
+- Security: 16 SECURITY DEFINER functions executable by signed-in users. These require function-by-function authorization review; do not revoke them blindly because some are intentional authorization helpers or guarded workflows.
+- Security: leaked-password protection is disabled in Supabase Auth and should be enabled before production use.
+- Performance: 199 unindexed foreign keys, 51 RLS auth-initplan findings, 241 unused indexes, and 36 multiple-permissive-policy findings.
+- Health advisor: no findings returned in this scan.
+
+These findings are recorded for controlled remediation. No database policy, function, auth setting, or schema was changed during this repair.
+
+## Conversation connector requirement
+
+The prior conversation search recovered the Connector Hub subscription/seat-management discussion (approximately 20 connectors, with purchased, assigned, available, and pending seats). It did not recover a definitive connector name or implementation design for the separate “main conversation” connector. That requirement remains open and must not be guessed or merged into IntelliSync without confirmation.
