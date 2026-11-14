@@ -39,6 +39,88 @@ function Panel({ children, className = "" }: { children: ReactNode; className?: 
   return <section className={`rounded-xl border bg-card p-4 shadow-card sm:p-5 ${className}`}>{children}</section>;
 }
 
+const KNOWLEDGE_PAGE_BASES: Record<string, string[] | null> = {
+  // The dashboard is the index for every collection the signed-in user is allowed to browse.
+  "featured-knowledge": null,
+  "recently-updated": null,
+
+  // Help Desk Knowledge Base
+  troubleshooting: ["help_desk"],
+  "technical-procedures": ["help_desk"],
+  "common-issues": ["help_desk"],
+
+  // Getting Started
+  welcome: ["getting_started"],
+  "platform-overview": ["getting_started"],
+  "navigation-training": ["getting_started"],
+  "profile-setup": ["getting_started"],
+  "identity-access-training": ["getting_started"],
+
+  // Platform & Service Reference
+  "application-documentation": ["platform_reference"],
+  "service-documentation": ["platform_reference"],
+  "integration-guides": ["platform_reference"],
+
+  // Business Knowledge
+  "business-procedures": ["business_stakeholders"],
+  "financial-procedures": ["business_stakeholders"],
+  "department-documentation": ["business_stakeholders"],
+
+  // Idea Ledger
+  ideas: ["idea_ledger"],
+  "conversation-references": ["idea_ledger"],
+  "proposed-features": ["idea_ledger"],
+  "approved-requirements": ["idea_ledger"],
+
+  // Training material currently lives in the Getting Started collection.
+  "learning-paths": ["getting_started"],
+  "basic-training": ["getting_started"],
+  "intermediate-training": ["getting_started"],
+  "advanced-training": ["getting_started"],
+  assessments: ["getting_started"],
+  certifications: ["getting_started"],
+
+  // Administration pages show only collections already authorized by database policy.
+  "article-editor": null,
+  "review-queue": null,
+  publishing: null,
+  "revision-history": null,
+
+  // Explicit collection landing pages retained for older links.
+  "founders-papers": ["founder_papers"],
+  "help-buddy-knowledge": ["helpbuddy_ai"],
+  "maximus-knowledge": ["maximus_ai"],
+  "optimus-knowledge": ["optimus_ai"],
+  "trinity-knowledge": ["trinity_ai"],
+};
+
+function knowledgeBaseKeysForPage(pageSlug: string): string[] | null {
+  if (Object.prototype.hasOwnProperty.call(KNOWLEDGE_PAGE_BASES, pageSlug)) {
+    return KNOWLEDGE_PAGE_BASES[pageSlug] ?? null;
+  }
+
+  // Preserve older deep links while keeping unknown pages visibly unassigned.
+  if (pageSlug.includes("founders-papers")) return ["founder_papers"];
+  if (pageSlug.includes("getting-started")) return ["getting_started"];
+  if (pageSlug.includes("faqs") || pageSlug.includes("troubleshooting") || pageSlug.includes("support") ||
+      pageSlug.includes("account-and-access") || pageSlug.includes("intellidesk") ||
+      pageSlug.includes("help-desk-procedures")) return ["help_desk"];
+  if (pageSlug.includes("executive") || pageSlug.includes("global-administration") ||
+      pageSlug.includes("ceo") || pageSlug.includes("cfo") || pageSlug.includes("sales") ||
+      pageSlug.includes("marketing") || pageSlug.includes("business-development") ||
+      pageSlug.includes("competitive-intelligence")) return ["business_stakeholders", "sales_market_intelligence"];
+  if (pageSlug.includes("development-history") || pageSlug.includes("project-intelligence") ||
+      pageSlug.includes("architecture") || pageSlug.includes("api-and-integration") ||
+      pageSlug.includes("active-directory-procedures") || pageSlug.includes("device-and-asset-procedures") ||
+      pageSlug.includes("marketplace-and-licensing") || pageSlug.includes("noc-and-soc") ||
+      pageSlug.includes("security-and-incident")) return ["idea_ledger", "platform_reference"];
+  if (pageSlug.includes("help-buddy-knowledge")) return ["helpbuddy_ai"];
+  if (pageSlug.includes("maximus-knowledge")) return ["maximus_ai"];
+  if (pageSlug.includes("optimus-knowledge")) return ["optimus_ai"];
+  if (pageSlug.includes("trinity-knowledge")) return ["trinity_ai"];
+  return [];
+}
+
 export function KnowledgeSpacesWorkspace({ title, pageSlug }: { title: string; pageSlug: string }) {
   const [bases, setBases] = useState<KnowledgeBase[]>([]);
   const [articles, setArticles] = useState<KnowledgeArticle[]>([]);
@@ -57,7 +139,7 @@ export function KnowledgeSpacesWorkspace({ title, pageSlug }: { title: string; p
       return () => { live = false; };
     }
     Promise.all([
-      supabase.from("knowledge_bases").select("id,kb_key,name,description,visibility").eq("status", "active").order("name"),
+      supabase.from("knowledge_bases").select("id,kb_key,name,description,visibility").eq("status", "active").neq("visibility", "assistant_private").order("name"),
       supabase.from("knowledge_articles").select("id,knowledge_base_id,title,summary,body_md,updated_at").eq("status", "published").order("updated_at", { ascending: false }).limit(300),
     ]).then(([baseResult, articleResult]) => {
       if (!live) return;
@@ -75,29 +157,22 @@ export function KnowledgeSpacesWorkspace({ title, pageSlug }: { title: string; p
     return () => { live = false; };
   }, []);
 
-  const visibleBases = useMemo(() => {
-    const category = pageSlug.includes("founders-papers")
-      ? ["founder_papers"]
-      : pageSlug.includes("getting-started") || pageSlug.includes("platform")
-        ? ["getting_started"]
-      : pageSlug.includes("faqs") || pageSlug.includes("troubleshooting") || pageSlug.includes("support") || pageSlug.includes("account-and-access") || pageSlug.includes("intellidesk") || pageSlug.includes("help-desk-procedures")
-        ? ["help_desk"]
-        : pageSlug.includes("executive") || pageSlug.includes("global-administration") || pageSlug.includes("ceo") || pageSlug.includes("cfo") || pageSlug.includes("sales") || pageSlug.includes("marketing") || pageSlug.includes("business-development") || pageSlug.includes("competitive-intelligence")
-          ? ["business_stakeholders", "sales_market_intelligence"]
-          : pageSlug.includes("development-history") || pageSlug.includes("project-intelligence") || pageSlug.includes("architecture") || pageSlug.includes("api-and-integration") || pageSlug.includes("active-directory-procedures") || pageSlug.includes("device-and-asset-procedures") || pageSlug.includes("marketplace-and-licensing") || pageSlug.includes("noc-and-soc") || pageSlug.includes("security-and-incident")
-            ? ["idea_ledger", "platform_reference"]
-            : pageSlug.includes("help-buddy-knowledge")
-              ? ["helpbuddy_ai"]
-              : pageSlug.includes("maximus-knowledge")
-                ? ["maximus_ai"]
-                : pageSlug.includes("optimus-knowledge")
-                  ? ["optimus_ai"]
-                  : pageSlug.includes("trinity-knowledge")
-                    ? ["trinity_ai"]
-                    : [];
-    return bases.filter((base) => (baseFilter === "all" || base.id === baseFilter) &&
-      (!category.length || category.includes(base.kb_key)));
-  }, [bases, baseFilter, pageSlug]);
+  const pageBaseKeys = useMemo(() => knowledgeBaseKeysForPage(pageSlug), [pageSlug]);
+  const pageBases = useMemo(
+    () => bases.filter((base) =>
+      base.visibility !== "assistant_private" &&
+      (pageBaseKeys === null || pageBaseKeys.includes(base.kb_key))),
+    [bases, pageBaseKeys],
+  );
+  const visibleBases = useMemo(
+    () => pageBases.filter((base) => baseFilter === "all" || base.id === baseFilter),
+    [pageBases, baseFilter],
+  );
+
+  useEffect(() => {
+    setBaseFilter("all");
+    setSelected(null);
+  }, [pageSlug]);
 
   const visibleArticles = useMemo(() => {
     const allowed = new Set(visibleBases.map((base) => base.id));
@@ -132,7 +207,7 @@ export function KnowledgeSpacesWorkspace({ title, pageSlug }: { title: string; p
           </div>
           <select className="rounded-md border bg-background px-3 py-2 text-sm" value={baseFilter} onChange={(event) => setBaseFilter(event.target.value)}>
             <option value="all">All accessible spaces</option>
-            {bases.map((base) => <option key={base.id} value={base.id}>{base.name}</option>)}
+            {pageBases.map((base) => <option key={base.id} value={base.id}>{base.name}</option>)}
           </select>
         </div>
       </Panel>
