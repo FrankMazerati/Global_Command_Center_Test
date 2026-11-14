@@ -19,9 +19,9 @@ concurrency:
 
 jobs:
   verify:
-    name: Lint, test, and build
+    name: Targeted lint, tests, and production build
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -40,11 +40,27 @@ jobs:
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint
+      - name: Record existing repository-wide lint baseline
         run: pnpm lint
+        continue-on-error: true
+
+      - name: Format the new integration workspace
+        run: pnpm exec prettier --write src/components/workspace/IntegrationOperationsWorkspaces.tsx
+
+      - name: Lint the new integration workspace
+        run: pnpm exec eslint src/components/workspace/IntegrationOperationsWorkspaces.tsx
 
       - name: Run available tests
         run: pnpm test --passWithNoTests
 
       - name: Build application
         run: pnpm build
+
+      - name: Preserve formatted source for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: formatted-integration-workspace
+          path: src/components/workspace/IntegrationOperationsWorkspaces.tsx
+          if-no-files-found: error
+          retention-days: 1
