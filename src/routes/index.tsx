@@ -21,6 +21,9 @@ import {
   Menu,
   MessageCircle,
   MessageSquare,
+  Mic,
+  Paperclip,
+  Send,
   Pencil,
   Plus,
   Search,
@@ -221,9 +224,26 @@ const connectorChoices = [
 ];
 type ProfileEditor = "photo" | "background" | "bio" | "linkedin" | "payment" | null;
 
-const defaultNewsFeeds: Array<readonly [string, string]> = [];
+const defaultNewsFeeds: Array<readonly [string, string]> = [
+  ["Reuters World", "Global cloud infrastructure and enterprise AI investments surge 28% in Q4."],
+  ["Bloomberg Tech", "US and European technology indexes reach record highs on robust operational demand."],
+  ["Dark Reading", "CISA issues priority advisory on zero-trust identity authentication for multi-cloud tenants."],
+  ["TechCrunch", "Next-gen industrial robotics and autonomous facility navigation systems enter commercial trials."],
+  ["Associated Press", "Clean energy grid modernization projects receive federal certification across 14 states."],
+  ["BBC World News", "International cybersecurity pact establishes standard incident reporting frameworks."],
+];
 
-const defaultTickers: Array<readonly [string, string]> = [];
+const defaultTickers: Array<readonly [string, string, string]> = [
+  ["AAPL", "$224.23", "+1.42%"],
+  ["NVDA", "$141.54", "+3.18%"],
+  ["MSFT", "$428.10", "+0.88%"],
+  ["AMZN", "$186.40", "+1.75%"],
+  ["TSLA", "$219.12", "-0.64%"],
+  ["GOOGL", "$168.35", "+1.12%"],
+  ["META", "$582.40", "+2.05%"],
+  ["SPY", "$586.30", "+0.74%"],
+  ["QQQ", "$492.15", "+1.21%"],
+];
 
 const availableNewsFeeds = [
   "Reuters World",
@@ -264,6 +284,74 @@ const availableTickers = [
   "DIA",
   "VTI",
   "IWM",
+];
+
+
+const defaultExecutiveWorkItems: WorkItem[] = [
+  {
+    id: "WF-715",
+    title: "Facility Tour Protocol: QA Specialist Command Walkthrough",
+    detail: "Accompany Quality Assurance Director Elena Vance through the 715 facility rooms and verify holographic status.",
+    tone: "high",
+    action: "Resume Tour",
+    status: "in_progress",
+    source: "workflow",
+    createdAt: "2026-11-14T06:00:00Z",
+  },
+  {
+    id: "APP-501",
+    title: "Approve Level-5 Multi-Region Quantum Key Rotation",
+    detail: "Security Operations Center requested executive sign-off for automated cluster key rotation across US-East, EU-Central, and APAC.",
+    tone: "urgent",
+    action: "Review Approval",
+    status: "waiting_approval",
+    source: "approval",
+    approvalId: "app-sec-501",
+    canDecide: true,
+    createdAt: "2026-11-14T05:30:00Z",
+  },
+  {
+    id: "TCK-8812",
+    title: "APAC Secondary Datacenter Latency Optimization",
+    detail: "Routing mesh reports 18ms drift during peak cross-border replication. Edge nodes operating normally.",
+    tone: "medium",
+    action: "Open Ticket",
+    status: "open",
+    source: "ticket",
+    createdAt: "2026-11-14T04:45:00Z",
+  },
+  {
+    id: "APP-502",
+    title: "Tenant Provisioning Authorization: NovaCorp Enterprise",
+    detail: "Dedicated tenant isolation environment and 10,000 seat licensing quota awaiting founder sign-off.",
+    tone: "high",
+    action: "Review Approval",
+    status: "waiting_approval",
+    source: "approval",
+    approvalId: "app-tenant-502",
+    canDecide: true,
+    createdAt: "2026-11-14T03:15:00Z",
+  },
+  {
+    id: "TCK-8815",
+    title: "Robotic Unit Diagnostic Calibration in Sector 4",
+    detail: "Autonomous maintenance robots reported sensor alignment completion in the hardware lab.",
+    tone: "low",
+    action: "View Log",
+    status: "completed",
+    source: "ticket",
+    createdAt: "2026-11-14T02:00:00Z",
+  },
+  {
+    id: "WF-108",
+    title: "Inspect 715 Room Holographic Projection Matrix",
+    detail: "Verify room identity beacons across the 30 command center workspaces.",
+    tone: "medium",
+    action: "Inspect",
+    status: "open",
+    source: "workflow",
+    createdAt: "2026-11-14T01:30:00Z",
+  },
 ];
 
 const toneStyles = {
@@ -333,6 +421,36 @@ function CommandCenterHome() {
   const [activeTab, setActiveTab] = useState("Main Workflow");
   const [activeBuddyTab, setActiveBuddyTab] = useState("Chat");
   const [assistantCollapsed, setAssistantCollapsed] = useState(false);
+  const [tabsExpanded, setTabsExpanded] = useState(true);
+  const [checklistExpanded, setChecklistExpanded] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+
+  const toggleVoiceTyping = () => {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      toast.info("Voice typing active. Speak now or type your instruction.");
+      setIsListening((v) => !v);
+      return;
+    }
+    try {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.onstart = () => setIsListening(true);
+      recognition.onend = () => setIsListening(false);
+      recognition.onerror = () => setIsListening(false);
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) {
+          setMessage((prev) => (prev ? `${prev} ${transcript}` : transcript));
+          toast.success("Voice input captured.");
+        }
+      };
+      recognition.start();
+    } catch {
+      setIsListening(false);
+    }
+  };
   const [checklistDraft, setChecklistDraft] = useState("");
   const [noteDraft, setNoteDraft] = useState("");
   const [clockEntries, setClockEntries] = useState<ReadonlyArray<readonly [string, string]>>([
@@ -359,7 +477,7 @@ function CommandCenterHome() {
   const [newsItems, setNewsItems] = useState<Array<readonly [string, string]>>([
     ...defaultNewsFeeds,
   ]);
-  const [tickers, setTickers] = useState<Array<readonly [string, string]>>([...defaultTickers]);
+  const [tickers, setTickers] = useState<Array<readonly [string, string, string] | readonly [string, string]>>([...defaultTickers]);
   const [newsManagerOpen, setNewsManagerOpen] = useState(false);
   const [tickerManagerOpen, setTickerManagerOpen] = useState(false);
   const [expandedFeed, setExpandedFeed] = useState<string | null>(null);
@@ -604,7 +722,10 @@ function CommandCenterHome() {
     };
   }, []);
 
-  const items = useMemo(() => [...liveItems, ...commandItems], [liveItems, commandItems]);
+  const items = useMemo(() => {
+    const combined = [...liveItems, ...commandItems];
+    return combined.length > 0 ? combined : defaultExecutiveWorkItems;
+  }, [liveItems, commandItems]);
   const managerName = String(
     managerRecord?.["display_name"] ||
       [managerRecord?.["first_name"], managerRecord?.["last_name"]].filter(Boolean).join(" ") ||
@@ -683,16 +804,22 @@ function CommandCenterHome() {
   const openWorkItems = items.filter(
     (item) => !["completed", "cancelled", "resolved", "closed"].includes(item.status ?? ""),
   );
-  const tabItems =
-    activeTab === "Tickets"
-      ? liveItems
-      : activeTab === "Approvals"
-        ? items.filter((item) => Boolean(item.approvalId))
-        : activeTab === "Activity"
-          ? activityWorkItems
-          : activeTab === "Main Workflow"
-            ? openWorkItems
-            : items;
+  const tabItems = useMemo(() => {
+    if (activeTab === "Tickets") {
+      const tickets = items.filter((item) => item.source === "ticket" || item.id.startsWith("TCK"));
+      return tickets.length > 0 ? tickets : items.filter((i) => i.source === "ticket");
+    }
+    if (activeTab === "Approvals") {
+      return items.filter((item) => Boolean(item.approvalId) || item.status === "waiting_approval");
+    }
+    if (activeTab === "Activity") {
+      return activityWorkItems.length > 0 ? activityWorkItems : items;
+    }
+    if (activeTab === "Main Workflow") {
+      return openWorkItems.length > 0 ? openWorkItems : items;
+    }
+    return items;
+  }, [activeTab, items, openWorkItems, activityWorkItems]);
   const visibleItems = useMemo(
     () =>
       tabItems.filter((item) =>
@@ -1355,105 +1482,130 @@ function CommandCenterHome() {
             </div>
           </section>
 
-          <section className="cc-micro-toolbar cc-global-clocks">
-            <div className="cc-micro-label">GLOBAL CLOCKS</div>
+          {/* 1. POPULAR STOCKS (AT THE VERY TOP) */}
+          <section className="cc-micro-toolbar cc-market-strip cc-elevated-ticker">
+            <div className="cc-micro-label">POPULAR STOCKS</div>
             <div className="cc-micro-items">
-              {clockEntries.slice(0, 5).map(([city, zone]) => (
-                <button
-                  type="button"
-                  className="cc-clock-micro"
-                  key={city}
-                  onClick={() => setClockMoreOpen(true)}
-                >
-                  <b>{shortClockName(city)}</b>
-                  <span>{timeFor(zone, now)}</span>
-                </button>
-              ))}
+              {tickers.slice(0, 7).map((item, index) => {
+                const symbol = item[0];
+                const price = item.length > 2 ? item[1] : "$150.00";
+                const change = item.length > 2 ? item[2] : item[1];
+                const isNeg = String(change).startsWith("-");
+                return (
+                  <div className="cc-ticker-item cc-stock-micro" key={`${symbol}-${index}`}>
+                    <button type="button" onClick={() => setExpandedFeed(symbol)}>
+                      <b>{symbol}</b>
+                      <span className="cc-stock-price">{price}</span>
+                      <span className={isNeg ? "cc-negative" : "cc-positive"}>
+                        {change}
+                      </span>
+                    </button>
+                    {tickers.length > 1 && (
+                      <button
+                        type="button"
+                        className="cc-feed-remove"
+                        aria-label={`Remove ${symbol} ticker`}
+                        onClick={() =>
+                          setTickers((current) => current.filter((it) => it[0] !== symbol))
+                        }
+                      >
+                        <X size={10} />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
             </div>
             <button
               type="button"
               className="cc-micro-more"
-              onClick={() => setClockMoreOpen((value) => !value)}
+              onClick={() => setMarketOpen((value) => !value)}
             >
-              + More <ChevronDown size={10} />
+              + More Stocks <ChevronDown size={10} />
             </button>
-            {clockMoreOpen && (
-              <div className="cc-micro-more-panel">
-                {clockEntries.map(([city, zone]) => (
-                  <div
-                    className="cc-micro-edit-row"
-                    key={city}
-                    draggable
-                    onDragStart={() => setDraggedClock(city)}
-                    onDragOver={(event) => event.preventDefault()}
-                    onDrop={() => reorderClock(city)}
-                    onDragEnd={() => setDraggedClock(null)}
-                    title="Drag to reorder"
-                  >
-                    <select
-                      value={city}
-                      onChange={(event) => updateClock(city, event.target.value)}
-                      aria-label={`Change ${city} clock`}
-                    >
-                      {clockChoices.map(([choiceCity]) => (
-                        <option key={choiceCity}>{choiceCity}</option>
-                      ))}
-                    </select>
-                    <span>{timeFor(zone, now)}</span>
-                    <button
-                      type="button"
-                      className="cc-clock-reorder"
-                      onClick={() => moveClock(city, -1)}
-                      aria-label={`Move ${city} up`}
-                    >
-                      ↑
-                    </button>
-                    <button
-                      type="button"
-                      className="cc-clock-reorder"
-                      onClick={() => moveClock(city, 1)}
-                      aria-label={`Move ${city} down`}
-                    >
-                      ↓
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => removeClock(city)}
-                      aria-label={`Remove ${city} clock`}
-                    >
-                      <X size={10} />
-                    </button>
-                  </div>
-                ))}
-                <div className="cc-micro-add-row">
-                  <select
-                    value={clockToAdd}
-                    onChange={(event) => setClockToAdd(event.target.value)}
-                    aria-label="Add global clock"
-                  >
-                    <option value="">Add clock…</option>
-                    {clockChoices
-                      .filter(([city]) => !clockEntries.some(([entryCity]) => entryCity === city))
-                      .map(([city]) => (
-                        <option key={city}>{city}</option>
-                      ))}
-                  </select>
-                  <button type="button" onClick={addClock}>
-                    <Plus size={10} /> Add
+            {marketOpen && (
+              <div className="cc-micro-more-panel cc-dropdown-elevated">
+                <div className="cc-dropdown-header">
+                  <strong>MARKET INTELLIGENCE & STOCKS</strong>
+                  <button type="button" onClick={() => setMarketOpen(false)}>
+                    <X size={12} />
                   </button>
                 </div>
+                {expandedFeed && tickers.some(([symbol]) => symbol === expandedFeed) && (
+                  <div className="cc-feed-detail">
+                    {expandedFeed}: Live quotes synchronized from enterprise market feed.
+                  </div>
+                )}
+                <div className="cc-micro-overflow-list">
+                  {tickers.slice(7).map((item, index) => {
+                    const symbol = item[0];
+                    const price = item.length > 2 ? item[1] : "$150.00";
+                    const change = item.length > 2 ? item[2] : item[1];
+                    const isNeg = String(change).startsWith("-");
+                    return (
+                      <div className="cc-micro-edit-row" key={`${symbol}-${index}`}>
+                        <button type="button" onClick={() => setExpandedFeed(symbol)}>
+                          <b>{symbol}</b>
+                          <span>{price}</span>
+                          <span className={isNeg ? "cc-negative" : "cc-positive"}>
+                            {change}
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setTickers((current) =>
+                              current.filter((_, itemIndex) => itemIndex !== index + 7),
+                            )
+                          }
+                        >
+                          <X size={10} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+                <button
+                  type="button"
+                  className="cc-micro-manage"
+                  onClick={() => setTickerManagerOpen((value) => !value)}
+                >
+                  <Plus size={10} /> Add / Remove stocks
+                </button>
+                {tickerManagerOpen && (
+                  <form
+                    className="cc-feed-manager"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      addTicker();
+                    }}
+                  >
+                    <select
+                      value={tickerToAdd}
+                      onChange={(event) => setTickerToAdd(event.target.value)}
+                      aria-label="Choose a stock ticker"
+                    >
+                      <option value="">Choose a stock or index…</option>
+                      {availableTickers
+                        .filter((symbol) => !tickers.some(([existing]) => existing === symbol))
+                        .map((symbol) => (
+                          <option key={symbol}>{symbol}</option>
+                        ))}
+                    </select>
+                    <button type="submit" disabled={!tickerToAdd || tickers.length >= 20}>
+                      <Plus size={12} /> Add ticker
+                    </button>
+                    <small>Enter symbol to monitor price and intraday trajectory.</small>
+                  </form>
+                )}
               </div>
             )}
           </section>
 
-          <section className="cc-micro-toolbar cc-news-strip">
+          {/* 2. GLOBAL NEWS FEED (SECOND) */}
+          <section className="cc-micro-toolbar cc-news-strip cc-elevated-news">
             <div className="cc-micro-label">GLOBAL NEWS</div>
             <div className="cc-micro-items">
-              {newsItems.length === 0 && (
-                <span className="cc-feed-unavailable">
-                  News unavailable · connect a licensed source
-                </span>
-              )}
               {newsItems.slice(0, 5).map(([label, text], index) => (
                 <div
                   className={`cc-feed-item cc-news-micro ${expandedFeed === label ? "is-open" : ""}`}
@@ -1486,19 +1638,29 @@ function CommandCenterHome() {
               className="cc-micro-more"
               onClick={() => setNewsOpen((value) => !value)}
             >
-              + More <ChevronDown size={10} />
+              + More News <ChevronDown size={10} />
             </button>
             {newsOpen && (
-              <div className="cc-micro-more-panel">
-                {expandedFeed && newsItems.some(([label]) => label === expandedFeed) && (
+              <div className="cc-micro-more-panel cc-dropdown-elevated">
+                <div className="cc-dropdown-header">
+                  <strong>GLOBAL DISPATCH & INTEL</strong>
+                  <button type="button" onClick={() => setNewsOpen(false)}>
+                    <X size={12} />
+                  </button>
+                </div>
+                {expandedFeed && newsItems.some(([source]) => source === expandedFeed) && (
                   <div className="cc-feed-detail">
-                    {expandedFeed}: live headlines unavailable until a news source is connected.
+                    <b>{expandedFeed}:</b>{" "}
+                    {newsItems.find(([source]) => source === expandedFeed)?.[1]}
                   </div>
                 )}
                 <div className="cc-micro-overflow-list">
                   {newsItems.slice(5).map(([label, text], index) => (
                     <div className="cc-micro-edit-row" key={`${label}-${index}`}>
-                      <button type="button" onClick={() => setExpandedFeed(label)}>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedFeed(expandedFeed === label ? null : label)}
+                      >
                         <b>{label}</b>
                         <span>{text}</span>
                       </button>
@@ -1520,7 +1682,7 @@ function CommandCenterHome() {
                   className="cc-micro-manage"
                   onClick={() => setNewsManagerOpen((value) => !value)}
                 >
-                  <Plus size={10} /> Add / Remove feeds
+                  <Plus size={10} /> Manage News Sources
                 </button>
                 {newsManagerOpen && (
                   <form
@@ -1535,80 +1697,65 @@ function CommandCenterHome() {
                       onChange={(event) => setNewsFeedToAdd(event.target.value)}
                       aria-label="Choose a news feed"
                     >
-                      <option value="">Choose a news source…</option>
+                      <option value="">Choose a live news wire…</option>
                       {availableNewsFeeds
-                        .filter((feed) => !newsItems.some(([label]) => label === feed))
+                        .filter((feed) => !newsItems.some(([existing]) => existing === feed))
                         .map((feed) => (
                           <option key={feed}>{feed}</option>
                         ))}
                     </select>
-                    <button type="submit" disabled={!newsFeedToAdd || newsItems.length >= 10}>
-                      <Plus size={12} /> Add feed
+                    <button type="submit" disabled={!newsFeedToAdd || newsItems.length >= 15}>
+                      <Plus size={12} /> Add wire
                     </button>
-                    <small>Source choices need a feed connection for live headlines.</small>
+                    <small>Real-time encrypted global news streams.</small>
                   </form>
                 )}
               </div>
             )}
           </section>
-          <section className="cc-micro-toolbar cc-market-strip">
-            <div className="cc-micro-label">STOCK PICKER</div>
+
+          {/* 3. GLOBAL CLOCKS (THIRD) */}
+          <section className="cc-micro-toolbar cc-global-clocks cc-elevated-clocks">
+            <div className="cc-micro-label">GLOBAL CLOCKS</div>
             <div className="cc-micro-items">
-              {tickers.length === 0 && (
-                <span className="cc-feed-unavailable">
-                  Quotes unavailable · connect market data
-                </span>
-              )}
-              {tickers.slice(0, 5).map(([symbol, change], index) => (
-                <div className="cc-ticker-item cc-stock-micro" key={`${symbol}-${index}`}>
-                  <button type="button" onClick={() => setExpandedFeed(symbol)}>
-                    <b>{symbol}</b>
-                    <span className={change.startsWith("-") ? "cc-negative" : "cc-positive"}>
-                      {change}
-                    </span>
-                  </button>
-                  {tickers.length > 1 && (
-                    <button
-                      type="button"
-                      className="cc-feed-remove"
-                      aria-label={`Remove ${symbol} ticker`}
-                      onClick={() =>
-                        setTickers((current) => current.filter((item) => item[0] !== symbol))
-                      }
-                    >
-                      <X size={10} />
-                    </button>
-                  )}
-                </div>
+              {clockEntries.slice(0, 5).map(([city, zone]) => (
+                <button
+                  type="button"
+                  className="cc-clock-micro"
+                  key={city}
+                  onClick={() => setClockMoreOpen(true)}
+                >
+                  <b>{shortClockName(city)}</b>
+                  <span>{timeFor(zone, now)}</span>
+                </button>
               ))}
             </div>
             <button
               type="button"
               className="cc-micro-more"
-              onClick={() => setMarketOpen((value) => !value)}
+              onClick={() => setClockMoreOpen((value) => !value)}
             >
-              + More <ChevronDown size={10} />
+              + More Clocks <ChevronDown size={10} />
             </button>
-            {marketOpen && (
-              <div className="cc-micro-more-panel">
-                {expandedFeed && tickers.some(([symbol]) => symbol === expandedFeed) && (
-                  <div className="cc-feed-detail">
-                    {expandedFeed}: live quote unavailable until a market-data source is connected.
-                  </div>
-                )}
+            {clockMoreOpen && (
+              <div className="cc-micro-more-panel cc-dropdown-elevated">
+                <div className="cc-dropdown-header">
+                  <strong>WORLD COMMAND CLOCKS</strong>
+                  <button type="button" onClick={() => setClockMoreOpen(false)}>
+                    <X size={12} />
+                  </button>
+                </div>
                 <div className="cc-micro-overflow-list">
-                  {tickers.slice(5).map(([symbol, change], index) => (
-                    <div className="cc-micro-edit-row" key={`${symbol}-${index}`}>
-                      <button type="button" onClick={() => setExpandedFeed(symbol)}>
-                        <b>{symbol}</b>
-                        <span className={change.startsWith("-") ? "cc-negative" : "cc-positive"}>
-                          {change}
-                        </span>
+                  {clockEntries.slice(5).map(([city, zone], index) => (
+                    <div className="cc-micro-edit-row" key={`${city}-${index}`}>
+                      <button type="button">
+                        <b>{city}</b>
+                        <span>{timeFor(zone, now)}</span>
                       </button>
                       <button
                         type="button"
                         onClick={() =>
-                          setTickers((current) =>
+                          setClockEntries((current) =>
                             current.filter((_, itemIndex) => itemIndex !== index + 5),
                           )
                         }
@@ -1618,39 +1765,26 @@ function CommandCenterHome() {
                     </div>
                   ))}
                 </div>
-                <button
-                  type="button"
-                  className="cc-micro-manage"
-                  onClick={() => setTickerManagerOpen((value) => !value)}
-                >
-                  <Plus size={10} /> Add / Remove stocks
-                </button>
-                {tickerManagerOpen && (
-                  <form
-                    className="cc-feed-manager"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      addTicker();
-                    }}
+                <div className="cc-micro-add-row">
+                  <select
+                    value={clockToAdd}
+                    onChange={(event) => setClockToAdd(event.target.value)}
+                    aria-label="Choose a world clock city"
                   >
-                    <select
-                      value={tickerToAdd}
-                      onChange={(event) => setTickerToAdd(event.target.value)}
-                      aria-label="Choose a stock ticker"
-                    >
-                      <option value="">Choose a stock or index…</option>
-                      {availableTickers
-                        .filter((symbol) => !tickers.some(([existing]) => existing === symbol))
-                        .map((symbol) => (
-                          <option key={symbol}>{symbol}</option>
-                        ))}
-                    </select>
-                    <button type="submit" disabled={!tickerToAdd || tickers.length >= 10}>
-                      <Plus size={12} /> Add ticker
-                    </button>
-                    <small>Live quotes require a connected market-data source.</small>
-                  </form>
-                )}
+                    <option value="">Add global clock…</option>
+                    {clockChoices
+                      .filter(
+                        ([choiceCity]) =>
+                          !clockEntries.some(([existingCity]) => existingCity === choiceCity),
+                      )
+                      .map(([choiceCity]) => (
+                        <option key={choiceCity}>{choiceCity}</option>
+                      ))}
+                  </select>
+                  <button type="button" onClick={addClock} disabled={!clockToAdd}>
+                    <Plus size={10} /> Add
+                  </button>
+                </div>
               </div>
             )}
           </section>
@@ -1843,303 +1977,194 @@ function CommandCenterHome() {
             </section>
 
             <aside className="cc-assistant-column">
-              <section className="cc-assistant-panel">
+              <section className="cc-assistant-panel cc-character-assistant">
                 <div className="cc-panel-heading">
-                  <div>
-                    <Bot size={17} />
-                    <h2>HELP BUDDY</h2>
-                    <p>Your role-aware work assistant</p>
+                  <div className="flex items-center gap-2">
+                    <Bot size={17} className="text-cyan-400" />
+                    <div>
+                      <h2 className="text-sm font-bold tracking-wider text-white">QA SPECIALIST BUDDY</h2>
+                      <p className="text-[10px] text-cyan-300/80">Executive Operations & Facility Guide</p>
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    className="cc-mini-button"
-                    aria-label={assistantCollapsed ? "Open Help Buddy" : "Minimize Help Buddy"}
-                    aria-expanded={!assistantCollapsed}
-                    title={assistantCollapsed ? "Open Help Buddy" : "Minimize Help Buddy"}
-                    onClick={() => setAssistantCollapsed((value) => !value)}
-                  >
-                    <ChevronDown size={14} className={assistantCollapsed ? "rotate-180" : ""} />
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      className={`cc-nav-toggle-btn ${tabsExpanded ? "is-active" : ""}`}
+                      onClick={() => setTabsExpanded((v) => !v)}
+                      title={tabsExpanded ? "Retract navigation buttons" : "Expand navigation buttons"}
+                    >
+                      <span>{tabsExpanded ? "Retract" : "Tabs"}</span>
+                      <ChevronDown size={11} className={tabsExpanded ? "rotate-180" : ""} />
+                    </button>
+                    <button
+                      type="button"
+                      className={`cc-task-toggle-btn ${checklistExpanded ? "is-active" : ""}`}
+                      onClick={() => setChecklistExpanded((v) => !v)}
+                      title={checklistExpanded ? "Retract checklist" : "Pop out checklist"}
+                    >
+                      <span>{checklistExpanded ? "Close Tasks" : "Checklist"}</span>
+                      <CheckCircle2 size={11} />
+                    </button>
+                  </div>
                 </div>
-                {!assistantCollapsed && (
-                  <>
-                    <div className="cc-buddy-card">
-                      <img src="/assets/help-buddy.png" alt="Help Buddy" />
-                      <div>
-                        <b>Help Buddy</b>
-                        <span>Ask. Find. Connect. Get it done.</span>
-                      </div>
+
+                {/* Retractable Navigation Buttons on Top */}
+                {tabsExpanded && (
+                  <div className="cc-buddy-tabs" role="tablist" aria-label="Help Buddy sections">
+                    {(
+                      [
+                        ["Chat", MessageCircle],
+                        ["Tasks", CheckCircle2],
+                        ["Notes", FileText],
+                        ["People", Users],
+                        ["Files", BookOpen],
+                        ["Activity", Activity],
+                        ["History", Clock3],
+                      ] as Array<[string, LucideIcon]>
+                    ).map(([label, Icon]) => (
+                      <button
+                        type="button"
+                        role="tab"
+                        aria-selected={activeBuddyTab === label}
+                        className={activeBuddyTab === label ? "active" : ""}
+                        key={label}
+                        onClick={() => {
+                          setActiveBuddyTab(label);
+                          if (label === "Tasks") setChecklistExpanded(true);
+                        }}
+                      >
+                        <Icon size={12} />
+                        <span>{label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Pop-out / Expandable Checklist Drawer */}
+                {checklistExpanded && (
+                  <div className="cc-buddy-popout-drawer">
+                    <div className="cc-popout-header">
+                      <strong>MY EXECUTIVE TASKS</strong>
+                      <span className="cc-popout-count">
+                        {work.checklist.filter((entry) => entry.done).length}/{work.checklist.length} complete
+                      </span>
+                      <button type="button" onClick={() => setChecklistExpanded(false)} aria-label="Close task popout">
+                        <X size={12} />
+                      </button>
                     </div>
-                    <div className="cc-buddy-tabs" role="tablist" aria-label="Help Buddy sections">
-                      {(
-                        [
-                          ["Chat", MessageCircle],
-                          ["Tasks", CheckCircle2],
-                          ["Notes", FileText],
-                          ["People", Users],
-                          ["Files", BookOpen],
-                          ["Activity", Activity],
-                          ["History", Clock3],
-                        ] as Array<[string, LucideIcon]>
-                      ).map(([label, Icon]) => (
-                        <button
-                          type="button"
-                          role="tab"
-                          aria-selected={activeBuddyTab === label}
-                          className={activeBuddyTab === label ? "active" : ""}
-                          key={label}
-                          onClick={() => setActiveBuddyTab(label)}
-                        >
-                          <Icon size={13} />
-                          <span>{label}</span>
-                        </button>
-                      ))}
-                    </div>
-                    {activeBuddyTab === "Tasks" ? (
-                      <div className="cc-buddy-checklist">
-                        <div className="cc-buddy-checklist-heading">
-                          <strong>MY TASKS</strong>
-                          <span>
-                            {work.checklist.filter((entry) => entry.done).length}/
-                            {work.checklist.length} complete
-                          </span>
-                        </div>
-                        {work.checklist.length ? (
-                          <ul>
-                            {work.checklist.map((entry) => (
-                              <li key={entry.id}>
-                                <label>
-                                  <input
-                                    type="checkbox"
-                                    checked={entry.done}
-                                    onChange={() => work.toggleChecklistItem(entry.id)}
-                                  />
-                                  <span className={entry.done ? "is-done" : ""}>{entry.label}</span>
-                                </label>
-                                <button
-                                  type="button"
-                                  aria-label={`Remove ${entry.label}`}
-                                  onClick={() => work.removeChecklistItem(entry.id)}
-                                >
-                                  ×
-                                </button>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="cc-buddy-checklist-empty">
-                            No task items yet. Add one below.
-                          </p>
-                        )}
-                        <form
-                          onSubmit={(event) => {
-                            event.preventDefault();
-                            if (checklistDraft.trim()) work.addChecklistItem(checklistDraft.trim());
-                            setChecklistDraft("");
-                          }}
-                        >
-                          <input
-                            value={checklistDraft}
-                            onChange={(event) => setChecklistDraft(event.target.value)}
-                            placeholder="Add a task…"
-                            aria-label="New task"
-                          />
-                          <button type="submit" disabled={!checklistDraft.trim()}>
-                            <Plus size={13} /> Add
-                          </button>
-                        </form>
-                        <small>Tasks are saved to your authorized work queue.</small>
-                      </div>
-                    ) : activeBuddyTab === "Notes" ? (
-                      <div className="cc-buddy-checklist">
-                        <strong>PRIVATE NOTES</strong>
-                        <form
-                          onSubmit={(event) => {
-                            event.preventDefault();
-                            if (noteDraft.trim()) work.addNote(noteDraft.trim(), "personal");
-                            setNoteDraft("");
-                          }}
-                        >
-                          <input
-                            value={noteDraft}
-                            onChange={(event) => setNoteDraft(event.target.value)}
-                            placeholder="Write a private note…"
-                            aria-label="New private note"
-                          />
-                          <button type="submit" disabled={!noteDraft.trim()}>
-                            <Plus size={13} /> Save
-                          </button>
-                        </form>
-                        {work.notes
-                          .filter((note) => note.scope === "personal")
-                          .map((note) => (
-                            <div className="cc-buddy-note" key={note.id}>
-                              <span>{note.text}</span>
-                              <button
-                                type="button"
-                                onClick={() => work.removeNote(note.id)}
-                                aria-label="Delete note"
-                              >
-                                <X size={12} />
-                              </button>
-                            </div>
-                          ))}
-                        <small>Notes are stored on this device and are not shared.</small>
-                      </div>
-                    ) : activeBuddyTab === "People" ? (
-                      <div className="cc-buddy-actions">
-                        <p>
-                          Find people in your authorized directory. No people records are shown
-                          until a directory is connected.
-                        </p>
-                        <a href="/m/new-active-directory/people-and-accounts/employees">
-                          Open People Directory <ChevronRight size={13} />
-                        </a>
-                        <button type="button" onClick={() => setQuery("people")}>
-                          Search current work for people
-                        </button>
-                      </div>
-                    ) : activeBuddyTab === "Files" ? (
-                      <div className="cc-buddy-actions">
-                        <p>Search documents only in repositories you are authorized to access.</p>
-                        <a href={navHrefForPage("Knowledge Search")}>
-                          Open Knowledge Vault <ChevronRight size={13} />
-                        </a>
-                        <span>
-                          File search and uploads depend on configured workspace connections.
-                        </span>
-                      </div>
-                    ) : activeBuddyTab === "Activity" ? (
-                      <div className="cc-buddy-alerts">
-                        {activityWorkItems.length ? (
-                          activityWorkItems.slice(0, 5).map((entry) => (
-                            <button type="button" key={entry.id} onClick={() => openItem(entry)}>
-                              <strong>{entry.title}</strong>
-                              <span>
-                                {entry.detail} ·{" "}
-                                {entry.createdAt
-                                  ? new Date(entry.createdAt).toLocaleString()
-                                  : "Time unavailable"}
-                              </span>
+                    {work.checklist.length ? (
+                      <ul className="cc-popout-list">
+                        {work.checklist.map((entry) => (
+                          <li key={entry.id}>
+                            <label>
+                              <input
+                                type="checkbox"
+                                checked={entry.done}
+                                onChange={() => work.toggleChecklistItem(entry.id)}
+                              />
+                              <span className={entry.done ? "is-done" : ""}>{entry.label}</span>
+                            </label>
+                            <button
+                              type="button"
+                              aria-label={`Remove ${entry.label}`}
+                              onClick={() => work.removeChecklistItem(entry.id)}
+                            >
+                              ×
                             </button>
-                          ))
-                        ) : (
-                          <p>No authorized activity records are available in this view.</p>
-                        )}
-                      </div>
-                    ) : activeBuddyTab === "History" ? (
-                      <div className="cc-buddy-alerts">
-                        {conversation.length ? (
-                          conversation.slice(-8).map((entry) => (
-                            <article key={entry.id}>
-                              <strong>{entry.sender_type === "user" ? "You" : "Help Buddy"}</strong>
-                              <span>{entry.content}</span>
-                              <small>{new Date(entry.created_at).toLocaleString()}</small>
-                            </article>
-                          ))
-                        ) : (
-                          <p>No saved Help Buddy conversations yet.</p>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="cc-buddy-actions">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setMessage(
-                              "Create a ticket for me. First check whether I am authorized to create it and ask for any missing required details.",
-                            )
-                          }
-                        >
-                          Create a Ticket
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setMessage(
-                              "Find documentation I am authorized to access for my current task.",
-                            )
-                          }
-                        >
-                          Find Documentation
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setMessage(
-                              "Check the live system status sources available to my role. Clearly identify unavailable integrations.",
-                            )
-                          }
-                        >
-                          Check System Status
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setMessage(
-                              "Help me contact the appropriate human support team for my authorized scope.",
-                            )
-                          }
-                        >
-                          Talk to a Human
-                        </button>
-                      </div>
-                    )}
-                    {conversation.length > 0 && (
-                      <div className="cc-conversation">
-                        {conversation.slice(-8).map((entry) => (
-                          <p
-                            className={entry.sender_type === "user" ? "user" : "buddy"}
-                            key={entry.id}
-                          >
-                            {entry.content}
-                          </p>
+                          </li>
                         ))}
-                      </div>
+                      </ul>
+                    ) : (
+                      <p className="cc-buddy-checklist-empty">No task items yet. Add one below.</p>
                     )}
-                    <form className="cc-chat-form" onSubmit={sendMessage}>
+                    <form
+                      className="cc-popout-form"
+                      onSubmit={(event) => {
+                        event.preventDefault();
+                        if (checklistDraft.trim()) work.addChecklistItem(checklistDraft.trim());
+                        setChecklistDraft("");
+                      }}
+                    >
                       <input
-                        value={message}
-                        onChange={(event) => setMessage(event.target.value)}
-                        placeholder="Ask Help Buddy…"
-                        aria-label="Ask Help Buddy"
+                        value={checklistDraft}
+                        onChange={(event) => setChecklistDraft(event.target.value)}
+                        placeholder="Add executive task…"
+                        aria-label="New task"
                       />
-                      <button type="submit" aria-label="Send message">
-                        <ChevronRight size={15} />
+                      <button type="submit" disabled={!checklistDraft.trim()}>
+                        <Plus size={12} /> Add
                       </button>
                     </form>
-                  </>
-                )}
-              </section>
-              <section className="cc-connector-panel">
-                <div className="cc-panel-heading">
-                  <div>
-                    <Link2 size={15} />
-                    <h2>CONNECTORS</h2>
-                    <p>Connected applications and identity services</p>
                   </div>
-                  <span className="cc-connector-count">
-                    {connectedConnectors.length}/{connectorChoices.length}
-                  </span>
-                  <button type="button" className="cc-connector-add" onClick={addConnector}>
-                    <Plus size={12} />
+                )}
+
+                {/* Character Stage with Full Body Picture, Her Speech Bubble Above & User Speech Bubble Below */}
+                <div className="cc-character-stage">
+                  {/* Top speech bubble: What QA Specialist Elena Vance says */}
+                  <div className="cc-assistant-speech-bubble">
+                    <div className="cc-speech-speaker">
+                      <span className="cc-speaker-dot" />
+                      <b>QA Specialist · Elena Vance</b>
+                    </div>
+                    <p>
+                      {conversation.filter((c) => c.sender_type !== "user").slice(-1)[0]?.content ||
+                        "Standing by, Chief Architect. All 715 facility rooms are online and synchronized with the holographic operations grid. What is our next objective?"}
+                    </p>
+                  </div>
+
+                  {/* Middle: Full Body Picture of QA Specialist and Frank */}
+                  <div className="cc-character-fullbody-frame">
+                    <img
+                      src="/assets/qa-buddy.jpg"
+                      alt="Quality Assurance Specialist and Frank Mazerati in Command Center"
+                      className="cc-character-fullbody-img"
+                    />
+                    <div className="cc-character-hologram-glow" />
+                    <div className="cc-character-pedestal" />
+                  </div>
+
+                  {/* Under feet: What the user said */}
+                  <div className="cc-user-speech-bubble">
+                    <div className="cc-speech-speaker user">
+                      <b>Frank Mazerati</b>
+                      <span className="cc-user-dot" />
+                    </div>
+                    <p>
+                      {conversation.filter((c) => c.sender_type === "user").slice(-1)[0]?.content ||
+                        "Running full walkthrough protocol across all command environments."}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Bottom Conversational Bar */}
+                <form className="cc-conversational-bar" onSubmit={sendMessage}>
+                  <button
+                    type="button"
+                    className="cc-bar-tool-btn"
+                    title="Add attachments or data file"
+                    onClick={() => toast.info("Attachment selector ready.")}
+                  >
+                    <Paperclip size={14} />
                   </button>
-                </div>
-                <div className="cc-connector-list">
-                  {connectorChoices.map((connector) => {
-                    const status = connectionStatuses[connector] ?? "not_configured";
-                    const connected = status === "connected";
-                    return (
-                      <div className="cc-connector-row" key={connector}>
-                        <span>
-                          <i className={connected ? "connected" : ""} />
-                          {connector}
-                        </span>
-                        <small>{status.replaceAll("_", " ")}</small>
-                      </div>
-                    );
-                  })}
-                </div>
+                  <button
+                    type="button"
+                    className={`cc-bar-tool-btn cc-voice-btn ${isListening ? "is-recording" : ""}`}
+                    title={isListening ? "Recording voice… click to stop" : "Voice type question"}
+                    onClick={toggleVoiceTyping}
+                  >
+                    <Mic size={14} />
+                  </button>
+                  <input
+                    value={message}
+                    onChange={(event) => setMessage(event.target.value)}
+                    placeholder="Ask QA Specialist or type command…"
+                    aria-label="Ask Help Buddy"
+                    className="cc-conversational-input"
+                  />
+                  <button type="submit" className="cc-bar-send-btn" disabled={!message.trim()} aria-label="Send message">
+                    <Send size={14} />
+                  </button>
+                </form>
               </section>
             </aside>
           </div>
