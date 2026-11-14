@@ -111,7 +111,8 @@ export function ConnectorHubWorkspace({ title }: { title: string }) {
       if (providerResult.error) setError(providerResult.error.message);
       else setProviders((providerResult.data ?? []) as Provider[]);
       if (connectionResult.error) {
-        setError((current) => current ?? connectionResult.error.message);
+        const message = connectionResult.error.message;
+        setError((current) => current ?? message);
         setConnections([]);
       } else {
         setConnections((connectionResult.data ?? []) as Connection[]);
@@ -276,10 +277,18 @@ export function IntelliSyncWorkspace({ title }: { title: string }) {
       if (!live) return;
       if (healthResult.error) setError(healthResult.error.message);
       else setHealth((healthResult.data ?? {}) as Record<string, unknown>);
-      if (connectionResult.error) setError((current) => current ?? connectionResult.error.message);
-      else setConnections(Array.isArray(connectionResult.data?.connections) ? connectionResult.data.connections : []);
-      if (eventResult.error) setError((current) => current ?? eventResult.error.message);
-      else setEvents(Array.isArray(eventResult.data?.events) ? eventResult.data.events as SyncEvent[] : []);
+      if (connectionResult.error) {
+        const message = connectionResult.error.message;
+        setError((current) => current ?? message);
+      } else {
+        setConnections(Array.isArray(connectionResult.data?.connections) ? connectionResult.data.connections : []);
+      }
+      if (eventResult.error) {
+        const message = eventResult.error.message;
+        setError((current) => current ?? message);
+      } else {
+        setEvents(Array.isArray(eventResult.data?.events) ? eventResult.data.events as SyncEvent[] : []);
+      }
       setLoading(false);
       setRefreshing(false);
     }).catch((reason) => {
