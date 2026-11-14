@@ -68,3 +68,15 @@ These findings are recorded for controlled remediation. No database policy, func
 ## Conversation connector requirement
 
 The prior conversation search recovered the Connector Hub subscription/seat-management discussion (approximately 20 connectors, with purchased, assigned, available, and pending seats). It did not recover a definitive connector name or implementation design for the separate “main conversation” connector. That requirement remains open and must not be guessed or merged into IntelliSync without confirmation.
+
+
+## Connector Hub / IntelliSync frontend wiring
+
+The repair branch now routes the existing Connector Hub and IntelliSync environments to purpose-built status workspaces:
+
+- Connector Hub reads the approved provider catalog and authorized connection records. It distinguishes catalog entries from real connected accounts and deliberately does not display a fake Connect action while provider authorization is absent.
+- IntelliSync calls the existing JWT-protected `intellisync-api` Edge Function for health, connection bindings, and recent events. It shows the API's actual state and does not invent job controls that the API does not expose.
+
+A second schema inventory found no connector-specific subscription or seat-allocation tables. Generic Marketplace subscription tables exist, but they are not proof of Connector Hub purchased/assigned/available seat tracking. The prior Connector Hub subscription and seat-management requirement remains a separate implementation gap.
+
+The current PR is a focused repair and status-wiring pass; it does not claim to complete provider OAuth, credential vaulting, webhook setup, sync scheduling, retry/reconciliation, or connector seat entitlements.
