@@ -3,6 +3,7 @@ name: Verify Command Center
 on:
   push:
     branches:
+      - feature/enterprise-workspace-chat-buddy-build
       - fix/intellibase-knowledge-connectivity-2026-11-14
   pull_request:
     branches:
