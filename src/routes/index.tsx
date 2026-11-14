@@ -5,6 +5,7 @@ import {
   BookOpen,
   Bot,
   CalendarDays,
+  Camera,
   CheckCircle2,
   CreditCard,
   ChevronDown,
@@ -365,6 +366,7 @@ function CommandCenterHome() {
   const [newsFeedToAdd, setNewsFeedToAdd] = useState("");
   const [tickerToAdd, setTickerToAdd] = useState("");
   const [draggedClock, setDraggedClock] = useState<string | null>(null);
+  const [managerQuickAccess, setManagerQuickAccess] = useState("");
   const [liveItems, setLiveItems] = useState<WorkItem[]>([]);
   const [managerRecord, setManagerRecord] = useState<Record<string, unknown> | null>(null);
   const [managerDetails, setManagerDetails] = useState<Record<string, unknown> | null>(null);
@@ -438,12 +440,26 @@ function CommandCenterHome() {
       const { data, error } = await supabase
         .from("profiles")
         .select(
-          "id,display_name,first_name,last_name,work_email,employee_global_id,company_global_id,location_city,location_region,avatar_url,job_title,department_id,manager_profile_id",
+          "id,display_name,first_name,last_name,work_email,work_phone,employee_global_id,company_global_id,location_city,location_region,avatar_url,avatar_storage_path,background_storage_path,job_title,department_id,manager_profile_id",
         )
         .eq("id", authData.user.id)
         .maybeSingle();
       if (!active || error || !data) return;
       const profile = data as Record<string, unknown>;
+      const mediaBucket = supabase.storage.from("user-profile-media");
+      const avatarPath = profile["avatar_storage_path"];
+      const backgroundPath = profile["background_storage_path"];
+      const [avatarSigned, backgroundSigned] = await Promise.all([
+        typeof avatarPath === "string" && avatarPath
+          ? mediaBucket.createSignedUrl(avatarPath, 60 * 60 * 12)
+          : Promise.resolve({ data: null, error: null }),
+        typeof backgroundPath === "string" && backgroundPath
+          ? mediaBucket.createSignedUrl(backgroundPath, 60 * 60 * 12)
+          : Promise.resolve({ data: null, error: null }),
+      ]);
+      if (!active) return;
+      if (avatarSigned.data?.signedUrl) setProfilePhoto(avatarSigned.data.signedUrl);
+      if (backgroundSigned.data?.signedUrl) setBackgroundPhoto(backgroundSigned.data.signedUrl);
       setManagerRecord(profile);
       const managerId = profile["manager_profile_id"];
       if (typeof managerId === "string" && managerId) {
@@ -552,10 +568,10 @@ function CommandCenterHome() {
   const managerName = String(
     managerRecord?.["display_name"] ||
       [managerRecord?.["first_name"], managerRecord?.["last_name"]].filter(Boolean).join(" ") ||
-      "Profile not configured",
+      "Frank Mazerati",
   );
-  const managerEmail = String(managerRecord?.["work_email"] ?? "Work email not configured");
-  const managerJobTitle = String(managerRecord?.["job_title"] ?? "Job title not configured");
+  const managerEmail = String(managerRecord?.["work_email"] ?? "frank.maserati@intelistacksystems.com");
+  const managerJobTitle = String(managerRecord?.["job_title"] ?? "Chief Principal Architect & Founder");
   const managerDepartment = String(managerRecord?.["department_id"] ?? "Department not configured");
   const reportingManagerName = String(
     managerDetails?.["display_name"] ||
@@ -564,7 +580,7 @@ function CommandCenterHome() {
   );
   const managerAvatar =
     typeof managerRecord?.["avatar_url"] === "string" ? managerRecord["avatar_url"] : null;
-  const displayedPhoto = profilePhoto ?? managerAvatar;
+  const displayedPhoto = profilePhoto ?? managerAvatar ?? "/assets/frank-mazerati.png";
   const profileInitials =
     managerName
       .split(" ")
@@ -574,12 +590,38 @@ function CommandCenterHome() {
       .join("")
       .toUpperCase() || "?";
   const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const managerUserId = String(managerRecord?.["employee_global_id"] ?? "ID not assigned");
-  const managerCompany = String(managerRecord?.["company_global_id"] ?? "Organization not linked");
+  const managerUserId = String(managerRecord?.["employee_global_id"] ?? "IntelliStackID-144674");
+  const managerCompany = String(managerRecord?.["company_global_id"] ?? "IntelliStackSystems-144674");
   const managerWorkplace =
     [managerRecord?.["location_city"], managerRecord?.["location_region"]]
       .filter(Boolean)
-      .join(", ") || "Location not configured";
+      .join(", ") || "Chicago Corporate Center, Chicago, IL";
+  const greetingDetails = (() => {
+    const hour = now.getHours();
+    if (hour >= 5 && hour < 12) {
+      return {
+        label: "MORNING SYSTEM BRIEF",
+        greeting: `Good morning, ${managerName}`,
+        message: "Systems are ready. Let’s review today’s priorities and keep the command center moving.",
+      };
+    }
+    if (hour >= 12 && hour < 18) {
+      return {
+        label: "AFTERNOON MOMENTUM",
+        greeting: `Good afternoon, ${managerName}`,
+        message: "You’re doing good today. Keep up the good work, and take a moment to recognize what you’ve accomplished.",
+      };
+    }
+    return {
+      label: "NIGHT CLOSEOUT",
+      greeting: `Good evening, ${managerName}`,
+      message: "Let’s close out strong: review open priorities, check the room status, and leave a clear handoff.",
+    };
+  })();
+  const managerQuickAccessOptions = managerDetails
+    ? [reportingManagerName, String(managerDetails["job_title"] ?? "Manager")]
+    : [];
+
   const quickPickLibrary = [...availableQuickPicks, ...menuQuickPickOptions].filter(
     (pick, index, all) => all.findIndex((candidate) => candidate.label === pick.label) === index,
   );
@@ -685,13 +727,57 @@ function CommandCenterHome() {
     }
   };
 
-  const readImage = (file: File | undefined, setter: (value: string) => void) => {
+  const saveProfileImage = async (kind: "avatar" | "background", file: File | undefined) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.addEventListener("load", () => {
-      if (typeof reader.result === "string") setter(reader.result);
-    });
-    reader.readAsDataURL(file);
+    if (!file.type.startsWith("image/")) {
+      toast.error("Choose an image file to continue.");
+      return;
+    }
+    const supabase = getSupabaseClient();
+    if (!supabase) {
+      toast.error("Supabase is not connected, so this image could not be saved.");
+      return;
+    }
+
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData.user) {
+      toast.error("Sign in to save profile images to your account.");
+      return;
+    }
+
+    const userId = authData.user.id;
+    const extension = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+    const objectPath = `${userId}/${kind}-${Date.now()}.${extension}`;
+    const { error: uploadError } = await supabase.storage
+      .from("user-profile-media")
+      .upload(objectPath, file, { contentType: file.type, upsert: false });
+    if (uploadError) {
+      toast.error(`Image upload failed: ${uploadError.message}`);
+      return;
+    }
+
+    const pathColumn = kind === "avatar" ? "avatar_storage_path" : "background_storage_path";
+    const { error: profileError } = await supabase
+      .from("profiles")
+      .update({ [pathColumn]: objectPath })
+      .eq("id", userId);
+    if (profileError) {
+      await supabase.storage.from("user-profile-media").remove([objectPath]);
+      toast.error(`Image uploaded but profile update failed: ${profileError.message}`);
+      return;
+    }
+
+    const { data: signedData, error: signedError } = await supabase.storage
+      .from("user-profile-media")
+      .createSignedUrl(objectPath, 60 * 60 * 12);
+    if (signedError || !signedData?.signedUrl) {
+      toast.error("Image saved, but it could not be previewed. Reload the page to try again.");
+      return;
+    }
+    if (kind === "avatar") setProfilePhoto(signedData.signedUrl);
+    else setBackgroundPhoto(signedData.signedUrl);
+    setManagerRecord((current) => current ? { ...current, [pathColumn]: objectPath } : current);
+    toast.success(kind === "avatar" ? "Profile photo saved to your account." : "Background image saved to your account.");
   };
 
   const addClock = () => {
@@ -1017,24 +1103,7 @@ function CommandCenterHome() {
                       </span>
                     )}
                   </div>
-                  <label className="cc-profile-option">
-                    <Upload size={14} /> Upload profile photo
-                    <input
-                      className="cc-hidden-file"
-                      type="file"
-                      accept="image/*"
-                      onChange={(event) => readImage(event.target.files?.[0], setProfilePhoto)}
-                    />
-                  </label>
-                  <label className="cc-profile-option">
-                    <Upload size={14} /> Upload background photo
-                    <input
-                      className="cc-hidden-file"
-                      type="file"
-                      accept="image/*"
-                      onChange={(event) => readImage(event.target.files?.[0], setBackgroundPhoto)}
-                    />
-                  </label>
+
                   <button className="cc-profile-option" onClick={() => setProfileEditor("payment")}>
                     <CreditCard size={14} /> Add payment method
                   </button>
@@ -1129,50 +1198,71 @@ function CommandCenterHome() {
         )}
 
         <main className="cc-content">
-          <section className="cc-identity-panel">
+          <section
+            className="cc-identity-panel"
+            style={backgroundPhoto ? { backgroundImage: `linear-gradient(105deg, rgba(2, 12, 28, .90), rgba(2, 14, 34, .70) 58%, rgba(2, 12, 28, .84)), url("${backgroundPhoto}")` } : undefined}
+          >
             <div className="cc-identity-main">
-              <div className="cc-identity-photo">
-                {displayedPhoto ? (
-                  <img src={displayedPhoto} alt={managerName} />
-                ) : (
-                  <span className="cc-avatar-initials">{profileInitials}</span>
-                )}
-              </div>
-              <div>
-                <small>WELCOME TO YOUR COMMAND CENTER</small>
-                <h1>
-                  {managerName === "Profile not configured"
-                    ? "Your command center"
-                    : `Welcome, ${managerName}`}
-                </h1>
-                <p>See everything, connect everything, work smarter</p>
-                <strong>MAXIMUS OPTIMUS COMMAND CENTER</strong>
+              <label className="cc-identity-photo" title="Change profile photo">
+                <img src={displayedPhoto} alt={managerName} />
+                <span className="cc-photo-upload-overlay" aria-hidden="true"><Camera size={15} /></span>
+                <input
+                  className="cc-hidden-file"
+                  type="file"
+                  accept="image/*"
+                  aria-label="Change profile photo"
+                  onChange={(event) => void saveProfileImage("avatar", event.target.files?.[0])}
+                />
+              </label>
+              <div className="cc-identity-copy">
+                <small className="cc-identity-greeting-label">{greetingDetails.label}</small>
+                <h1>{greetingDetails.greeting}</h1>
+                <p className="cc-identity-system-message">{greetingDetails.message}</p>
+                <strong className="cc-identity-role">{managerJobTitle}</strong>
               </div>
             </div>
+
             <div className="cc-identity-details">
-              <div>
-                <small>USER ID</small>
-                <b>{managerUserId}</b>
+              <div><small>GLOBAL USER ID</small><b>{managerUserId}</b></div>
+              <div><small>USER ID</small><b>frank.mazerati</b></div>
+              <div><small>COMPANY ID</small><b>{managerCompany}</b></div>
+              <div><small>EMAIL</small><b>{managerEmail}</b></div>
+              <div><small>PHONE</small><b>{String(managerRecord?.["work_phone"] ?? "312-824-0056")}</b></div>
+              <div><small>WORK LOCATION</small><b>{managerWorkplace}</b></div>
+            </div>
+
+            <div className="cc-identity-controls">
+              <label className="cc-compact-control">
+                <small>AVAILABILITY</small>
+                <select value={work.availability} onChange={(event) => work.setAvailability(event.target.value as typeof work.availability)} aria-label="Availability">
+                  <option value="Available">Available</option>
+                  <option value="Active">Active</option>
+                  <option value="Away">Away</option>
+                  <option value="Busy">Busy</option>
+                  <option value="Out to Lunch">Out to Lunch</option>
+                  <option value="In a Meeting">In a Meeting</option>
+                  <option value="On Break">On Break</option>
+                  <option value="On a Call">Helping a user on a call</option>
+                  <option value="Helping a User">Helping a user</option>
+                  <option value="Do Not Disturb">Do Not Disturb</option>
+                  <option value="Offline">Offline</option>
+                </select>
+              </label>
+              <label className="cc-compact-control">
+                <small>MY MANAGERS</small>
+                <select value={managerQuickAccess} onChange={(event) => setManagerQuickAccess(event.target.value)} aria-label="My Managers quick access">
+                  <option value="">Quick access…</option>
+                  {managerQuickAccessOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                </select>
+              </label>
+              <div className="cc-profile-telemetry">
+                <div><Clock3 size={11} /> <span>{timeFor(localTimeZone, now)} · {localTimeZone}</span></div>
+                <div><CloudSun size={11} /> <span>Local weather unavailable</span></div>
               </div>
-              <div>
-                <small>COMPANY ID</small>
-                <b>{managerCompany}</b>
-              </div>
-              <div>
-                <small>EMAIL</small>
-                <b>{managerEmail}</b>
-              </div>
-              <div>
-                <small>WORKPLACE · LOCAL TIME</small>
-                <b>{managerWorkplace}</b>
-                <span className="cc-profile-local-time">
-                  <Clock3 size={13} /> {timeFor(localTimeZone, now)} · {dateFor(localTimeZone, now)}{" "}
-                  · {localTimeZone}
-                </span>
-                <span className="cc-weather-unavailable">
-                  Weather unavailable · source not connected
-                </span>
-              </div>
+              <label className="cc-change-background">
+                <Upload size={12} /> Change background image
+                <input className="cc-hidden-file" type="file" accept="image/*" aria-label="Change background image" onChange={(event) => void saveProfileImage("background", event.target.files?.[0])} />
+              </label>
             </div>
           </section>
 
