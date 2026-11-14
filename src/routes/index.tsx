@@ -372,6 +372,46 @@ function CommandCenterHome() {
   const [managerDetails, setManagerDetails] = useState<Record<string, unknown> | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [navFilter, setNavFilter] = useState("");
+
+  const totalRoomsCount = useMemo(() => {
+    return NAV.reduce(
+      (total, section) =>
+        total + section.groups.reduce((gTotal, group) => gTotal + group.pages.length, 0),
+      0,
+    );
+  }, []);
+
+  const filteredSections = useMemo(() => {
+    const q = navFilter.trim().toLowerCase();
+    if (!q) return NAV;
+    return NAV.map((section) => {
+      const sectionMatch = section.title.toLowerCase().includes(q) || section.number.includes(q);
+      const matchingGroups = section.groups
+        .map((group) => {
+          const groupMatch = group.title.toLowerCase().includes(q);
+          const matchingPages = group.pages.filter((page) =>
+            page.title.toLowerCase().includes(q),
+          );
+          if (groupMatch || sectionMatch) {
+            return group;
+          }
+          if (matchingPages.length > 0) {
+            return { ...group, pages: matchingPages };
+          }
+          return null;
+        })
+        .filter((g) => g !== null);
+
+      if (sectionMatch || matchingGroups.length > 0) {
+        return {
+          ...section,
+          groups: matchingGroups.length > 0 ? matchingGroups : section.groups,
+        };
+      }
+      return null;
+    }).filter((s) => s !== null);
+  }, [navFilter]);
   const [summaryCategory, setSummaryCategory] = useState<SummaryCategory | null>(null);
   const [selectedWorkItem, setSelectedWorkItem] = useState<WorkItem | null>(null);
   const [approvalDecisionReason, setApprovalDecisionReason] = useState("");
@@ -911,15 +951,52 @@ function CommandCenterHome() {
       >
         <div className="cc-sidebar-brand">
           <img src="/assets/intellistack-shield.jpg" alt="IntelliStack Systems" />
-          <span>
+          <span className="cc-sidebar-brand-text">
             INTELLISTACK
             <br />
             <b>SYSTEMS</b>
           </span>
+          <button
+            type="button"
+            className="cc-sidebar-close"
+            aria-label="Close navigation"
+            onClick={() => setDrawerOpen(false)}
+          >
+            <X size={18} />
+          </button>
         </div>
+
+        <div className="cc-nav-search-box">
+          <Search size={14} className="cc-nav-search-icon" />
+          <input
+            type="text"
+            className="cc-nav-search-input"
+            placeholder="Search workspaces & rooms…"
+            value={navFilter}
+            onChange={(e) => setNavFilter(e.target.value)}
+            aria-label="Filter command navigation"
+          />
+          {navFilter && (
+            <button
+              type="button"
+              className="cc-nav-search-clear"
+              aria-label="Clear filter"
+              onClick={() => setNavFilter("")}
+            >
+              <X size={12} />
+            </button>
+          )}
+        </div>
+
+        <div className="cc-sidebar-meta">
+          <span>{filteredSections.length} WORKSPACES</span>
+          <span>{totalRoomsCount} ROOMS</span>
+        </div>
+
         <nav aria-label="Command navigation" className="cc-nav">
-          {NAV.map((section) => {
-            const sectionOpen = expandedSections[section.slug] ?? section.number === "01";
+          {filteredSections.map((section) => {
+            const isSearching = Boolean(navFilter.trim());
+            const sectionOpen = isSearching ? true : (expandedSections[section.slug] ?? section.number === "01");
             const sectionLabel = section.title;
             return (
               <div className="cc-nav-section" key={section.slug}>
@@ -932,19 +1009,27 @@ function CommandCenterHome() {
                   aria-expanded={sectionOpen}
                 >
                   <span className="cc-nav-number">{section.number}</span>
-                  <span>{sectionLabel}</span>
-                  <ChevronDown size={12} />
+                  <span className="cc-nav-title">{sectionLabel}</span>
+                  <ChevronDown size={14} className={`cc-nav-chevron ${sectionOpen ? "is-rotated" : ""}`} />
                 </button>
                 {sectionOpen && (
                   <div className="cc-nav-groups">
+                    <a
+                      className="cc-nav-overview-link"
+                      href={`/m/${section.slug}`}
+                      onClick={() => setDrawerOpen(false)}
+                    >
+                      <span>Workspace overview</span>
+                      <ChevronRight size={12} />
+                    </a>
                     {section.groups.map((group) => {
                       const groupKey = `${section.slug}:${group.slug}`;
-                      const groupOpen = expandedGroups[groupKey] ?? group.pages.length <= 6;
+                      const groupOpen = isSearching ? true : (expandedGroups[groupKey] ?? group.pages.length <= 6);
                       return (
                         <div className="cc-nav-group" key={groupKey}>
                           <button
                             type="button"
-                            className="cc-nav-group-toggle"
+                            className={`cc-nav-group-toggle ${groupOpen ? "is-open" : ""}`}
                             onClick={() =>
                               setExpandedGroups((current) => ({
                                 ...current,
@@ -953,8 +1038,11 @@ function CommandCenterHome() {
                             }
                             aria-expanded={groupOpen}
                           >
-                            <span>{group.title}</span>
-                            <ChevronRight size={11} className={groupOpen ? "rotate-90" : ""} />
+                            <span className="cc-nav-group-title">{group.title}</span>
+                            <span className="cc-nav-group-meta">
+                              <span className="cc-nav-group-count">{group.pages.length}</span>
+                              <ChevronRight size={12} className={`cc-nav-group-chevron ${groupOpen ? "rotate-90" : ""}`} />
+                            </span>
                           </button>
                           {groupOpen && (
                             <div className="cc-nav-pages">
@@ -965,7 +1053,8 @@ function CommandCenterHome() {
                                   href={`/m/${section.slug}/${group.slug}/${page.slug}`}
                                   onClick={() => setDrawerOpen(false)}
                                 >
-                                  {page.title}
+                                  <span className="cc-nav-page-bullet" />
+                                  <span className="cc-nav-page-title">{page.title}</span>
                                 </a>
                               ))}
                             </div>

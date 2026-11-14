@@ -8,7 +8,9 @@ import {
   Home,
   LayoutGrid,
   LogOut,
+  Search,
   Settings2,
+  X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -69,6 +71,36 @@ export function NavMenu({ open, onOpenChange, onLogout }: NavMenuProps) {
   const [profileId, setProfileId] = useState<string | null>(null);
   const [sectionOrder, setSectionOrder] = useState(() => NAV.map((section) => section.slug));
   const [draggedSection, setDraggedSection] = useState<string | null>(null);
+  const [filterQuery, setFilterQuery] = useState("");
+
+  const filteredSections = useMemo(() => {
+    const q = filterQuery.trim().toLowerCase();
+    if (!q) return sections;
+    return sections
+      .map((section) => {
+        const sectionMatch = section.title.toLowerCase().includes(q) || section.number.includes(q);
+        const matchingGroups = section.groups
+          .map((group) => {
+            const groupMatch = group.title.toLowerCase().includes(q);
+            const matchingPages = group.pages.filter((page) =>
+              page.title.toLowerCase().includes(q),
+            );
+            if (groupMatch || sectionMatch) return group;
+            if (matchingPages.length > 0) return { ...group, pages: matchingPages };
+            return null;
+          })
+          .filter((g): g is (typeof section.groups)[number] => g !== null);
+
+        if (sectionMatch || matchingGroups.length > 0) {
+          return {
+            ...section,
+            groups: matchingGroups.length > 0 ? matchingGroups : section.groups,
+          };
+        }
+        return null;
+      })
+      .filter((s): s is (typeof sections)[number] => s !== null);
+  }, [filterQuery, sections]);
 
   useEffect(() => {
     if (!open) return;
@@ -132,7 +164,7 @@ export function NavMenu({ open, onOpenChange, onLogout }: NavMenuProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="left"
-        className="glass-strong holo-nav-sheet flex h-dvh w-[92vw] max-w-sm flex-col gap-0 border-sky-400/25 p-0 text-slate-100"
+        className="glass-strong holo-nav-sheet flex h-dvh w-[92vw] max-w-md flex-col gap-0 border-sky-400/25 p-0 text-slate-100"
       >
         <SheetHeader className="shrink-0 border-b border-sky-400/20 bg-[#071326]/80 px-5 py-4 text-left">
           <SheetTitle className="font-display text-base tracking-wide">Navigation</SheetTitle>
@@ -140,20 +172,44 @@ export function NavMenu({ open, onOpenChange, onLogout }: NavMenuProps) {
             30 workspaces · select a workspace, category, then page
           </SheetDescription>
         </SheetHeader>
+        <div className="shrink-0 border-b border-sky-400/15 bg-[#051020]/90 px-4 py-2.5">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-sky-400/70" />
+            <input
+              type="text"
+              placeholder="Search 30 workspaces & rooms…"
+              value={filterQuery}
+              onChange={(e) => setFilterQuery(e.target.value)}
+              className="h-9 w-full rounded-lg border border-sky-400/25 bg-[#03142c]/80 pl-9 pr-8 text-xs text-slate-100 placeholder:text-slate-400 focus:border-sky-300 focus:outline-none focus:ring-1 focus:ring-sky-300/50"
+              aria-label="Filter navigation"
+            />
+            {filterQuery && (
+              <button
+                type="button"
+                onClick={() => setFilterQuery("")}
+                className="absolute right-2.5 top-1/2 grid size-4 -translate-y-1/2 place-items-center rounded-full bg-slate-700/60 text-slate-300 hover:text-white"
+                aria-label="Clear filter"
+              >
+                <X className="size-3" />
+              </button>
+            )}
+          </div>
+        </div>
+
         <ScrollArea className="min-h-0 flex-1">
           <nav aria-label="Main" className="p-3">
             <Link
               to="/"
               onClick={close}
               className={cn(
-                "holo-control mb-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-accent",
+                "holo-control mb-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold tracking-wide hover:bg-accent",
                 pathname === "/" && "bg-accent text-accent-foreground",
               )}
             >
               <Home className="size-4 text-primary" /> Command Center
             </Link>
-            <ol aria-label="Workspaces" className="list-none space-y-1 p-0">
-              {sections.map((section, index) => {
+            <ol aria-label="Workspaces" className="list-none space-y-1.5 p-0">
+              {filteredSections.map((section, index) => {
                 const Icon = SECTION_ICONS[section.slug] ?? LayoutGrid;
                 const expanded = openSection === section.slug;
                 const isCurrent = curSection === section.slug;
@@ -196,7 +252,7 @@ export function NavMenu({ open, onOpenChange, onLogout }: NavMenuProps) {
                             expanded ? null : `${section.slug}:${section.groups[0]?.slug ?? ""}`,
                           );
                         }}
-                        className="flex min-w-0 flex-1 items-center gap-2 py-1 text-left text-[13px] font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70"
+                        className="flex min-w-0 flex-1 items-center gap-2 py-1 text-left text-[13.5px] font-semibold text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70"
                       >
                         <span
                           className="grid size-7 shrink-0 place-items-center rounded-md text-primary-foreground"
@@ -205,7 +261,7 @@ export function NavMenu({ open, onOpenChange, onLogout }: NavMenuProps) {
                           <Icon className="size-3.5" />
                         </span>
                         <span className="min-w-0 flex-1 truncate">
-                          <span className="mr-1.5 font-display text-[9px] text-muted-foreground">
+                          <span className="mr-1.5 font-display text-[10px] font-bold text-sky-400">
                             {section.number}
                           </span>
                           {section.title}
@@ -265,7 +321,7 @@ export function NavMenu({ open, onOpenChange, onLogout }: NavMenuProps) {
                                 aria-expanded={groupExpanded}
                                 aria-controls={`category-${section.slug}-${group.slug}`}
                                 onClick={() => setOpenGroup(groupExpanded ? null : groupKey)}
-                                className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-xs font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70"
+                                className="flex w-full items-center gap-1.5 rounded-md px-2 py-1.5 text-left text-[13px] font-medium text-slate-200 hover:text-white hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300/70"
                               >
                                 <ChevronRight
                                   className={cn(
@@ -298,7 +354,7 @@ export function NavMenu({ open, onOpenChange, onLogout }: NavMenuProps) {
                                           onClick={close}
                                           aria-current={active ? "page" : undefined}
                                           className={cn(
-                                            "block rounded-md px-2 py-1.5 text-[12px] text-muted-foreground hover:bg-accent hover:text-foreground",
+                                            "block rounded-md px-2 py-1.5 text-[12.5px] font-medium text-slate-300 hover:bg-sky-500/15 hover:text-white",
                                             active && "bg-primary/10 font-semibold text-primary",
                                           )}
                                         >
